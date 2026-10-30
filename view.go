@@ -221,7 +221,7 @@ func (a *App) hostTip(h store.Host, rt *hostRuntime) string {
 
 func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 	ui.Row(c).Height(36).Shrink(0).Padding(0, 12, 4, 12).Gap(2).AlignItems(ui.Center).DragWindow().Children(func() {
-		iconButton(c, "footer-new", plusIcon, locales.ActionNewHost(), pal, func() { a.openEditor("") })
+		iconButton(c, "cycle-theme", paintbrushIcon, locales.ActionCycleTheme()+" · "+themeName(a.state.Theme), pal, a.cycleTheme)
 		iconButton(c, "settings", gearIcon, locales.ActionSettings(), pal, a.openSettings)
 		ui.Spacer(c)
 		n := a.connectedCount()

@@ -810,6 +810,16 @@ func (msgs Messages) SetTheme() string {
 	return Catalog.Format(msgs.locale, "setTheme", nil)
 }
 
+// ActionCycleTheme says "Switch Theme"
+// in the language the app shows.
+func ActionCycleTheme() string { return In(i18n.Locale()).ActionCycleTheme() }
+
+// ActionCycleTheme says "Switch Theme"
+// in the language of msgs.
+func (msgs Messages) ActionCycleTheme() string {
+	return Catalog.Format(msgs.locale, "actionCycleTheme", nil)
+}
+
 // ThemePaper says "Paper"
 // in the language the app shows.
 func ThemePaper() string { return In(i18n.Locale()).ThemePaper() }

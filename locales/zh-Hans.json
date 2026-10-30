@@ -77,6 +77,7 @@
   "setThemeLight": "浅色",
   "setThemeDark": "深色",
   "setTheme": "主题",
+  "actionCycleTheme": "切换主题",
   "themePaper": "纸张",
   "themePlain": "原色",
   "themePetal": "花瓣",

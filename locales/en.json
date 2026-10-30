@@ -77,6 +77,7 @@
   "setThemeLight": "Light",
   "setThemeDark": "Dark",
   "setTheme": "Theme",
+  "actionCycleTheme": "Switch Theme",
   "themePaper": "Paper",
   "themePlain": "Plain",
   "themePetal": "Petal",

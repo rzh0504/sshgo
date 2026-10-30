@@ -252,6 +252,11 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 				[]string{"system", "light", "dark"},
 				[]string{locales.SetThemeSystem(), locales.SetThemeLight(), locales.SetThemeDark()})
 		})
+		settingRow(c, pal, locales.SetLanguage(), "", func() {
+			segmented(c, "language", &a.state.Language,
+				[]string{"system", "en", "zh-Hans"},
+				[]string{locales.LanguageSystem(), "English", "简体中文"})
+		})
 	})
 	ui.Column(c).Gap(8).Children(func() {
 		groupTitle(c, pal, locales.SetTheme())
@@ -261,13 +266,18 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 			}
 		})
 	})
-	settingsGroup(c, pal, "", "", func() {
-		settingRow(c, pal, locales.SetLanguage(), "", func() {
-			segmented(c, "language", &a.state.Language,
-				[]string{"system", "en", "zh-Hans"},
-				[]string{locales.LanguageSystem(), "English", "简体中文"})
-		})
-	})
+}
+
+// cycleTheme makes the next theme the window's, as the sidebar's theme
+// button does.
+func (a *App) cycleTheme() {
+	a.state.Theme = nextTheme(a.state.Theme)
+	a.applySettings()
+}
+
+func nextTheme(id string) string {
+	i := slices.Index(themeIDs, knownTheme(id))
+	return themeIDs[(i+1)%len(themeIDs)]
 }
 
 func themeName(id string) string {

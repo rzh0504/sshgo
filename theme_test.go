@@ -67,6 +67,19 @@ func TestDarkWashesKeepTheirThemeColor(t *testing.T) {
 	}
 }
 
+func TestNextTheme(t *testing.T) {
+	cases := map[string]string{
+		"paper": "plain",
+		"dune":  "paper",
+		"nope":  "plain",
+	}
+	for from, want := range cases {
+		if got := nextTheme(from); got != want {
+			t.Errorf("nextTheme(%q) = %q, want %q", from, got, want)
+		}
+	}
+}
+
 func TestCursorSequence(t *testing.T) {
 	cases := []struct {
 		style   string
