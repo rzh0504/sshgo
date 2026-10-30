@@ -114,6 +114,26 @@ func (msgs Messages) ActionDeleteHost() string {
 	return Catalog.Format(msgs.locale, "actionDeleteHost", nil)
 }
 
+// MenuEditHost says "Edit Host"
+// in the language the app shows.
+func MenuEditHost() string { return In(i18n.Locale()).MenuEditHost() }
+
+// MenuEditHost says "Edit Host"
+// in the language of msgs.
+func (msgs Messages) MenuEditHost() string {
+	return Catalog.Format(msgs.locale, "menuEditHost", nil)
+}
+
+// MenuDeleteHost says "Delete Host"
+// in the language the app shows.
+func MenuDeleteHost() string { return In(i18n.Locale()).MenuDeleteHost() }
+
+// MenuDeleteHost says "Delete Host"
+// in the language of msgs.
+func (msgs Messages) MenuDeleteHost() string {
+	return Catalog.Format(msgs.locale, "menuDeleteHost", nil)
+}
+
 // ActionCopyAddress says "Copy Address"
 // in the language the app shows.
 func ActionCopyAddress() string { return In(i18n.Locale()).ActionCopyAddress() }

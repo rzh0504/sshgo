@@ -73,6 +73,7 @@ type App struct {
 	password *passwordState
 	hostKey  *hostKeyState
 	confirm  *confirmState
+	hostMenu *hostMenuState
 
 	chrome      chrome
 	sidebarDrag float32

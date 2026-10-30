@@ -8,6 +8,8 @@
   "actionDisconnect": "Disconnect",
   "actionEditHost": "Edit Host…",
   "actionDeleteHost": "Delete Host…",
+  "menuEditHost": "Edit Host",
+  "menuDeleteHost": "Delete Host",
   "actionCopyAddress": "Copy Address",
   "actionAddHost": "Add Host",
   "actionSave": "Save",

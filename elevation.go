@@ -36,6 +36,19 @@ func chosen(e ui.Element, pal *palette) ui.Element {
 	return e.Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.06)).Shadow(0, 0.5, 2, 0, ui.RGBA(0, 0, 0, 0.05))
 }
 
+// menu lifts a menu a little off the window, as a floating surface:
+// lighter at the top, with a hairline and a soft shadow.
+func menu(e ui.Element, pal *palette) ui.Element {
+	if pal.dark {
+		return e.Background(pal.popover).InsetShadow(0, 0, 0, 1, ui.RGBA(255, 255, 255, 0.12)).
+			Shadow(0, 1, 3, 0, ui.RGBA(0, 0, 0, 0.25)).Shadow(0, 4, 16, 0, ui.RGBA(0, 0, 0, 0.4))
+	}
+	return e.LinearGradient(ui.LinearGradient{Angle: 180, From: ui.Hex("#fbfbfb"), To: ui.Hex("#f4f4f5")}).
+		InsetShadow(0, 1, 0, 0, ui.RGBA(255, 255, 255, 0.9)).InsetShadow(0, -1, 0, 0, ui.RGBA(255, 255, 255, 0.9)).
+		InsetShadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.3)).
+		Shadow(0, 5, 10, 0, ui.RGBA(0, 0, 0, 0.22))
+}
+
 // floating lifts a surface above the window: dialogs.
 func floating(e ui.Element, pal *palette) ui.Element {
 	if pal.dark {

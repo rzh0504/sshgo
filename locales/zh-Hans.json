@@ -8,6 +8,8 @@
   "actionDisconnect": "断开连接",
   "actionEditHost": "编辑主机…",
   "actionDeleteHost": "删除主机…",
+  "menuEditHost": "编辑主机",
+  "menuDeleteHost": "删除主机",
   "actionCopyAddress": "复制地址",
   "actionAddHost": "添加主机",
   "actionSave": "保存",
