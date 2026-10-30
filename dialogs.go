@@ -117,7 +117,7 @@ func dialogHead(c *ui.Context, pal *palette, title, detail string) {
 func formField(c *ui.Context, key, label, placeholder string, value *string, pal *palette, password bool) ui.Element {
 	ui.Text(c, label).FontSize(12).FontWeight(550).TextColor(pal.textMuted).Margin(0, 0, 2, 0)
 	in := ui.TextInputBase(c.Key(key), value).Height(32).Padding(0, 10).Radius(8).FontSize(13.5).
-		TextColor(pal.text).Placeholder(placeholder).Label(label)
+		Border(0, ui.Transparent).TextColor(pal.text).Placeholder(placeholder).Label(label)
 	face(in, pal, pal.control)
 	if password {
 		in.Password()
@@ -292,7 +292,7 @@ func (a *App) passwordView(c *ui.Context, pal *palette) {
 			})
 		})
 		in := ui.TextInputBase(c.Key("password"), &p.password).Height(32).Padding(0, 10).Radius(8).FontSize(13.5).
-			TextColor(pal.text).Password().AutoFocus().Label(locales.FieldPassword()).Placeholder(locales.FieldPassword())
+			Border(0, ui.Transparent).TextColor(pal.text).Password().AutoFocus().Label(locales.FieldPassword()).Placeholder(locales.FieldPassword())
 		face(in, pal, pal.control)
 		ui.Checkbox(c, &p.save, locales.PasswordSaveLabel())
 		if p.err != "" {

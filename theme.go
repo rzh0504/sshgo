@@ -212,16 +212,29 @@ var darkTermTheme = &terminal.Theme{
 	},
 }
 
-// borderless returns the theme with sshgo's look: its accent, no lines
-// around controls, and the desktop's interface font.
+// borderless returns the theme with sshgo's look: its palette and accent,
+// one radius for the controls and a drawn menu, and the desktop's
+// interface font.
 func borderless(c *ui.Context, pal *palette) *ui.Theme {
 	t := *c.Theme()
+	t.Background = pal.popover
+	t.Text = pal.text
+	t.TextMuted = pal.textMuted
 	t.Accent = pal.accent
+	t.AccentText = ui.Hex("#ffffff")
+	t.Danger = pal.danger
+	t.Warning = pal.attention
+	t.Success = okColor(pal)
+	t.Inverse = pal.text
+	t.InverseText = pal.card
 	t.Selection = pal.accent.Alpha(0.25)
-	t.Border = ui.Transparent
+	t.Focus = pal.accent.Alpha(0.55)
+	t.Border = pal.divider
 	t.Surface = pal.control
 	t.SurfaceHover = pal.controlHover
 	t.SurfacePressed = pal.controlHover.Mix(pal.text, 0.06)
+	t.Radius = 8
+	t.FontSize = 13.5
 	t.Font = uiFontFamily()
 	return &t
 }
