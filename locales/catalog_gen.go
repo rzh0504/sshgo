@@ -779,3 +779,413 @@ func WindowClose() string { return In(i18n.Locale()).WindowClose() }
 func (msgs Messages) WindowClose() string {
 	return Catalog.Format(msgs.locale, "windowClose", nil)
 }
+
+// ActionSettings says "Settings…"
+// in the language the app shows.
+func ActionSettings() string { return In(i18n.Locale()).ActionSettings() }
+
+// ActionSettings says "Settings…"
+// in the language of msgs.
+func (msgs Messages) ActionSettings() string {
+	return Catalog.Format(msgs.locale, "actionSettings", nil)
+}
+
+// SettingsTitle says "Settings"
+// in the language the app shows.
+func SettingsTitle() string { return In(i18n.Locale()).SettingsTitle() }
+
+// SettingsTitle says "Settings"
+// in the language of msgs.
+func (msgs Messages) SettingsTitle() string {
+	return Catalog.Format(msgs.locale, "settingsTitle", nil)
+}
+
+// PageAppearance says "Appearance"
+// in the language the app shows.
+func PageAppearance() string { return In(i18n.Locale()).PageAppearance() }
+
+// PageAppearance says "Appearance"
+// in the language of msgs.
+func (msgs Messages) PageAppearance() string {
+	return Catalog.Format(msgs.locale, "pageAppearance", nil)
+}
+
+// PageTerminal says "Terminal"
+// in the language the app shows.
+func PageTerminal() string { return In(i18n.Locale()).PageTerminal() }
+
+// PageTerminal says "Terminal"
+// in the language of msgs.
+func (msgs Messages) PageTerminal() string {
+	return Catalog.Format(msgs.locale, "pageTerminal", nil)
+}
+
+// PageLanguage says "Language"
+// in the language the app shows.
+func PageLanguage() string { return In(i18n.Locale()).PageLanguage() }
+
+// PageLanguage says "Language"
+// in the language of msgs.
+func (msgs Messages) PageLanguage() string {
+	return Catalog.Format(msgs.locale, "pageLanguage", nil)
+}
+
+// PageAbout says "About"
+// in the language the app shows.
+func PageAbout() string { return In(i18n.Locale()).PageAbout() }
+
+// PageAbout says "About"
+// in the language of msgs.
+func (msgs Messages) PageAbout() string {
+	return Catalog.Format(msgs.locale, "pageAbout", nil)
+}
+
+// SetAppearance says "Theme"
+// in the language the app shows.
+func SetAppearance() string { return In(i18n.Locale()).SetAppearance() }
+
+// SetAppearance says "Theme"
+// in the language of msgs.
+func (msgs Messages) SetAppearance() string {
+	return Catalog.Format(msgs.locale, "setAppearance", nil)
+}
+
+// SetAppearanceDetail says "Light, dark, or the system's choice."
+// in the language the app shows.
+func SetAppearanceDetail() string { return In(i18n.Locale()).SetAppearanceDetail() }
+
+// SetAppearanceDetail says "Light, dark, or the system's choice."
+// in the language of msgs.
+func (msgs Messages) SetAppearanceDetail() string {
+	return Catalog.Format(msgs.locale, "setAppearanceDetail", nil)
+}
+
+// SetThemeSystem says "System"
+// in the language the app shows.
+func SetThemeSystem() string { return In(i18n.Locale()).SetThemeSystem() }
+
+// SetThemeSystem says "System"
+// in the language of msgs.
+func (msgs Messages) SetThemeSystem() string {
+	return Catalog.Format(msgs.locale, "setThemeSystem", nil)
+}
+
+// SetThemeLight says "Light"
+// in the language the app shows.
+func SetThemeLight() string { return In(i18n.Locale()).SetThemeLight() }
+
+// SetThemeLight says "Light"
+// in the language of msgs.
+func (msgs Messages) SetThemeLight() string {
+	return Catalog.Format(msgs.locale, "setThemeLight", nil)
+}
+
+// SetThemeDark says "Dark"
+// in the language the app shows.
+func SetThemeDark() string { return In(i18n.Locale()).SetThemeDark() }
+
+// SetThemeDark says "Dark"
+// in the language of msgs.
+func (msgs Messages) SetThemeDark() string {
+	return Catalog.Format(msgs.locale, "setThemeDark", nil)
+}
+
+// SetLightTheme says "Light theme"
+// in the language the app shows.
+func SetLightTheme() string { return In(i18n.Locale()).SetLightTheme() }
+
+// SetLightTheme says "Light theme"
+// in the language of msgs.
+func (msgs Messages) SetLightTheme() string {
+	return Catalog.Format(msgs.locale, "setLightTheme", nil)
+}
+
+// SetDarkTheme says "Dark theme"
+// in the language the app shows.
+func SetDarkTheme() string { return In(i18n.Locale()).SetDarkTheme() }
+
+// SetDarkTheme says "Dark theme"
+// in the language of msgs.
+func (msgs Messages) SetDarkTheme() string {
+	return Catalog.Format(msgs.locale, "setDarkTheme", nil)
+}
+
+// SetThemeDetail says "A theme colors the window and its terminals."
+// in the language the app shows.
+func SetThemeDetail() string { return In(i18n.Locale()).SetThemeDetail() }
+
+// SetThemeDetail says "A theme colors the window and its terminals."
+// in the language of msgs.
+func (msgs Messages) SetThemeDetail() string {
+	return Catalog.Format(msgs.locale, "setThemeDetail", nil)
+}
+
+// ThemePaper says "Paper"
+// in the language the app shows.
+func ThemePaper() string { return In(i18n.Locale()).ThemePaper() }
+
+// ThemePaper says "Paper"
+// in the language of msgs.
+func (msgs Messages) ThemePaper() string {
+	return Catalog.Format(msgs.locale, "themePaper", nil)
+}
+
+// ThemePlain says "Plain"
+// in the language the app shows.
+func ThemePlain() string { return In(i18n.Locale()).ThemePlain() }
+
+// ThemePlain says "Plain"
+// in the language of msgs.
+func (msgs Messages) ThemePlain() string {
+	return Catalog.Format(msgs.locale, "themePlain", nil)
+}
+
+// ThemePetal says "Petal"
+// in the language the app shows.
+func ThemePetal() string { return In(i18n.Locale()).ThemePetal() }
+
+// ThemePetal says "Petal"
+// in the language of msgs.
+func (msgs Messages) ThemePetal() string {
+	return Catalog.Format(msgs.locale, "themePetal", nil)
+}
+
+// ThemeMist says "Mist"
+// in the language the app shows.
+func ThemeMist() string { return In(i18n.Locale()).ThemeMist() }
+
+// ThemeMist says "Mist"
+// in the language of msgs.
+func (msgs Messages) ThemeMist() string {
+	return Catalog.Format(msgs.locale, "themeMist", nil)
+}
+
+// ThemeMeadow says "Meadow"
+// in the language the app shows.
+func ThemeMeadow() string { return In(i18n.Locale()).ThemeMeadow() }
+
+// ThemeMeadow says "Meadow"
+// in the language of msgs.
+func (msgs Messages) ThemeMeadow() string {
+	return Catalog.Format(msgs.locale, "themeMeadow", nil)
+}
+
+// ThemeDusk says "Dusk"
+// in the language the app shows.
+func ThemeDusk() string { return In(i18n.Locale()).ThemeDusk() }
+
+// ThemeDusk says "Dusk"
+// in the language of msgs.
+func (msgs Messages) ThemeDusk() string {
+	return Catalog.Format(msgs.locale, "themeDusk", nil)
+}
+
+// ThemeTide says "Tide"
+// in the language the app shows.
+func ThemeTide() string { return In(i18n.Locale()).ThemeTide() }
+
+// ThemeTide says "Tide"
+// in the language of msgs.
+func (msgs Messages) ThemeTide() string {
+	return Catalog.Format(msgs.locale, "themeTide", nil)
+}
+
+// ThemeApricot says "Apricot"
+// in the language the app shows.
+func ThemeApricot() string { return In(i18n.Locale()).ThemeApricot() }
+
+// ThemeApricot says "Apricot"
+// in the language of msgs.
+func (msgs Messages) ThemeApricot() string {
+	return Catalog.Format(msgs.locale, "themeApricot", nil)
+}
+
+// ThemeAurora says "Aurora"
+// in the language the app shows.
+func ThemeAurora() string { return In(i18n.Locale()).ThemeAurora() }
+
+// ThemeAurora says "Aurora"
+// in the language of msgs.
+func (msgs Messages) ThemeAurora() string {
+	return Catalog.Format(msgs.locale, "themeAurora", nil)
+}
+
+// ThemeDune says "Dune"
+// in the language the app shows.
+func ThemeDune() string { return In(i18n.Locale()).ThemeDune() }
+
+// ThemeDune says "Dune"
+// in the language of msgs.
+func (msgs Messages) ThemeDune() string {
+	return Catalog.Format(msgs.locale, "themeDune", nil)
+}
+
+// SetFontSize says "Font size"
+// in the language the app shows.
+func SetFontSize() string { return In(i18n.Locale()).SetFontSize() }
+
+// SetFontSize says "Font size"
+// in the language of msgs.
+func (msgs Messages) SetFontSize() string {
+	return Catalog.Format(msgs.locale, "setFontSize", nil)
+}
+
+// SetFontSizeDetail says "The terminal's text, applied to open sessions at once."
+// in the language the app shows.
+func SetFontSizeDetail() string { return In(i18n.Locale()).SetFontSizeDetail() }
+
+// SetFontSizeDetail says "The terminal's text, applied to open sessions at once."
+// in the language of msgs.
+func (msgs Messages) SetFontSizeDetail() string {
+	return Catalog.Format(msgs.locale, "setFontSizeDetail", nil)
+}
+
+// SetCursor says "Cursor"
+// in the language the app shows.
+func SetCursor() string { return In(i18n.Locale()).SetCursor() }
+
+// SetCursor says "Cursor"
+// in the language of msgs.
+func (msgs Messages) SetCursor() string {
+	return Catalog.Format(msgs.locale, "setCursor", nil)
+}
+
+// SetCursorDetail says "The cursor's shape in the terminal."
+// in the language the app shows.
+func SetCursorDetail() string { return In(i18n.Locale()).SetCursorDetail() }
+
+// SetCursorDetail says "The cursor's shape in the terminal."
+// in the language of msgs.
+func (msgs Messages) SetCursorDetail() string {
+	return Catalog.Format(msgs.locale, "setCursorDetail", nil)
+}
+
+// CursorBlock says "Block"
+// in the language the app shows.
+func CursorBlock() string { return In(i18n.Locale()).CursorBlock() }
+
+// CursorBlock says "Block"
+// in the language of msgs.
+func (msgs Messages) CursorBlock() string {
+	return Catalog.Format(msgs.locale, "cursorBlock", nil)
+}
+
+// CursorBar says "Bar"
+// in the language the app shows.
+func CursorBar() string { return In(i18n.Locale()).CursorBar() }
+
+// CursorBar says "Bar"
+// in the language of msgs.
+func (msgs Messages) CursorBar() string {
+	return Catalog.Format(msgs.locale, "cursorBar", nil)
+}
+
+// CursorUnderline says "Underline"
+// in the language the app shows.
+func CursorUnderline() string { return In(i18n.Locale()).CursorUnderline() }
+
+// CursorUnderline says "Underline"
+// in the language of msgs.
+func (msgs Messages) CursorUnderline() string {
+	return Catalog.Format(msgs.locale, "cursorUnderline", nil)
+}
+
+// SetCursorBlink says "Blink"
+// in the language the app shows.
+func SetCursorBlink() string { return In(i18n.Locale()).SetCursorBlink() }
+
+// SetCursorBlink says "Blink"
+// in the language of msgs.
+func (msgs Messages) SetCursorBlink() string {
+	return Catalog.Format(msgs.locale, "setCursorBlink", nil)
+}
+
+// SetCursorBlinkDetail says "Whether the cursor blinks when a program sets no style."
+// in the language the app shows.
+func SetCursorBlinkDetail() string { return In(i18n.Locale()).SetCursorBlinkDetail() }
+
+// SetCursorBlinkDetail says "Whether the cursor blinks when a program sets no style."
+// in the language of msgs.
+func (msgs Messages) SetCursorBlinkDetail() string {
+	return Catalog.Format(msgs.locale, "setCursorBlinkDetail", nil)
+}
+
+// SetLanguage says "Interface language"
+// in the language the app shows.
+func SetLanguage() string { return In(i18n.Locale()).SetLanguage() }
+
+// SetLanguage says "Interface language"
+// in the language of msgs.
+func (msgs Messages) SetLanguage() string {
+	return Catalog.Format(msgs.locale, "setLanguage", nil)
+}
+
+// SetLanguageDetail says "The language of the windows, menus and dialogs."
+// in the language the app shows.
+func SetLanguageDetail() string { return In(i18n.Locale()).SetLanguageDetail() }
+
+// SetLanguageDetail says "The language of the windows, menus and dialogs."
+// in the language of msgs.
+func (msgs Messages) SetLanguageDetail() string {
+	return Catalog.Format(msgs.locale, "setLanguageDetail", nil)
+}
+
+// LanguageSystem says "System"
+// in the language the app shows.
+func LanguageSystem() string { return In(i18n.Locale()).LanguageSystem() }
+
+// LanguageSystem says "System"
+// in the language of msgs.
+func (msgs Messages) LanguageSystem() string {
+	return Catalog.Format(msgs.locale, "languageSystem", nil)
+}
+
+// AboutVersion says "Version {version}"
+// in the language the app shows.
+func AboutVersion(version string) string { return In(i18n.Locale()).AboutVersion(version) }
+
+// AboutVersion says "Version {version}"
+// in the language of msgs.
+func (msgs Messages) AboutVersion(version string) string {
+	return Catalog.Format(msgs.locale, "aboutVersion", map[string]any{"version": version})
+}
+
+// AboutEngine says "Native UI by MyGo, terminal by Ghostty's libghostty-vt."
+// in the language the app shows.
+func AboutEngine() string { return In(i18n.Locale()).AboutEngine() }
+
+// AboutEngine says "Native UI by MyGo, terminal by Ghostty's libghostty-vt."
+// in the language of msgs.
+func (msgs Messages) AboutEngine() string {
+	return Catalog.Format(msgs.locale, "aboutEngine", nil)
+}
+
+// AboutConfig says "Hosts and settings"
+// in the language the app shows.
+func AboutConfig() string { return In(i18n.Locale()).AboutConfig() }
+
+// AboutConfig says "Hosts and settings"
+// in the language of msgs.
+func (msgs Messages) AboutConfig() string {
+	return Catalog.Format(msgs.locale, "aboutConfig", nil)
+}
+
+// AboutKnownHosts says "Trusted host keys"
+// in the language the app shows.
+func AboutKnownHosts() string { return In(i18n.Locale()).AboutKnownHosts() }
+
+// AboutKnownHosts says "Trusted host keys"
+// in the language of msgs.
+func (msgs Messages) AboutKnownHosts() string {
+	return Catalog.Format(msgs.locale, "aboutKnownHosts", nil)
+}
+
+// AboutOpenFolder says "Open Settings Folder"
+// in the language the app shows.
+func AboutOpenFolder() string { return In(i18n.Locale()).AboutOpenFolder() }
+
+// AboutOpenFolder says "Open Settings Folder"
+// in the language of msgs.
+func (msgs Messages) AboutOpenFolder() string {
+	return Catalog.Format(msgs.locale, "aboutOpenFolder", nil)
+}

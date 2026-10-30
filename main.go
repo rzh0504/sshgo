@@ -14,8 +14,10 @@ import (
 
 func main() {
 	a := newApp()
+	a.load()
+	mygo.Theme.SetSource(mygo.ThemeSource(a.state.Appearance))
+	mygo.App.SetLocale(localeTag(a.state.Language))
 	mygo.App.WhenReady(func() {
-		a.load()
 		a.win = mygo.NewWindow(framed(mygo.WindowOptions{
 			Title:     "sshgo",
 			Width:     1180,
@@ -36,6 +38,10 @@ func main() {
 		if a.win != nil {
 			a.win.Invalidate()
 		}
+		if a.setWin != nil {
+			a.setWin.SetTitle(locales.SettingsTitle())
+			a.setWin.Invalidate()
+		}
 	})
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)
@@ -44,6 +50,10 @@ func main() {
 
 func (a *App) buildMenu() *mygo.Menu {
 	file := []*mygo.MenuItem{
+		{Label: locales.ActionSettings(), Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) {
+			a.openSettings()
+		}},
+		mygo.Separator(),
 		{Label: locales.ActionNewHost(), Accelerator: "CmdOrCtrl+Shift+N", Click: func(*mygo.MenuItem, *mygo.Window) {
 			a.openEditor("")
 		}},

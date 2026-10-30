@@ -12,7 +12,11 @@ func TestLoadMissingIsEmpty(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(s.Hosts) != 0 || s.Selected != "" {
-		t.Fatalf("state = %+v, want empty", s)
+		t.Fatalf("state = %+v, want empty hosts", s)
+	}
+	if s.Appearance != "system" || s.LightTheme != "paper" || s.DarkTheme != "paper" ||
+		s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" {
+		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }
 
@@ -25,6 +29,13 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		},
 		Selected:     "b",
 		SidebarWidth: 300,
+		Appearance:   "dark",
+		LightTheme:   "mist",
+		DarkTheme:    "dusk",
+		FontSize:     15,
+		Cursor:       "bar",
+		NoBlink:      true,
+		Language:     "en",
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -35,6 +46,10 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	}
 	if got.Selected != want.Selected || got.SidebarWidth != want.SidebarWidth {
 		t.Fatalf("state = %+v, want %+v", got, want)
+	}
+	if got.Appearance != want.Appearance || got.LightTheme != want.LightTheme || got.DarkTheme != want.DarkTheme ||
+		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink || got.Language != want.Language {
+		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if len(got.Hosts) != len(want.Hosts) {
 		t.Fatalf("len(hosts) = %d, want %d", len(got.Hosts), len(want.Hosts))
@@ -79,6 +94,23 @@ func TestLoadFillsDefaults(t *testing.T) {
 	}
 	if s.Hosts[0].Name != "me@dev" {
 		t.Fatalf("name = %q, want me@dev", s.Hosts[0].Name)
+	}
+	if s.FontSize != DefaultFontSize || s.Cursor != "block" {
+		t.Fatalf("settings = %+v, want the defaults", s)
+	}
+}
+
+func TestLoadClampsSettings(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	if err := os.WriteFile(path, []byte(`{"appearance":"blue","fontSize":99,"cursor":"beam","language":"fr"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := loadFrom(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Appearance != "system" || s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" {
+		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }
 

@@ -51,12 +51,25 @@ func joinHostPort(host string, port int) string {
 	return net.JoinHostPort(host, strconv.Itoa(port))
 }
 
-// State is what sshgo remembers: its hosts, and the window as it was.
+// DefaultFontSize is the terminal's text size, in DIPs, until the user
+// picks another.
+const DefaultFontSize = 13
+
+// State is what sshgo remembers: its hosts, the window as it was, and the
+// settings.
 type State struct {
 	Hosts         []Host  `json:"hosts"`
 	Selected      string  `json:"selected,omitempty"`
 	SidebarWidth  float32 `json:"sidebarWidth,omitempty"`
 	SidebarHidden bool    `json:"sidebarHidden,omitempty"`
+
+	Appearance string  `json:"appearance,omitempty"` // "system", "light" or "dark"
+	LightTheme string  `json:"lightTheme,omitempty"`
+	DarkTheme  string  `json:"darkTheme,omitempty"`
+	FontSize   float64 `json:"fontSize,omitempty"`
+	Cursor     string  `json:"cursor,omitempty"` // "block", "bar" or "underline"
+	NoBlink    bool    `json:"noBlink,omitempty"`
+	Language   string  `json:"language,omitempty"` // "system", "en" or "zh-Hans"
 }
 
 // Host returns the host of an id.
@@ -111,7 +124,9 @@ func Load() (State, error) {
 func loadFrom(path string) (State, error) {
 	b, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
-		return State{}, nil
+		var s State
+		s.fillDefaults()
+		return s, nil
 	}
 	if err != nil {
 		return State{}, err
@@ -129,7 +144,37 @@ func loadFrom(path string) (State, error) {
 			h.Name = defaultName(*h)
 		}
 	}
+	s.fillDefaults()
 	return s, nil
+}
+
+// fillDefaults gives the settings their defaults, and clamps what a file
+// may have got wrong.
+func (s *State) fillDefaults() {
+	switch s.Appearance {
+	case "system", "light", "dark":
+	default:
+		s.Appearance = "system"
+	}
+	if s.LightTheme == "" {
+		s.LightTheme = "paper"
+	}
+	if s.DarkTheme == "" {
+		s.DarkTheme = "paper"
+	}
+	if s.FontSize < 8 || s.FontSize > 36 {
+		s.FontSize = DefaultFontSize
+	}
+	switch s.Cursor {
+	case "block", "bar", "underline":
+	default:
+		s.Cursor = "block"
+	}
+	switch s.Language {
+	case "system", "en", "zh-Hans":
+	default:
+		s.Language = "system"
+	}
 }
 
 // Save writes the state, replacing the file in one step.

@@ -79,6 +79,10 @@ type App struct {
 	menuBar     *mygo.Menu
 	focusWanted string
 
+	setWin  *mygo.Window
+	ss      settingsState
+	applied settingsValues
+
 	askMu sync.Mutex // one host key question at a time
 }
 
@@ -106,6 +110,10 @@ func (a *App) load() {
 	}
 	a.state = s
 	a.selected = s.Selected
+	a.state.LightTheme = knownTheme(a.state.LightTheme)
+	a.state.DarkTheme = knownTheme(a.state.DarkTheme)
+	setLooks(a.state.LightTheme, a.state.DarkTheme)
+	a.applied = valuesOf(a.state)
 	if dir, err := store.Dir(); err == nil {
 		a.keys = kh.Store{Path: filepath.Join(dir, "known_hosts")}
 	}
@@ -291,11 +299,14 @@ func (a *App) beginConnect(h store.Host, password string) {
 			return
 		}
 		var term *terminal.Terminal
+		light, dark := termThemes()
 		term, err = terminal.New(terminal.Options{
 			Conn:         sess,
-			Font:         terminal.Font{Size: 13},
-			Theme:        lightTermTheme,
-			DarkTheme:    darkTermTheme,
+			Font:         a.termFont(),
+			Theme:        light,
+			DarkTheme:    dark,
+			Cursor:       a.termCursor(),
+			NoBlink:      a.state.NoBlink,
 			Transparent:  true,
 			Padding:      terminal.Padding{X: 16, Y: 6},
 			PaddingColor: terminal.PaddingExtend,
@@ -459,6 +470,22 @@ func (a *App) answerHostKey(trust bool) {
 }
 
 func passwordKey(h store.Host) string { return "host-" + h.ID }
+
+// termFont is the terminal's text, as the settings choose it.
+func (a *App) termFont() terminal.Font {
+	return terminal.Font{Size: float32(a.state.FontSize)}
+}
+
+// termCursor is the cursor shape the settings choose.
+func (a *App) termCursor() terminal.CursorStyle {
+	switch a.state.Cursor {
+	case "bar":
+		return terminal.CursorBar
+	case "underline":
+		return terminal.CursorUnderline
+	}
+	return terminal.CursorBlock
+}
 
 func (a *App) forgetSavedPassword(h store.Host) {
 	_ = mygo.Secrets.Delete(passwordKey(h))

@@ -117,6 +117,26 @@ func dangerButton(c *ui.Context, key, label string, pal *palette) bool {
 	return b.Clicked()
 }
 
+// toggle is sshgo's switch: a track that shows on and off alike, the
+// accent's when on, with a knob that springs across.
+func toggle(c *ui.Context, on *bool, pal *palette) ui.Element {
+	sw := ui.SwitchBase(c, on).Size(38, 22).Radius(11).Padding(2).Shrink(0)
+	track := pal.text.Alpha(0.14)
+	if pal.dark {
+		track = ui.RGBA(255, 255, 255, 0.2)
+	}
+	if *on {
+		track = pal.accent
+	}
+	sw.Background(sw.AnimateColor("track", track, ui.Animation{Duration: 150 * time.Millisecond}))
+	x := sw.AnimateTo("knob", b2f(*on)*16, ui.Animation{Spring: ui.SpringOptions{Duration: 260 * time.Millisecond, Bounce: 0.15}})
+	sw.Children(func() {
+		ui.Box(c).Size(18, 18).Radius(9).Background(ui.Hex("#ffffff")).Translate(x, 0).
+			Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.22)).Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.06))
+	})
+	return sw
+}
+
 // iconButton is a quiet square button with an icon, as in a toolbar.
 func iconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette, fn func()) {
 	b := ui.ButtonBase(c.Key(key)).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).Label(label).Tooltip(label)

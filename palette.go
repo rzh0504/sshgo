@@ -145,13 +145,6 @@ var hostColors = map[string][2]ui.Color{
 
 var hostColorNames = []string{"red", "orange", "amber", "green", "teal", "blue", "purple", "pink"}
 
-func paletteFor(c *ui.Context) *palette {
-	if c.Theme().Dark {
-		return &darkPalette
-	}
-	return &lightPalette
-}
-
 // hostColor is the color that marks a host.
 func hostColor(pal *palette, name string) ui.Color {
 	f := fnv.New32a()
