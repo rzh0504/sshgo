@@ -258,12 +258,9 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 				ui.Icon(c, serverIcon).Size(15, 15).TextColor(hostColor(pal, h.Name)).Shrink(0)
 				ui.Text(c, h.Name).FontSize(14).FontWeight(600).TextColor(pal.text).SingleLine().Ellipsis("…").
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
-				ui.Text(c, h.Address()).FontSize(12).TextColor(pal.textFaint).SingleLine().Ellipsis("…").
-					Shrink(2).MinWidth(0).Margin(0, 0, 0, 8)
 			}
 			ui.Spacer(c)
 			if hasHost {
-				a.headerState(c, pal, h)
 				if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
 					iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
 				}
@@ -271,33 +268,6 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 			windowControls(c, pal, a.win)
 		})
 		ui.Column(c).Grow(1).MinHeight(0).Children(func() { a.cardBody(c, pal) })
-	})
-}
-
-func (a *App) headerState(c *ui.Context, pal *palette, h store.Host) {
-	rt := a.runtimes[h.ID]
-	if rt == nil {
-		return
-	}
-	var dot ui.Color
-	var label string
-	switch rt.state {
-	case connConnecting:
-		ui.Spinner(c).Size(12, 12).Margin(0, 6, 0, 6)
-		return
-	case connConnected:
-		dot, label = okColor(pal), locales.StatusConnected()
-	case connEnded:
-		dot, label = pal.attention, locales.StatusEnded()
-	case connFailed:
-		dot, label = pal.danger, locales.StatusDisconnected()
-	default:
-		return
-	}
-	ui.Row(c).Height(22).Padding(0, 8, 0, 7).Gap(6).Radius(11).AlignItems(ui.Center).Background(pal.chip).
-		Margin(0, 0, 0, 4).Children(func() {
-		ui.Box(c).Size(6, 6).Radius(3).Background(dot).Shrink(0)
-		ui.Text(c, label).FontSize(11.5).FontWeight(500).TextColor(pal.textMuted).SingleLine()
 	})
 }
 
