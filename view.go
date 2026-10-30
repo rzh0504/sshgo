@@ -119,6 +119,8 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	ui.Row(c).Height(topBar).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, lead(bar)).Gap(2).DragWindow().Children(func() {
 		iconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
 		iconButton(c, "new-host", plusIcon, locales.ActionNewHost(), pal, func() { a.openEditor("") })
+		ui.Spacer(c)
+		ui.Text(c, "sshgo").FontSize(13.5).FontWeight(650).TextColor(pal.text).SingleLine().Padding(0, 4, 0, 2)
 	})
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
 		if len(a.state.Hosts) == 0 {
@@ -250,8 +252,6 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 					Shrink(1).MaxWidth(280).Margin(0, 8, 0, 0)
 				ui.Text(c, h.Address()).FontSize(12).TextColor(pal.textFaint).SingleLine().Ellipsis("…").
 					Shrink(2).MinWidth(0).Margin(0, 8, 0, 0)
-			} else {
-				ui.Text(c, "sshgo").FontSize(14).FontWeight(600).TextColor(pal.text)
 			}
 			ui.Spacer(c)
 			if hasHost {

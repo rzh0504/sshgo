@@ -41,6 +41,22 @@ func TestUnknownThemeFallsBackToPaper(t *testing.T) {
 	}
 }
 
+func TestDarkLooksAreDerivedFromTheirTheme(t *testing.T) {
+	seen := map[ui.Color]string{}
+	for _, id := range themeIDs {
+		l := themeLook(id, true)
+		first := l.base.Stops[0].Color
+		lum := 0.299*float32(first.R) + 0.587*float32(first.G) + 0.114*float32(first.B)
+		if lum > 60 {
+			t.Errorf("theme %q dark wash is not dark: %v", id, first)
+		}
+		if other, ok := seen[first]; ok {
+			t.Errorf("themes %q and %q start from the same dark wash %v", id, other, first)
+		}
+		seen[first] = id
+	}
+}
+
 func TestCursorSequence(t *testing.T) {
 	cases := []struct {
 		style   string

@@ -110,9 +110,8 @@ func (a *App) load() {
 	}
 	a.state = s
 	a.selected = s.Selected
-	a.state.LightTheme = knownTheme(a.state.LightTheme)
-	a.state.DarkTheme = knownTheme(a.state.DarkTheme)
-	setLooks(a.state.LightTheme, a.state.DarkTheme)
+	a.state.Theme = knownTheme(a.state.Theme)
+	setLooks(a.state.Theme)
 	a.applied = valuesOf(a.state)
 	if dir, err := store.Dir(); err == nil {
 		a.keys = kh.Store{Path: filepath.Join(dir, "known_hosts")}

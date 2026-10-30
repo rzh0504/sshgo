@@ -35,9 +35,12 @@ type looks struct {
 
 var currentLooks atomic.Pointer[looks]
 
-// setLooks builds the looks of the themes, and makes them the window's.
-func setLooks(lightTheme, darkTheme string) *looks {
-	l := &looks{light: themeLook(lightTheme, false), dark: themeLook(darkTheme, true)}
+// setLooks builds one theme's light and dark looks, and makes them the
+// window's. The dark one is the same theme with its wash darkened and its
+// colors tuned for a dark window, not another theme.
+func setLooks(theme string) *looks {
+	id := knownTheme(theme)
+	l := &looks{light: themeLook(id, false), dark: themeLook(id, true)}
 	currentLooks.Store(l)
 	return l
 }
@@ -96,17 +99,11 @@ var themeLooks = func() map[string][2]*look {
 }()
 
 func buildLook(id string, w wash, dark bool) *look {
-	hexes, glow := w.light, w.lightGlow
+	l := &look{}
 	if dark {
-		hexes, glow = w.dark, w.darkGlow
-	}
-	stops := make([]ui.GradientStop, len(hexes))
-	for i, h := range hexes {
-		stops[i] = ui.GradientStop{Color: ui.Hex(h), At: float32(i) / float32(len(hexes)-1)}
-	}
-	l := &look{
-		base: ui.LinearGradient{Angle: 180, Oklab: true, Stops: stops},
-		glow: glowOf(glow),
+		l.base = ui.LinearGradient{Angle: 180, Oklab: true, Stops: darkWash(w.light)}
+	} else {
+		l.base = ui.LinearGradient{Angle: 180, Oklab: true, Stops: lightWash(w.light)}
 	}
 	if id == "plain" {
 		// kero's own colors, on its card's white or gray.
@@ -114,12 +111,45 @@ func buildLook(id string, w wash, dark bool) *look {
 		if dark {
 			l.term, l.pal = darkTermTheme, &darkPalette
 		}
+		if dark {
+			l.glow = glowOf(ui.RGBA(0, 0, 0, 0))
+		} else {
+			l.glow = glowOf(w.lightGlow)
+		}
 		return l
 	}
 	var accent ui.Color
 	l.term, accent = toneTheme(w.tone, dark)
 	l.pal = tinted(l.term, accent, dark)
+	if dark {
+		// The theme's own accent lights the dark wash.
+		l.glow = glowOf(accent.Alpha(0.18))
+	} else {
+		l.glow = glowOf(w.lightGlow)
+	}
 	return l
+}
+
+func lightWash(hexes []string) []ui.GradientStop {
+	stops := make([]ui.GradientStop, len(hexes))
+	for i, h := range hexes {
+		stops[i] = ui.GradientStop{Color: ui.Hex(h), At: float32(i) / float32(len(hexes)-1)}
+	}
+	return stops
+}
+
+// darkWash darkens a light wash into a dark one of the same hues: the
+// necessary adjustment for dark windows, not a theme of its own.
+func darkWash(hexes []string) []ui.GradientStop {
+	stops := make([]ui.GradientStop, 3)
+	for i := range stops {
+		src := hexes[i*(len(hexes)-1)/2]
+		_, chroma, hue := oklch(ui.Hex(src))
+		chroma = min(chroma*1.5, 0.03)
+		l := 0.068 + float32(i)*0.005
+		stops[i] = ui.GradientStop{Color: ui.Oklch(l, chroma, hue), At: float32(i) / 2}
+	}
+	return stops
 }
 
 func glowOf(c ui.Color) ui.LinearGradient {
@@ -252,60 +282,70 @@ func toneTheme(t tone, dark bool) (*terminal.Theme, ui.Color) {
 	return th, accent
 }
 
+// oklch returns a color's lightness, chroma and hue, as CSS's oklch().
+func oklch(c ui.Color) (l, ch, h float32) {
+	lin := func(v uint8) float64 {
+		x := float64(v) / 255
+		if x <= 0.04045 {
+			return x / 12.92
+		}
+		return math.Pow((x+0.055)/1.055, 2.4)
+	}
+	r, g, b := lin(c.R), lin(c.G), lin(c.B)
+	lc := math.Cbrt(0.4122214708*r + 0.5363325363*g + 0.0514459929*b)
+	mc := math.Cbrt(0.2119034982*r + 0.6806995451*g + 0.1073969566*b)
+	sc := math.Cbrt(0.0883024619*r + 0.2817188376*g + 0.6299787005*b)
+	L := 0.2104542553*lc + 0.7936177850*mc - 0.0040720468*sc
+	A := 1.9779984951*lc - 2.4285922050*mc + 0.4505937099*sc
+	B := 0.0259040371*lc + 0.7827717662*mc - 0.8086757660*sc
+	hue := math.Mod(math.Atan2(B, A)*180/math.Pi+360, 360)
+	return float32(L), float32(math.Hypot(A, B)), float32(hue)
+}
+
 type wash struct {
-	light, dark         []string
-	lightGlow, darkGlow ui.Color
-	tone                tone
+	light     []string
+	lightGlow ui.Color
+	tone      tone
 }
 
 var washTable = map[string]wash{
 	"rex": {
 		light: []string{"#ebe0f3", "#f3e7f1", "#f7eee4", "#f6efcf"}, lightGlow: ui.RGBA(247, 220, 241, 0.75),
-		dark: []string{"#240f1d", "#26111a", "#271610"}, darkGlow: ui.RGBA(142, 58, 110, 0.3),
 		tone: tone{350, 1, 0.95, 350},
 	},
 	"mist": {
 		light: []string{"#e3e9f4", "#ebeff6", "#f1f2f3", "#f2f1ec"}, lightGlow: ui.RGBA(210, 225, 248, 0.75),
-		dark: []string{"#0c1628", "#0d1827", "#111b23"}, darkGlow: ui.RGBA(46, 91, 166, 0.3),
 		tone: tone{255, 1, 0.8, 255},
 	},
 	"meadow": {
 		light: []string{"#e2eee5", "#ebf2e7", "#f3f2e2", "#f5f0d6"}, lightGlow: ui.RGBA(214, 240, 222, 0.75),
-		dark: []string{"#081c0d", "#101d0c", "#1b1c0b"}, darkGlow: ui.RGBA(6, 113, 50, 0.3),
 		tone: tone{140, 1, 0.9, 140},
 	},
 	"dusk": {
 		light: []string{"#e4dbf3", "#efdeee", "#f6e3dc", "#f7e6cf"}, lightGlow: ui.RGBA(246, 206, 222, 0.8),
-		dark: []string{"#190f2e", "#260f24", "#2d140b"}, darkGlow: ui.RGBA(125, 65, 138, 0.3),
 		tone: tone{315, 1, 1.1, 315},
 	},
 	"tide": {
 		light: []string{"#dbebef", "#e3eff1", "#ecf3f0", "#f2f2e8"}, lightGlow: ui.RGBA(194, 232, 238, 0.75),
-		dark: []string{"#001b22", "#001e1f", "#0b1e1b"}, darkGlow: ui.RGBA(0, 112, 128, 0.3),
 		tone: tone{205, 1, 0.85, 205},
 	},
 	"apricot": {
 		light: []string{"#f5e1d6", "#f8e7dc", "#f8eedf", "#f6f0da"}, lightGlow: ui.RGBA(252, 212, 194, 0.78),
-		dark: []string{"#2a1207", "#291507", "#25190a"}, darkGlow: ui.RGBA(151, 62, 22, 0.3),
 		tone: tone{50, 1, 1.05, 50},
 	},
 	"aurora": {
 		light: []string{"#dbefe8", "#e1ebf2", "#e8e4f4", "#f0e6f1"}, lightGlow: ui.RGBA(198, 238, 224, 0.75),
-		dark: []string{"#001f13", "#06192b", "#1e122a"}, darkGlow: ui.RGBA(0, 115, 75, 0.3),
 		tone: tone{170, 1, 1.15, 170},
 	},
 	"dune": {
 		light: []string{"#ede4d8", "#f1e9de", "#f4eee4", "#f3efe8"}, lightGlow: ui.RGBA(242, 222, 194, 0.7),
-		dark: []string{"#22190b", "#211a0e", "#201b12"}, darkGlow: ui.RGBA(135, 79, 0, 0.3),
 		tone: tone{80, 0.7, 0.55, 80},
 	},
 	"paper": {
 		light: []string{"#f6f6f7", "#f7f7f8", "#f8f8f8"}, lightGlow: ui.RGBA(255, 255, 255, 0),
-		dark: []string{"#141416", "#151517", "#161618"}, darkGlow: ui.RGBA(90, 120, 200, 0.1),
 		tone: tone{260, 0, 0.9, 262},
 	},
 	"plain": {
 		light: []string{"#eceef4", "#eceef4"}, lightGlow: ui.RGBA(0, 0, 0, 0),
-		dark: []string{"#141418", "#141418"}, darkGlow: ui.RGBA(0, 0, 0, 0),
 	},
 }

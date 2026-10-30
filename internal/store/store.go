@@ -64,12 +64,16 @@ type State struct {
 	SidebarHidden bool    `json:"sidebarHidden,omitempty"`
 
 	Appearance string  `json:"appearance,omitempty"` // "system", "light" or "dark"
-	LightTheme string  `json:"lightTheme,omitempty"`
-	DarkTheme  string  `json:"darkTheme,omitempty"`
+	Theme      string  `json:"theme,omitempty"`      // one theme for both appearances
 	FontSize   float64 `json:"fontSize,omitempty"`
 	Cursor     string  `json:"cursor,omitempty"` // "block", "bar" or "underline"
 	NoBlink    bool    `json:"noBlink,omitempty"`
 	Language   string  `json:"language,omitempty"` // "system", "en" or "zh-Hans"
+
+	// LightTheme and DarkTheme are the first build's separate themes, read
+	// to migrate them to Theme and then cleared.
+	LightTheme string `json:"lightTheme,omitempty"`
+	DarkTheme  string `json:"darkTheme,omitempty"`
 }
 
 // Host returns the host of an id.
@@ -156,12 +160,17 @@ func (s *State) fillDefaults() {
 	default:
 		s.Appearance = "system"
 	}
-	if s.LightTheme == "" {
-		s.LightTheme = "paper"
+	if s.Theme == "" {
+		switch {
+		case s.LightTheme != "":
+			s.Theme = s.LightTheme
+		case s.DarkTheme != "":
+			s.Theme = s.DarkTheme
+		default:
+			s.Theme = "paper"
+		}
 	}
-	if s.DarkTheme == "" {
-		s.DarkTheme = "paper"
-	}
+	s.LightTheme, s.DarkTheme = "", ""
 	if s.FontSize < 8 || s.FontSize > 36 {
 		s.FontSize = DefaultFontSize
 	}

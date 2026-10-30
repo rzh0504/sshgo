@@ -3,6 +3,7 @@ package store
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestLoadMissingIsEmpty(t *testing.T) {
 	if len(s.Hosts) != 0 || s.Selected != "" {
 		t.Fatalf("state = %+v, want empty hosts", s)
 	}
-	if s.Appearance != "system" || s.LightTheme != "paper" || s.DarkTheme != "paper" ||
+	if s.Appearance != "system" || s.Theme != "paper" ||
 		s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
@@ -30,8 +31,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		Selected:     "b",
 		SidebarWidth: 300,
 		Appearance:   "dark",
-		LightTheme:   "mist",
-		DarkTheme:    "dusk",
+		Theme:        "mist",
 		FontSize:     15,
 		Cursor:       "bar",
 		NoBlink:      true,
@@ -47,9 +47,12 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	if got.Selected != want.Selected || got.SidebarWidth != want.SidebarWidth {
 		t.Fatalf("state = %+v, want %+v", got, want)
 	}
-	if got.Appearance != want.Appearance || got.LightTheme != want.LightTheme || got.DarkTheme != want.DarkTheme ||
+	if got.Appearance != want.Appearance || got.Theme != want.Theme ||
 		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink || got.Language != want.Language {
 		t.Fatalf("settings = %+v, want %+v", got, want)
+	}
+	if got.LightTheme != "" || got.DarkTheme != "" {
+		t.Fatalf("legacy themes = %q, %q, want them cleared", got.LightTheme, got.DarkTheme)
 	}
 	if len(got.Hosts) != len(want.Hosts) {
 		t.Fatalf("len(hosts) = %d, want %d", len(got.Hosts), len(want.Hosts))
@@ -95,8 +98,35 @@ func TestLoadFillsDefaults(t *testing.T) {
 	if s.Hosts[0].Name != "me@dev" {
 		t.Fatalf("name = %q, want me@dev", s.Hosts[0].Name)
 	}
-	if s.FontSize != DefaultFontSize || s.Cursor != "block" {
+	if s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Theme != "paper" {
 		t.Fatalf("settings = %+v, want the defaults", s)
+	}
+}
+
+func TestLoadMigratesSeparateThemes(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	if err := os.WriteFile(path, []byte(`{"lightTheme":"mist","darkTheme":"dusk"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := loadFrom(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Theme != "mist" {
+		t.Fatalf("theme = %q, want mist", s.Theme)
+	}
+	if s.LightTheme != "" || s.DarkTheme != "" {
+		t.Fatalf("legacy themes = %q, %q, want them cleared", s.LightTheme, s.DarkTheme)
+	}
+	if err := s.saveTo(path); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), "lightTheme") || strings.Contains(string(b), "darkTheme") {
+		t.Fatalf("state = %s, want the legacy themes gone", b)
 	}
 }
 

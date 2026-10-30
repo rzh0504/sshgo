@@ -890,31 +890,21 @@ func (msgs Messages) SetThemeDark() string {
 	return Catalog.Format(msgs.locale, "setThemeDark", nil)
 }
 
-// SetLightTheme says "Light theme"
+// SetTheme says "Theme"
 // in the language the app shows.
-func SetLightTheme() string { return In(i18n.Locale()).SetLightTheme() }
+func SetTheme() string { return In(i18n.Locale()).SetTheme() }
 
-// SetLightTheme says "Light theme"
+// SetTheme says "Theme"
 // in the language of msgs.
-func (msgs Messages) SetLightTheme() string {
-	return Catalog.Format(msgs.locale, "setLightTheme", nil)
+func (msgs Messages) SetTheme() string {
+	return Catalog.Format(msgs.locale, "setTheme", nil)
 }
 
-// SetDarkTheme says "Dark theme"
-// in the language the app shows.
-func SetDarkTheme() string { return In(i18n.Locale()).SetDarkTheme() }
-
-// SetDarkTheme says "Dark theme"
-// in the language of msgs.
-func (msgs Messages) SetDarkTheme() string {
-	return Catalog.Format(msgs.locale, "setDarkTheme", nil)
-}
-
-// SetThemeDetail says "A theme colors the window and its terminals."
+// SetThemeDetail says "One theme colors the window and its terminals; dark windows adjust it rather than use a separate theme."
 // in the language the app shows.
 func SetThemeDetail() string { return In(i18n.Locale()).SetThemeDetail() }
 
-// SetThemeDetail says "A theme colors the window and its terminals."
+// SetThemeDetail says "One theme colors the window and its terminals; dark windows adjust it rather than use a separate theme."
 // in the language of msgs.
 func (msgs Messages) SetThemeDetail() string {
 	return Catalog.Format(msgs.locale, "setThemeDetail", nil)

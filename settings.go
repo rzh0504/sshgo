@@ -47,16 +47,16 @@ func (s *settingsState) scrollOf(id string) *ui.ScrollState {
 
 // settingsValues are the settings a change applies, comparable as a set.
 type settingsValues struct {
-	appearance, lightTheme, darkTheme string
-	fontSize                          float64
-	cursor                            string
-	noBlink                           bool
-	language                          string
+	appearance, theme string
+	fontSize          float64
+	cursor            string
+	noBlink           bool
+	language          string
 }
 
 func valuesOf(s store.State) settingsValues {
 	return settingsValues{
-		appearance: s.Appearance, lightTheme: s.LightTheme, darkTheme: s.DarkTheme,
+		appearance: s.Appearance, theme: s.Theme,
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 	}
 }
@@ -253,20 +253,14 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 				[]string{locales.SetThemeSystem(), locales.SetThemeLight(), locales.SetThemeDark()})
 		})
 	})
-	for _, dark := range []bool{false, true} {
-		ui.Column(c).Gap(8).Children(func() {
-			title := locales.SetLightTheme()
-			if dark {
-				title = locales.SetDarkTheme()
+	ui.Column(c).Gap(8).Children(func() {
+		groupTitle(c, pal, locales.SetTheme())
+		ui.Row(c).Gap(12).Wrap().Children(func() {
+			for _, id := range themeIDs {
+				a.themeTile(c, pal, id)
 			}
-			groupTitle(c, pal, title)
-			ui.Row(c).Gap(12).Wrap().Children(func() {
-				for _, id := range themeIDs {
-					a.themeTile(c, pal, id, dark)
-				}
-			})
 		})
-	}
+	})
 	ui.Text(c, locales.SetThemeDetail()).FontSize(12).TextColor(pal.textFaint).Padding(0, 4).LineHeight(1.4)
 }
 
@@ -296,19 +290,15 @@ func themeName(id string) string {
 	return id
 }
 
-// themeTile previews a theme as windows of an appearance show it, choosing
-// it for them on a click.
-func (a *App) themeTile(c *ui.Context, pal *palette, id string, dark bool) {
-	slot, windows := &a.state.LightTheme, locales.SetLightTheme()
-	key := "theme-light-" + id
-	if dark {
-		slot, windows, key = &a.state.DarkTheme, locales.SetDarkTheme(), "theme-dark-"+id
-	}
-	sel := *slot == id
+// themeTile previews a theme as the window's appearance shows it, choosing
+// it for both light and dark windows on a click.
+func (a *App) themeTile(c *ui.Context, pal *palette, id string) {
+	dark := c.Theme().Dark
+	sel := a.state.Theme == id
 	name := themeName(id)
-	tile := ui.ButtonBase(c.Key(key)).Column().Width(124).Gap(8).AlignItems(ui.Stretch).Label(name + ", " + windows)
+	tile := ui.ButtonBase(c.Key("theme-" + id)).Column().Width(124).Gap(8).AlignItems(ui.Stretch).Label(name)
 	if tile.Clicked() {
-		*slot = id
+		a.state.Theme = id
 	}
 	tile.Children(func() {
 		l := themeLook(id, dark)
@@ -435,8 +425,8 @@ func (a *App) applySettings() {
 	a.applied = now
 	a.saveState()
 
-	if old.lightTheme != now.lightTheme || old.darkTheme != now.darkTheme {
-		setLooks(now.lightTheme, now.darkTheme)
+	if old.theme != now.theme {
+		setLooks(now.theme)
 		light, dark := termThemes()
 		for _, rt := range a.runtimes {
 			if rt.term != nil {
