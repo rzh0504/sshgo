@@ -123,7 +123,7 @@ func buildLook(id string, w wash, dark bool) *look {
 	l.pal = tinted(l.term, accent, dark)
 	if dark {
 		// The theme's own accent lights the dark wash.
-		l.glow = glowOf(accent.Alpha(0.18))
+		l.glow = glowOf(accent.Alpha(0.2))
 	} else {
 		l.glow = glowOf(w.lightGlow)
 	}
@@ -145,8 +145,8 @@ func darkWash(hexes []string) []ui.GradientStop {
 	for i := range stops {
 		src := hexes[i*(len(hexes)-1)/2]
 		_, chroma, hue := oklch(ui.Hex(src))
-		chroma = min(chroma*1.5, 0.03)
-		l := 0.068 + float32(i)*0.005
+		chroma = min(chroma*2.2, 0.05)
+		l := 0.13 + float32(i)*0.008
 		stops[i] = ui.GradientStop{Color: ui.Oklch(l, chroma, hue), At: float32(i) / 2}
 	}
 	return stops

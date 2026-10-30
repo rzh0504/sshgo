@@ -234,16 +234,6 @@ func (msgs Messages) SidebarNoHosts() string {
 	return Catalog.Format(msgs.locale, "sidebarNoHosts", nil)
 }
 
-// SidebarAddHint says "Add a host to get started."
-// in the language the app shows.
-func SidebarAddHint() string { return In(i18n.Locale()).SidebarAddHint() }
-
-// SidebarAddHint says "Add a host to get started."
-// in the language of msgs.
-func (msgs Messages) SidebarAddHint() string {
-	return Catalog.Format(msgs.locale, "sidebarAddHint", nil)
-}
-
 // SidebarConnectedCount says "{count, plural, =0 {None connected} one {# connected} other {# connected}}"
 // in the language the app shows.
 func SidebarConnectedCount(count int) string { return In(i18n.Locale()).SidebarConnectedCount(count) }
@@ -304,26 +294,6 @@ func (msgs Messages) EmptyTitle() string {
 	return Catalog.Format(msgs.locale, "emptyTitle", nil)
 }
 
-// EmptyDetail says "Add a host with its address and password, then work in its terminal right here."
-// in the language the app shows.
-func EmptyDetail() string { return In(i18n.Locale()).EmptyDetail() }
-
-// EmptyDetail says "Add a host with its address and password, then work in its terminal right here."
-// in the language of msgs.
-func (msgs Messages) EmptyDetail() string {
-	return Catalog.Format(msgs.locale, "emptyDetail", nil)
-}
-
-// EmptyHint says "Passwords stay in the system credential store when you ask."
-// in the language the app shows.
-func EmptyHint() string { return In(i18n.Locale()).EmptyHint() }
-
-// EmptyHint says "Passwords stay in the system credential store when you ask."
-// in the language of msgs.
-func (msgs Messages) EmptyHint() string {
-	return Catalog.Format(msgs.locale, "emptyHint", nil)
-}
-
 // HostIdleTitle says "Connect to {name}"
 // in the language the app shows.
 func HostIdleTitle(name string) string { return In(i18n.Locale()).HostIdleTitle(name) }
@@ -334,16 +304,6 @@ func (msgs Messages) HostIdleTitle(name string) string {
 	return Catalog.Format(msgs.locale, "hostIdleTitle", map[string]any{"name": name})
 }
 
-// HostIdleDetail says "Open an SSH session to {address}."
-// in the language the app shows.
-func HostIdleDetail(address string) string { return In(i18n.Locale()).HostIdleDetail(address) }
-
-// HostIdleDetail says "Open an SSH session to {address}."
-// in the language of msgs.
-func (msgs Messages) HostIdleDetail(address string) string {
-	return Catalog.Format(msgs.locale, "hostIdleDetail", map[string]any{"address": address})
-}
-
 // ConnectingTitle says "Connecting to {name}…"
 // in the language the app shows.
 func ConnectingTitle(name string) string { return In(i18n.Locale()).ConnectingTitle(name) }
@@ -352,16 +312,6 @@ func ConnectingTitle(name string) string { return In(i18n.Locale()).ConnectingTi
 // in the language of msgs.
 func (msgs Messages) ConnectingTitle(name string) string {
 	return Catalog.Format(msgs.locale, "connectingTitle", map[string]any{"name": name})
-}
-
-// ConnectingDetail says "{address}"
-// in the language the app shows.
-func ConnectingDetail(address string) string { return In(i18n.Locale()).ConnectingDetail(address) }
-
-// ConnectingDetail says "{address}"
-// in the language of msgs.
-func (msgs Messages) ConnectingDetail(address string) string {
-	return Catalog.Format(msgs.locale, "connectingDetail", map[string]any{"address": address})
 }
 
 // FailedTitle says "Could not connect"
@@ -414,16 +364,6 @@ func PasswordEmptyError() string { return In(i18n.Locale()).PasswordEmptyError()
 // in the language of msgs.
 func (msgs Messages) PasswordEmptyError() string {
 	return Catalog.Format(msgs.locale, "passwordEmptyError", nil)
-}
-
-// PasswordSavedNote says "A password is saved for this host."
-// in the language the app shows.
-func PasswordSavedNote() string { return In(i18n.Locale()).PasswordSavedNote() }
-
-// PasswordSavedNote says "A password is saved for this host."
-// in the language of msgs.
-func (msgs Messages) PasswordSavedNote() string {
-	return Catalog.Format(msgs.locale, "passwordSavedNote", nil)
 }
 
 // PasswordSaveLabel says "Save password in the system credential store"
@@ -526,16 +466,6 @@ func EditorEditTitle() string { return In(i18n.Locale()).EditorEditTitle() }
 // in the language of msgs.
 func (msgs Messages) EditorEditTitle() string {
 	return Catalog.Format(msgs.locale, "editorEditTitle", nil)
-}
-
-// EditorDetail says "sshgo signs in over SSH with a password."
-// in the language the app shows.
-func EditorDetail() string { return In(i18n.Locale()).EditorDetail() }
-
-// EditorDetail says "sshgo signs in over SSH with a password."
-// in the language of msgs.
-func (msgs Messages) EditorDetail() string {
-	return Catalog.Format(msgs.locale, "editorDetail", nil)
 }
 
 // FieldName says "Name"
@@ -850,16 +780,6 @@ func (msgs Messages) SetAppearance() string {
 	return Catalog.Format(msgs.locale, "setAppearance", nil)
 }
 
-// SetAppearanceDetail says "Light, dark, or the system's choice."
-// in the language the app shows.
-func SetAppearanceDetail() string { return In(i18n.Locale()).SetAppearanceDetail() }
-
-// SetAppearanceDetail says "Light, dark, or the system's choice."
-// in the language of msgs.
-func (msgs Messages) SetAppearanceDetail() string {
-	return Catalog.Format(msgs.locale, "setAppearanceDetail", nil)
-}
-
 // SetThemeSystem says "System"
 // in the language the app shows.
 func SetThemeSystem() string { return In(i18n.Locale()).SetThemeSystem() }
@@ -898,16 +818,6 @@ func SetTheme() string { return In(i18n.Locale()).SetTheme() }
 // in the language of msgs.
 func (msgs Messages) SetTheme() string {
 	return Catalog.Format(msgs.locale, "setTheme", nil)
-}
-
-// SetThemeDetail says "One theme colors the window and its terminals; dark windows adjust it rather than use a separate theme."
-// in the language the app shows.
-func SetThemeDetail() string { return In(i18n.Locale()).SetThemeDetail() }
-
-// SetThemeDetail says "One theme colors the window and its terminals; dark windows adjust it rather than use a separate theme."
-// in the language of msgs.
-func (msgs Messages) SetThemeDetail() string {
-	return Catalog.Format(msgs.locale, "setThemeDetail", nil)
 }
 
 // ThemePaper says "Paper"
@@ -1020,16 +930,6 @@ func (msgs Messages) SetFontSize() string {
 	return Catalog.Format(msgs.locale, "setFontSize", nil)
 }
 
-// SetFontSizeDetail says "The terminal's text, applied to open sessions at once."
-// in the language the app shows.
-func SetFontSizeDetail() string { return In(i18n.Locale()).SetFontSizeDetail() }
-
-// SetFontSizeDetail says "The terminal's text, applied to open sessions at once."
-// in the language of msgs.
-func (msgs Messages) SetFontSizeDetail() string {
-	return Catalog.Format(msgs.locale, "setFontSizeDetail", nil)
-}
-
 // SetCursor says "Cursor"
 // in the language the app shows.
 func SetCursor() string { return In(i18n.Locale()).SetCursor() }
@@ -1038,16 +938,6 @@ func SetCursor() string { return In(i18n.Locale()).SetCursor() }
 // in the language of msgs.
 func (msgs Messages) SetCursor() string {
 	return Catalog.Format(msgs.locale, "setCursor", nil)
-}
-
-// SetCursorDetail says "The cursor's shape in the terminal."
-// in the language the app shows.
-func SetCursorDetail() string { return In(i18n.Locale()).SetCursorDetail() }
-
-// SetCursorDetail says "The cursor's shape in the terminal."
-// in the language of msgs.
-func (msgs Messages) SetCursorDetail() string {
-	return Catalog.Format(msgs.locale, "setCursorDetail", nil)
 }
 
 // CursorBlock says "Block"
@@ -1090,16 +980,6 @@ func (msgs Messages) SetCursorBlink() string {
 	return Catalog.Format(msgs.locale, "setCursorBlink", nil)
 }
 
-// SetCursorBlinkDetail says "Whether the cursor blinks when a program sets no style."
-// in the language the app shows.
-func SetCursorBlinkDetail() string { return In(i18n.Locale()).SetCursorBlinkDetail() }
-
-// SetCursorBlinkDetail says "Whether the cursor blinks when a program sets no style."
-// in the language of msgs.
-func (msgs Messages) SetCursorBlinkDetail() string {
-	return Catalog.Format(msgs.locale, "setCursorBlinkDetail", nil)
-}
-
 // SetLanguage says "Interface language"
 // in the language the app shows.
 func SetLanguage() string { return In(i18n.Locale()).SetLanguage() }
@@ -1108,16 +988,6 @@ func SetLanguage() string { return In(i18n.Locale()).SetLanguage() }
 // in the language of msgs.
 func (msgs Messages) SetLanguage() string {
 	return Catalog.Format(msgs.locale, "setLanguage", nil)
-}
-
-// SetLanguageDetail says "The language of the windows, menus and dialogs."
-// in the language the app shows.
-func SetLanguageDetail() string { return In(i18n.Locale()).SetLanguageDetail() }
-
-// SetLanguageDetail says "The language of the windows, menus and dialogs."
-// in the language of msgs.
-func (msgs Messages) SetLanguageDetail() string {
-	return Catalog.Format(msgs.locale, "setLanguageDetail", nil)
 }
 
 // LanguageSystem says "System"
@@ -1138,16 +1008,6 @@ func AboutVersion(version string) string { return In(i18n.Locale()).AboutVersion
 // in the language of msgs.
 func (msgs Messages) AboutVersion(version string) string {
 	return Catalog.Format(msgs.locale, "aboutVersion", map[string]any{"version": version})
-}
-
-// AboutEngine says "Native UI by MyGo, terminal by Ghostty's libghostty-vt."
-// in the language the app shows.
-func AboutEngine() string { return In(i18n.Locale()).AboutEngine() }
-
-// AboutEngine says "Native UI by MyGo, terminal by Ghostty's libghostty-vt."
-// in the language of msgs.
-func (msgs Messages) AboutEngine() string {
-	return Catalog.Format(msgs.locale, "aboutEngine", nil)
 }
 
 // AboutConfig says "Hosts and settings"

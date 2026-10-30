@@ -57,6 +57,16 @@ func TestDarkLooksAreDerivedFromTheirTheme(t *testing.T) {
 	}
 }
 
+func TestDarkWashesKeepTheirThemeColor(t *testing.T) {
+	for _, id := range []string{"rex", "mist", "meadow", "dusk", "tide", "apricot", "aurora", "dune"} {
+		l := themeLook(id, true)
+		_, chroma, _ := oklch(l.base.Stops[0].Color)
+		if chroma < 0.02 {
+			t.Errorf("theme %q dark wash has chroma %v, want its theme's color to show", id, chroma)
+		}
+	}
+}
+
 func TestCursorSequence(t *testing.T) {
 	cases := []struct {
 		style   string

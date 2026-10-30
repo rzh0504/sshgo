@@ -124,9 +124,8 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	})
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
 		if len(a.state.Hosts) == 0 {
-			ui.Column(c).Padding(8, 10).Gap(4).Children(func() {
+			ui.Column(c).Padding(8, 10).Children(func() {
 				ui.Text(c, locales.SidebarNoHosts()).FontSize(12.5).TextColor(pal.textFaint)
-				ui.Text(c, locales.SidebarAddHint()).FontSize(11.5).TextColor(pal.textFaint).LineHeight(1.35)
 			})
 			return
 		}
@@ -313,7 +312,6 @@ func (a *App) cardBody(c *ui.Context, pal *palette) {
 		ui.Column(c).Fill().Center().Gap(10).Padding(24).Children(func() {
 			ui.Spinner(c).Size(18, 18)
 			ui.Text(c, locales.ConnectingTitle(h.Name)).FontSize(17).FontWeight(600).TextColor(pal.text)
-			ui.Text(c, locales.ConnectingDetail(h.Address())).FontSize(13).TextColor(pal.textMuted).Selectable()
 			ui.Box(c).Height(4)
 			if button(c, "cancel-connect", locales.ActionCancel(), "", false, pal) {
 				a.disconnect(h.ID)
@@ -332,7 +330,7 @@ func (a *App) cardBody(c *ui.Context, pal *palette) {
 		})
 		return
 	}
-	a.message(c, pal, locales.HostIdleTitle(h.Name), locales.HostIdleDetail(h.Address()), func() {
+	a.message(c, pal, locales.HostIdleTitle(h.Name), "", func() {
 		if button(c, "connect", locales.ActionConnect(), "", true, pal) {
 			a.connect(h.ID)
 		}
@@ -345,7 +343,9 @@ func (a *App) cardBody(c *ui.Context, pal *palette) {
 func (a *App) message(c *ui.Context, pal *palette, title, detail string, actions func()) {
 	ui.Column(c).Fill().Center().Gap(10).Padding(24).Children(func() {
 		ui.Text(c, title).FontSize(17).FontWeight(600).TextColor(pal.text)
-		ui.Text(c, detail).FontSize(13).TextColor(pal.textMuted).MaxWidth(460).TextAlign(ui.Center).LineHeight(1.4).Selectable()
+		if detail != "" {
+			ui.Text(c, detail).FontSize(13).TextColor(pal.textMuted).MaxWidth(460).TextAlign(ui.Center).LineHeight(1.4).Selectable()
+		}
 		if actions != nil {
 			ui.Row(c).Gap(10).Margin(10, 0, 0, 0).Children(actions)
 		}
@@ -358,14 +358,10 @@ func (a *App) emptyState(c *ui.Context, pal *palette) {
 			ui.Icon(c, terminalIcon).Size(26, 26)
 		})
 		ui.Text(c, locales.EmptyTitle()).FontSize(19).FontWeight(650).TextColor(pal.text)
-		ui.Text(c, locales.EmptyDetail()).FontSize(13.5).TextColor(pal.textMuted).MaxWidth(400).TextAlign(ui.Center).LineHeight(1.45).Margin(8, 0, 22, 0)
-		ui.Row(c).Gap(10).Children(func() {
+		ui.Row(c).Gap(10).Margin(22, 0, 0, 0).Children(func() {
 			if button(c, "empty-add", locales.ActionAddHost(), "", true, pal) {
 				a.openEditor("")
 			}
-		})
-		ui.Column(c).Margin(40, 0, 0, 0).Padding(14, 16).Gap(6).Radius(10).Background(pal.chip).MaxWidth(420).Children(func() {
-			ui.Text(c, locales.EmptyHint()).FontSize(11.5).FontWeight(600).TextColor(pal.textMuted).LineHeight(1.4)
 		})
 	})
 }

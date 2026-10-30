@@ -138,7 +138,7 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 			title = locales.EditorEditTitle()
 		}
 		floating(panel.Width(460).Padding(22).Gap(14).Radius(14).Background(pal.popover), pal).Label(title)
-		dialogHead(c, pal, title, locales.EditorDetail())
+		dialogHead(c, pal, title, "")
 		var inName, inHost, inPort, inUser, inPass ui.Element
 		ui.Column(c).Gap(5).Children(func() {
 			inName = formField(c, "name", locales.FieldName(), locales.PlaceholderName(), &ed.name, pal, false)

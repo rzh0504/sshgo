@@ -247,7 +247,7 @@ func segmented(c *ui.Context, key string, value *string, ids, labels []string) {
 
 func (a *App) appearancePage(c *ui.Context, pal *palette) {
 	settingsGroup(c, pal, "", "", func() {
-		settingRow(c, pal, locales.SetAppearance(), locales.SetAppearanceDetail(), func() {
+		settingRow(c, pal, locales.SetAppearance(), "", func() {
 			segmented(c, "appearance", &a.state.Appearance,
 				[]string{"system", "light", "dark"},
 				[]string{locales.SetThemeSystem(), locales.SetThemeLight(), locales.SetThemeDark()})
@@ -261,7 +261,6 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 			}
 		})
 	})
-	ui.Text(c, locales.SetThemeDetail()).FontSize(12).TextColor(pal.textFaint).Padding(0, 4).LineHeight(1.4)
 }
 
 func themeName(id string) string {
@@ -339,16 +338,16 @@ func (a *App) themeTile(c *ui.Context, pal *palette, id string) {
 
 func (a *App) terminalPage(c *ui.Context, pal *palette) {
 	settingsGroup(c, pal, "", "", func() {
-		settingRow(c, pal, locales.SetFontSize(), locales.SetFontSizeDetail(), func() {
+		settingRow(c, pal, locales.SetFontSize(), "", func() {
 			ui.Text(c, strconv.Itoa(int(a.state.FontSize))).FontSize(13).FontFeatures("tnum").TextColor(pal.text)
 			ui.Stepper(c, &a.state.FontSize, 8, 36, 1).Label(locales.SetFontSize())
 		})
-		settingRow(c, pal, locales.SetCursor(), locales.SetCursorDetail(), func() {
+		settingRow(c, pal, locales.SetCursor(), "", func() {
 			segmented(c, "cursor", &a.state.Cursor,
 				[]string{"block", "bar", "underline"},
 				[]string{locales.CursorBlock(), locales.CursorBar(), locales.CursorUnderline()})
 		})
-		settingRow(c, pal, locales.SetCursorBlink(), locales.SetCursorBlinkDetail(), func() {
+		settingRow(c, pal, locales.SetCursorBlink(), "", func() {
 			on := !a.state.NoBlink
 			if toggle(c.Key("blink"), &on, pal).Changed() {
 				a.state.NoBlink = !on
@@ -361,7 +360,7 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 
 func (a *App) languagePage(c *ui.Context, pal *palette) {
 	settingsGroup(c, pal, "", "", func() {
-		settingRow(c, pal, locales.SetLanguage(), locales.SetLanguageDetail(), func() {
+		settingRow(c, pal, locales.SetLanguage(), "", func() {
 			segmented(c, "language", &a.state.Language,
 				[]string{"system", "en", "zh-Hans"},
 				[]string{locales.LanguageSystem(), "English", "简体中文"})
@@ -382,7 +381,6 @@ func (a *App) aboutPage(c *ui.Context, pal *palette) {
 		})
 		ui.Text(c, "sshgo").FontSize(19).FontWeight(650).TextColor(pal.text)
 		ui.Text(c, locales.AboutVersion(version)).FontSize(12.5).TextColor(pal.textMuted)
-		ui.Text(c, locales.AboutEngine()).FontSize(12).TextColor(pal.textFaint).TextAlign(ui.Center).MaxWidth(420).LineHeight(1.4)
 	})
 	dir, err := store.Dir()
 	if err != nil {
