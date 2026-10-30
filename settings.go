@@ -268,18 +268,6 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 	})
 }
 
-// cycleTheme makes the next theme the window's, as the sidebar's theme
-// button does.
-func (a *App) cycleTheme() {
-	a.state.Theme = nextTheme(a.state.Theme)
-	a.applySettings()
-}
-
-func nextTheme(id string) string {
-	i := slices.Index(themeIDs, knownTheme(id))
-	return themeIDs[(i+1)%len(themeIDs)]
-}
-
 func themeName(id string) string {
 	switch id {
 	case "paper":

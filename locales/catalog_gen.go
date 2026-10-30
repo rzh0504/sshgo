@@ -810,14 +810,24 @@ func (msgs Messages) SetTheme() string {
 	return Catalog.Format(msgs.locale, "setTheme", nil)
 }
 
-// ActionCycleTheme says "Switch Theme"
+// ActionSwitchLight says "Switch to Light Mode"
 // in the language the app shows.
-func ActionCycleTheme() string { return In(i18n.Locale()).ActionCycleTheme() }
+func ActionSwitchLight() string { return In(i18n.Locale()).ActionSwitchLight() }
 
-// ActionCycleTheme says "Switch Theme"
+// ActionSwitchLight says "Switch to Light Mode"
 // in the language of msgs.
-func (msgs Messages) ActionCycleTheme() string {
-	return Catalog.Format(msgs.locale, "actionCycleTheme", nil)
+func (msgs Messages) ActionSwitchLight() string {
+	return Catalog.Format(msgs.locale, "actionSwitchLight", nil)
+}
+
+// ActionSwitchDark says "Switch to Dark Mode"
+// in the language the app shows.
+func ActionSwitchDark() string { return In(i18n.Locale()).ActionSwitchDark() }
+
+// ActionSwitchDark says "Switch to Dark Mode"
+// in the language of msgs.
+func (msgs Messages) ActionSwitchDark() string {
+	return Catalog.Format(msgs.locale, "actionSwitchDark", nil)
 }
 
 // ThemePaper says "Paper"

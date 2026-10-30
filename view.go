@@ -221,7 +221,14 @@ func (a *App) hostTip(h store.Host, rt *hostRuntime) string {
 
 func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 	ui.Row(c).Height(36).Shrink(0).Padding(0, 12, 4, 12).Gap(2).AlignItems(ui.Center).DragWindow().Children(func() {
-		iconButton(c, "cycle-theme", paintbrushIcon, locales.ActionCycleTheme()+" · "+themeName(a.state.Theme), pal, a.cycleTheme)
+		icon, label, target := moonIcon, locales.ActionSwitchDark(), "dark"
+		if c.Theme().Dark {
+			icon, label, target = sunIcon, locales.ActionSwitchLight(), "light"
+		}
+		iconButton(c, "appearance-mode", icon, label, pal, func() {
+			a.state.Appearance = target
+			a.applySettings()
+		})
 		iconButton(c, "settings", gearIcon, locales.ActionSettings(), pal, a.openSettings)
 		ui.Spacer(c)
 		n := a.connectedCount()

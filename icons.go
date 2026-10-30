@@ -32,6 +32,8 @@ var (
 	pencilIcon   = icon(`<path d="M3 13l.4-2.7L10.9 2.8a1.3 1.3 0 0 1 1.9 0l.4.4a1.3 1.3 0 0 1 0 1.9L5.7 12.6z"/>`)
 	retryIcon    = icon(`<path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2.8v3.4h-3.4"/>`)
 	infoIcon     = icon(`<circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v4M8 4.9v.1"/>`)
+	sunIcon      = icon(`<circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1"/>`)
+	moonIcon     = icon(`<path d="M13.2 9.8A5.7 5.7 0 0 1 6.2 2.8a5.7 5.7 0 1 0 7 7z"/>`)
 )
 
 var (
