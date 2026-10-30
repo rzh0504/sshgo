@@ -23,7 +23,6 @@ type settingsPage struct {
 var settingsPages = []settingsPage{
 	{id: "appearance", title: locales.PageAppearance, icon: paintbrushIcon},
 	{id: "terminal", title: locales.PageTerminal, icon: terminalIcon},
-	{id: "language", title: locales.PageLanguage, icon: globeIcon},
 	{id: "about", title: locales.PageAbout, icon: infoIcon},
 }
 
@@ -122,8 +121,6 @@ func (a *App) settingsView(c *ui.Context) {
 							a.appearancePage(c, pal)
 						case "terminal":
 							a.terminalPage(c, pal)
-						case "language":
-							a.languagePage(c, pal)
 						case "about":
 							a.aboutPage(c, pal)
 						}
@@ -262,6 +259,13 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 			for _, id := range themeIDs {
 				a.themeTile(c, pal, id)
 			}
+		})
+	})
+	settingsGroup(c, pal, "", "", func() {
+		settingRow(c, pal, locales.SetLanguage(), "", func() {
+			segmented(c, "language", &a.state.Language,
+				[]string{"system", "en", "zh-Hans"},
+				[]string{locales.LanguageSystem(), "English", "简体中文"})
 		})
 	})
 }
@@ -439,16 +443,6 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 }
 
 // --- Language ---
-
-func (a *App) languagePage(c *ui.Context, pal *palette) {
-	settingsGroup(c, pal, "", "", func() {
-		settingRow(c, pal, locales.SetLanguage(), "", func() {
-			segmented(c, "language", &a.state.Language,
-				[]string{"system", "en", "zh-Hans"},
-				[]string{locales.LanguageSystem(), "English", "简体中文"})
-		})
-	})
-}
 
 // --- About ---
 

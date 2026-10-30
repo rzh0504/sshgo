@@ -750,16 +750,6 @@ func (msgs Messages) PageTerminal() string {
 	return Catalog.Format(msgs.locale, "pageTerminal", nil)
 }
 
-// PageLanguage says "Language"
-// in the language the app shows.
-func PageLanguage() string { return In(i18n.Locale()).PageLanguage() }
-
-// PageLanguage says "Language"
-// in the language of msgs.
-func (msgs Messages) PageLanguage() string {
-	return Catalog.Format(msgs.locale, "pageLanguage", nil)
-}
-
 // PageAbout says "About"
 // in the language the app shows.
 func PageAbout() string { return In(i18n.Locale()).PageAbout() }
