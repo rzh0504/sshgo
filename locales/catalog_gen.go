@@ -810,6 +810,26 @@ func (msgs Messages) SetTheme() string {
 	return Catalog.Format(msgs.locale, "setTheme", nil)
 }
 
+// SetPrivacyMode says "Privacy Mode"
+// in the language the app shows.
+func SetPrivacyMode() string { return In(i18n.Locale()).SetPrivacyMode() }
+
+// SetPrivacyMode says "Privacy Mode"
+// in the language of msgs.
+func (msgs Messages) SetPrivacyMode() string {
+	return Catalog.Format(msgs.locale, "setPrivacyMode", nil)
+}
+
+// SetPrivacyModeDetail says "Replace the middle two parts of an IP address in host cards with x.x"
+// in the language the app shows.
+func SetPrivacyModeDetail() string { return In(i18n.Locale()).SetPrivacyModeDetail() }
+
+// SetPrivacyModeDetail says "Replace the middle two parts of an IP address in host cards with x.x"
+// in the language of msgs.
+func (msgs Messages) SetPrivacyModeDetail() string {
+	return Catalog.Format(msgs.locale, "setPrivacyModeDetail", nil)
+}
+
 // ActionSwitchLight says "Switch to Light Mode"
 // in the language the app shows.
 func ActionSwitchLight() string { return In(i18n.Locale()).ActionSwitchLight() }

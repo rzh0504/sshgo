@@ -23,6 +23,33 @@ func TestSidebarWidthIsWholeAndBounded(t *testing.T) {
 	}
 }
 
+func TestMaskIPv4s(t *testing.T) {
+	cases := map[string]string{
+		"root@185.92.47.30":                 "root@185.x.x.30",
+		"root@185.92.47.30:2222":            "root@185.x.x.30:2222",
+		"dial tcp 185.92.47.30:22: refused": "dial tcp 185.x.x.30:22: refused",
+		"root@dev.example.com":              "root@dev.example.com",
+		"2001:db8::1":                       "2001:db8::1",
+		"10.0.0.1 and 192.168.1.20":         "10.x.x.1 and 192.x.x.20",
+	}
+	for in, want := range cases {
+		if got := maskIPv4s(in); got != want {
+			t.Errorf("maskIPv4s(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestPrivacyModeMasksHostCardsOnly(t *testing.T) {
+	a := &App{}
+	if got := a.mask("root@185.92.47.30"); got != "root@185.92.47.30" {
+		t.Fatalf("mask without privacy = %q, want the address", got)
+	}
+	a.state.Privacy = true
+	if got := a.mask("root@185.92.47.30"); got != "root@185.x.x.30" {
+		t.Fatalf("mask with privacy = %q, want root@185.x.x.30", got)
+	}
+}
+
 func TestChromeKeepsTheHeaderInset(t *testing.T) {
 	for w := float32(minSidebar); w <= maxSidebar; w++ {
 		ch := chromeFor(1, w, ui.TitleBar{})

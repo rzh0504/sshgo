@@ -53,12 +53,13 @@ type settingsValues struct {
 	cursor            string
 	noBlink           bool
 	language          string
+	privacy           bool
 }
 
 func valuesOf(s store.State) settingsValues {
 	return settingsValues{
 		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
-		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
+		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language, privacy: s.Privacy,
 	}
 }
 
@@ -256,6 +257,9 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 			segmented(c, "language", &a.state.Language,
 				[]string{"system", "en", "zh-Hans"},
 				[]string{locales.LanguageSystem(), "English", "简体中文"})
+		})
+		settingRow(c, pal, locales.SetPrivacyMode(), locales.SetPrivacyModeDetail(), func() {
+			toggle(c.Key("privacy"), &a.state.Privacy, pal)
 		})
 	})
 	ui.Column(c).Gap(8).Children(func() {

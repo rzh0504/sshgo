@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"regexp"
 	"time"
 
 	"github.com/egoist/mygo/plugins/terminal"
@@ -138,6 +139,21 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	a.sidebarFooter(c, pal)
 }
 
+var ipv4Pattern = regexp.MustCompile(`\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b`)
+
+// maskIPv4s hides the middle two parts of every IPv4 address in s.
+func maskIPv4s(s string) string {
+	return ipv4Pattern.ReplaceAllString(s, "${1}.x.x.${4}")
+}
+
+// mask hides IP addresses in what a host card shows, in privacy mode.
+func (a *App) mask(s string) string {
+	if !a.state.Privacy {
+		return s
+	}
+	return maskIPv4s(s)
+}
+
 func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host) {
 	selected := h.ID == a.selected
 	rt := a.runtimes[h.ID]
@@ -155,7 +171,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host) {
 		bg = pal.rowHover
 	}
 	row.Background(row.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	row.Tooltip(a.hostTip(h, rt))
+	row.Tooltip(a.mask(a.hostTip(h, rt)))
 	if (row.Pressed() || row.Clicked()) && !selected {
 		a.selectHost(h.ID)
 	}
@@ -167,7 +183,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host) {
 		ui.Icon(c, serverIcon).Size(15, 15).TextColor(hostColor(pal, h.Name)).Shrink(0)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, h.Name).FontSize(13.5).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0).TextColor(pal.text)
+				ui.Text(c, a.mask(h.Name)).FontSize(13.5).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0).TextColor(pal.text)
 				ui.Spacer(c)
 				a.hostState(c, pal, rt)
 			})
@@ -177,7 +193,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host) {
 				detail = rt.err
 				fg = pal.danger
 			}
-			ui.Text(c, detail).FontSize(12).TextColor(fg).SingleLine().Ellipsis("…").MinWidth(0)
+			ui.Text(c, a.mask(detail)).FontSize(12).TextColor(fg).SingleLine().Ellipsis("…").MinWidth(0)
 		})
 	})
 }

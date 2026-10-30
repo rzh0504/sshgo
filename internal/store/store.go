@@ -69,7 +69,8 @@ type State struct {
 	FontSize   float64 `json:"fontSize,omitempty"`
 	Cursor     string  `json:"cursor,omitempty"` // "block", "bar" or "underline"
 	NoBlink    bool    `json:"noBlink,omitempty"`
-	Language   string  `json:"language,omitempty"` // "system", "en" or "zh-Hans"
+	Language   string  `json:"language,omitempty"`    // "system", "en" or "zh-Hans"
+	Privacy    bool    `json:"privacyMode,omitempty"` // mask IP addresses in host cards
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.
