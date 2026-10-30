@@ -95,7 +95,6 @@ func (a *App) view(c *ui.Context) {
 		}
 	})
 	a.dialogs(c, pal)
-	a.hostMenuView(c, pal)
 }
 
 // resizeHandle is the sidebar's edge, which a drag moves. It sits above
@@ -179,11 +178,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host) {
 	if row.DoubleClicked() {
 		a.connect(h.ID)
 	}
-	if row.RightClicked() {
-		b := row.Bounds()
-		px, py, _ := row.PointerPosition()
-		a.openHostMenu(h, b.X+px, b.Y+py)
-	}
+	row.ContextMenu(func(m *ui.Menu) { a.hostMenu(m, h) })
 	row.Children(func() {
 		ui.Icon(c, serverIcon).Size(15, 15).TextColor(hostColor(pal, h.Name)).Shrink(0)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {

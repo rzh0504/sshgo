@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/transfer"
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/crypto/ssh"
 
@@ -69,6 +70,34 @@ func (a *App) openPassword(h store.Host) {
 
 func (a *App) openDelete(h store.Host) {
 	a.confirm = &confirmState{open: true, host: h}
+}
+
+func (a *App) hostMenu(m *ui.Menu, h store.Host) {
+	rt := a.runtimes[h.ID]
+	live := rt != nil && (rt.state == connConnected || rt.state == connEnded || rt.state == connConnecting)
+	if live {
+		if m.Item(locales.ActionDisconnect()).Chosen() {
+			a.disconnect(h.ID)
+		}
+		if m.Item(locales.ActionReconnect()).Chosen() {
+			a.connect(h.ID)
+		}
+	} else if m.Item(locales.ActionConnect()).Chosen() {
+		a.connect(h.ID)
+	}
+	m.Separator()
+	if m.Item(locales.MenuEditHost()).Chosen() {
+		a.openEditor(h.ID)
+	}
+	if m.Item(locales.ActionCopyAddress()).Chosen() {
+		if err := mygo.Clipboard.Write(transfer.TextData(h.Address())); err == nil {
+			a.toast = locales.ToastAddressCopied()
+		}
+	}
+	m.Separator()
+	if m.Item(locales.MenuDeleteHost()).Chosen() {
+		a.openDelete(h)
+	}
 }
 
 func (a *App) dialogs(c *ui.Context, pal *palette) {
