@@ -15,8 +15,10 @@ import (
 var ownControls = runtime.GOOS != "darwin"
 
 // framed sets a window's frame: the title bar hidden, under the traffic
-// lights on macOS and without its buttons elsewhere.
+// lights on macOS and without its buttons elsewhere, and the sidebar's
+// material behind the window's wash.
 func framed(o mygo.WindowOptions) mygo.WindowOptions {
+	o.Vibrancy = mygo.VibrancySidebar
 	if ownControls {
 		o.TitleBarStyle = mygo.TitleBarHidden
 		o.HideWindowButtons = true

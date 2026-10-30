@@ -164,10 +164,20 @@ func abs(v float32) float32 {
 }
 
 // backdrop paints the window's wash of color, under the sidebar and
-// between the cards.
+// between the cards. With the window's material showing, the wash goes
+// over it, translucent, so that the sidebar and the gaps look frosted.
 func backdrop(c *ui.Context, row ui.Element) {
 	l := lookFor(c)
-	c.Root().LinearGradient(l.base)
+	base := l.base
+	if c.Vibrancy() {
+		stops := make([]ui.GradientStop, len(base.Stops))
+		for i, stop := range base.Stops {
+			stop.Color = stop.Color.Alpha(0.78)
+			stops[i] = stop
+		}
+		base.Stops = stops
+	}
+	c.Root().LinearGradient(base)
 	row.LinearGradient(l.glow)
 }
 
