@@ -82,6 +82,9 @@ type App struct {
 	setWin  *mygo.Window
 	ss      settingsState
 	applied settingsValues
+	// fontPick is the font the settings show: the system font's label, or
+	// the family's name.
+	fontPick string
 
 	askMu sync.Mutex // one host key question at a time
 }
@@ -472,7 +475,7 @@ func passwordKey(h store.Host) string { return "host-" + h.ID }
 
 // termFont is the terminal's text, as the settings choose it.
 func (a *App) termFont() terminal.Font {
-	return terminal.Font{Size: float32(a.state.FontSize)}
+	return terminal.Font{Family: a.state.FontFamily, Size: float32(a.state.FontSize)}
 }
 
 // termCursor is the cursor shape the settings choose.

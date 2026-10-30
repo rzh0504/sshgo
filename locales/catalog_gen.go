@@ -920,6 +920,26 @@ func (msgs Messages) ThemeDune() string {
 	return Catalog.Format(msgs.locale, "themeDune", nil)
 }
 
+// SetFontFamily says "Font"
+// in the language the app shows.
+func SetFontFamily() string { return In(i18n.Locale()).SetFontFamily() }
+
+// SetFontFamily says "Font"
+// in the language of msgs.
+func (msgs Messages) SetFontFamily() string {
+	return Catalog.Format(msgs.locale, "setFontFamily", nil)
+}
+
+// FontSystem says "System Monospace"
+// in the language the app shows.
+func FontSystem() string { return In(i18n.Locale()).FontSystem() }
+
+// FontSystem says "System Monospace"
+// in the language of msgs.
+func (msgs Messages) FontSystem() string {
+	return Catalog.Format(msgs.locale, "fontSystem", nil)
+}
+
 // SetFontSize says "Font size"
 // in the language the app shows.
 func SetFontSize() string { return In(i18n.Locale()).SetFontSize() }

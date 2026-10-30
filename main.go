@@ -33,6 +33,7 @@ func main() {
 	mygo.App.OnWindowAllClosed(func() { mygo.App.Quit() })
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.closeAll() })
 	mygo.App.OnLocaleChanged(func(string) {
+		a.fontPick = fontLabel(a.state.FontFamily)
 		mygo.App.SetMenu(a.buildMenu())
 		a.updateTitle()
 		if a.win != nil {

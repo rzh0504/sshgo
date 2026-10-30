@@ -88,6 +88,8 @@
   "themeApricot": "Apricot",
   "themeAurora": "Aurora",
   "themeDune": "Dune",
+  "setFontFamily": "Font",
+  "fontSystem": "System Monospace",
   "setFontSize": "Font size",
   "setCursor": "Cursor",
   "cursorBlock": "Block",

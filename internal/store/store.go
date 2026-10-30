@@ -65,6 +65,7 @@ type State struct {
 
 	Appearance string  `json:"appearance,omitempty"` // "system", "light" or "dark"
 	Theme      string  `json:"theme,omitempty"`      // one theme for both appearances
+	FontFamily string  `json:"fontFamily,omitempty"` // "" is the system's monospaced font
 	FontSize   float64 `json:"fontSize,omitempty"`
 	Cursor     string  `json:"cursor,omitempty"` // "block", "bar" or "underline"
 	NoBlink    bool    `json:"noBlink,omitempty"`

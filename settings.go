@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -48,6 +49,7 @@ func (s *settingsState) scrollOf(id string) *ui.ScrollState {
 // settingsValues are the settings a change applies, comparable as a set.
 type settingsValues struct {
 	appearance, theme string
+	fontFamily        string
 	fontSize          float64
 	cursor            string
 	noBlink           bool
@@ -56,7 +58,7 @@ type settingsValues struct {
 
 func valuesOf(s store.State) settingsValues {
 	return settingsValues{
-		appearance: s.Appearance, theme: s.Theme,
+		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 	}
 }
@@ -73,6 +75,7 @@ func (a *App) openSettings() {
 		a.setWin.Focus()
 		return
 	}
+	a.fontPick = fontLabel(a.state.FontFamily)
 	a.setWin = mygo.NewWindow(framed(mygo.WindowOptions{
 		Title:     locales.SettingsTitle(),
 		Width:     900,
@@ -334,10 +337,49 @@ func (a *App) themeTile(c *ui.Context, pal *palette, id string) {
 	})
 }
 
+func fontLabel(family string) string {
+	if family == "" {
+		return locales.FontSystem()
+	}
+	return family
+}
+
+// monoFamilies are the monospaced families the system has, asked once.
+var monoFamilies = sync.OnceValue(func() []string {
+	var out []string
+	for _, f := range ui.FontFamilies() {
+		if f.Monospaced && f.Name != "" {
+			out = append(out, f.Name)
+		}
+	}
+	return out
+})
+
+// fontOptions are the fonts the settings offer: the system's monospaced
+// font first, then every monospaced family the system has, and the chosen
+// one too when it is gone from the system.
+func (a *App) fontOptions() []string {
+	out := append([]string{locales.FontSystem()}, monoFamilies()...)
+	if f := a.state.FontFamily; f != "" && !slices.Contains(out, f) {
+		out = append(out, f)
+	}
+	return out
+}
+
 // --- Terminal ---
 
 func (a *App) terminalPage(c *ui.Context, pal *palette) {
 	settingsGroup(c, pal, "", "", func() {
+		settingRow(c, pal, locales.SetFontFamily(), "", func() {
+			cb := ui.Combobox(c.Key("font-"+a.state.Language), &a.fontPick, a.fontOptions()).
+				Width(220).Label(locales.SetFontFamily())
+			if cb.Changed() {
+				a.state.FontFamily = ""
+				if a.fontPick != locales.FontSystem() {
+					a.state.FontFamily = a.fontPick
+				}
+			}
+		})
 		settingRow(c, pal, locales.SetFontSize(), "", func() {
 			ui.Text(c, strconv.Itoa(int(a.state.FontSize))).FontSize(13).FontFeatures("tnum").TextColor(pal.text)
 			ui.Stepper(c, &a.state.FontSize, 8, 36, 1).Label(locales.SetFontSize())
@@ -432,7 +474,7 @@ func (a *App) applySettings() {
 			}
 		}
 	}
-	if old.fontSize != now.fontSize {
+	if old.fontFamily != now.fontFamily || old.fontSize != now.fontSize {
 		font := a.termFont()
 		for _, rt := range a.runtimes {
 			if rt.term != nil {

@@ -32,6 +32,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		SidebarWidth: 300,
 		Appearance:   "dark",
 		Theme:        "mist",
+		FontFamily:   "Cascadia Mono",
 		FontSize:     15,
 		Cursor:       "bar",
 		NoBlink:      true,
@@ -47,7 +48,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	if got.Selected != want.Selected || got.SidebarWidth != want.SidebarWidth {
 		t.Fatalf("state = %+v, want %+v", got, want)
 	}
-	if got.Appearance != want.Appearance || got.Theme != want.Theme ||
+	if got.Appearance != want.Appearance || got.Theme != want.Theme || got.FontFamily != want.FontFamily ||
 		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink || got.Language != want.Language {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
@@ -98,7 +99,7 @@ func TestLoadFillsDefaults(t *testing.T) {
 	if s.Hosts[0].Name != "me@dev" {
 		t.Fatalf("name = %q, want me@dev", s.Hosts[0].Name)
 	}
-	if s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Theme != "paper" {
+	if s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Theme != "paper" || s.FontFamily != "" {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }

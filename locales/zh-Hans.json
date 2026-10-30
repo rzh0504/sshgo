@@ -88,6 +88,8 @@
   "themeApricot": "杏色",
   "themeAurora": "极光",
   "themeDune": "沙丘",
+  "setFontFamily": "字体",
+  "fontSystem": "系统等宽",
   "setFontSize": "字号",
   "setCursor": "光标形状",
   "cursorBlock": "方块",
