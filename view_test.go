@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
 	"sshgo/internal/store"
@@ -20,6 +21,17 @@ func TestSidebarWidthIsWholeAndBounded(t *testing.T) {
 	a.state.SidebarWidth = 999
 	if got := a.sidebarWidth(); got != maxSidebar {
 		t.Fatalf("sidebarWidth = %v, want %v", got, maxSidebar)
+	}
+}
+
+func TestVibrancyChoice(t *testing.T) {
+	a := &App{}
+	if got := a.vibrancy(); got != mygo.VibrancySidebar {
+		t.Fatalf("vibrancy = %q, want the sidebar material", got)
+	}
+	a.state.NoVibrancy = true
+	if got := a.vibrancy(); got != mygo.VibrancyNone {
+		t.Fatalf("vibrancy = %q, want none", got)
 	}
 }
 

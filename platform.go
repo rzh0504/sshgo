@@ -16,7 +16,9 @@ var ownControls = runtime.GOOS != "darwin"
 
 // framed sets a window's frame: the title bar hidden, under the traffic
 // lights on macOS and without its buttons elsewhere, and the sidebar's
-// material behind the window's wash.
+// material behind the window's wash. The material is always created, as
+// Windows shows one only in a window created with one; a setting removes
+// it when the window should stay opaque.
 func framed(o mygo.WindowOptions) mygo.WindowOptions {
 	o.Vibrancy = mygo.VibrancySidebar
 	if ownControls {
@@ -29,6 +31,25 @@ func framed(o mygo.WindowOptions) mygo.WindowOptions {
 	o.TitleBarHeight = topBar
 	o.TrafficLightPosition = &mygo.Point{X: 18, Y: barMid - 7}
 	return o
+}
+
+// vibrancy is the window material the settings choose.
+func (a *App) vibrancy() mygo.Vibrancy {
+	if a.state.NoVibrancy {
+		return mygo.VibrancyNone
+	}
+	return mygo.VibrancySidebar
+}
+
+// applyVibrancy puts the settings' material behind the windows.
+func (a *App) applyVibrancy() {
+	v := a.vibrancy()
+	if a.win != nil {
+		a.win.SetVibrancy(v)
+	}
+	if a.setWin != nil {
+		a.setWin.SetVibrancy(v)
+	}
 }
 
 // windowControls are a window's minimize, maximize and close buttons, at

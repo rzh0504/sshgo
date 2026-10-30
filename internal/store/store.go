@@ -71,6 +71,7 @@ type State struct {
 	NoBlink    bool    `json:"noBlink,omitempty"`
 	Language   string  `json:"language,omitempty"`    // "system", "en" or "zh-Hans"
 	Privacy    bool    `json:"privacyMode,omitempty"` // mask IP addresses in host cards
+	NoVibrancy bool    `json:"noVibrancy,omitempty"`  // keep the window opaque
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.

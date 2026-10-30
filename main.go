@@ -27,6 +27,7 @@ func main() {
 			StateKey:  "main",
 			Content:   ui.View(a.view),
 		}))
+		a.win.SetVibrancy(a.vibrancy())
 		a.updateTitle()
 		mygo.App.SetMenu(a.buildMenu())
 	})

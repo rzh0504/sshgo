@@ -54,12 +54,14 @@ type settingsValues struct {
 	noBlink           bool
 	language          string
 	privacy           bool
+	noVibrancy        bool
 }
 
 func valuesOf(s store.State) settingsValues {
 	return settingsValues{
 		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
-		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language, privacy: s.Privacy,
+		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
+		privacy: s.Privacy, noVibrancy: s.NoVibrancy,
 	}
 }
 
@@ -85,6 +87,7 @@ func (a *App) openSettings() {
 		StateKey:  "settings",
 		Content:   ui.View(a.settingsView),
 	}))
+	a.setWin.SetVibrancy(a.vibrancy())
 	a.setWin.OnClosed(func() { a.setWin = nil })
 }
 
@@ -260,6 +263,12 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 		})
 		settingRow(c, pal, locales.SetPrivacyMode(), locales.SetPrivacyModeDetail(), func() {
 			toggle(c.Key("privacy"), &a.state.Privacy, pal)
+		})
+		settingRow(c, pal, locales.SetVibrancy(), "", func() {
+			on := !a.state.NoVibrancy
+			if toggle(c.Key("vibrancy"), &on, pal).Changed() {
+				a.state.NoVibrancy = !on
+			}
 		})
 	})
 	ui.Column(c).Gap(8).Children(func() {
@@ -528,6 +537,9 @@ func (a *App) applySettings() {
 	}
 	if old.appearance != now.appearance {
 		mygo.Theme.SetSource(mygo.ThemeSource(now.appearance))
+	}
+	if old.noVibrancy != now.noVibrancy {
+		a.applyVibrancy()
 	}
 	if old.language != now.language {
 		mygo.App.SetLocale(localeTag(now.language))

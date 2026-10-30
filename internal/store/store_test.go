@@ -38,6 +38,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		NoBlink:      true,
 		Language:     "en",
 		Privacy:      true,
+		NoVibrancy:   true,
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -51,7 +52,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	}
 	if got.Appearance != want.Appearance || got.Theme != want.Theme || got.FontFamily != want.FontFamily ||
 		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink ||
-		got.Language != want.Language || got.Privacy != want.Privacy {
+		got.Language != want.Language || got.Privacy != want.Privacy || got.NoVibrancy != want.NoVibrancy {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if got.LightTheme != "" || got.DarkTheme != "" {

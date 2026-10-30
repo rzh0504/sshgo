@@ -830,6 +830,16 @@ func (msgs Messages) SetPrivacyModeDetail() string {
 	return Catalog.Format(msgs.locale, "setPrivacyModeDetail", nil)
 }
 
+// SetVibrancy says "Frosted Sidebar"
+// in the language the app shows.
+func SetVibrancy() string { return In(i18n.Locale()).SetVibrancy() }
+
+// SetVibrancy says "Frosted Sidebar"
+// in the language of msgs.
+func (msgs Messages) SetVibrancy() string {
+	return Catalog.Format(msgs.locale, "setVibrancy", nil)
+}
+
 // ActionSwitchLight says "Switch to Light Mode"
 // in the language the app shows.
 func ActionSwitchLight() string { return In(i18n.Locale()).ActionSwitchLight() }
