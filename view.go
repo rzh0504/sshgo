@@ -87,24 +87,26 @@ func (a *App) view(c *ui.Context) {
 		})
 		main := ui.Column(c).Grow(1).MinWidth(0).Padding(cardGap, cardGap, cardGap, a.chrome.mainPad).DragWindow()
 		main.Children(func() {
-			if shown > 0.01 {
-				a.resizeHandle(c, pal)
-			}
 			a.card(c, pal, bar, shown)
 		})
+		if shown > 0.01 {
+			a.resizeHandle(c, pal, w)
+		}
 	})
 	a.dialogs(c, pal)
 }
 
-// resizeHandle is the sidebar's edge, which a drag moves.
-func (a *App) resizeHandle(c *ui.Context, pal *palette) {
-	h := ui.Box(c.Key("resize")).Absolute().Left(-4).Top(0).Bottom(0).Width(9).Cursor(ui.CursorResizeColumn).KeepFocus()
+// resizeHandle is the sidebar's edge, which a drag moves. It sits above
+// the window's content, beside the sidebar, so that a drag of it is never
+// a drag of the window.
+func (a *App) resizeHandle(c *ui.Context, pal *palette, at float32) {
+	h := ui.Box(c.Key("resize")).Absolute().Left(at - 4).Top(0).Bottom(0).Width(9).Cursor(ui.CursorResizeColumn).KeepFocus()
 	if dx, _, ok := h.Dragged(); ok {
 		if a.sidebarDrag == 0 {
 			a.sidebarDrag = a.sidebarWidth()
 		}
 		a.sidebarDrag += dx
-		a.state.SidebarWidth = min(max(a.sidebarDrag, minSidebar), maxSidebar)
+		a.state.SidebarWidth = float32(math.Round(float64(min(max(a.sidebarDrag, minSidebar), maxSidebar))))
 	} else if a.sidebarDrag != 0 && !h.Pressed() {
 		a.sidebarDrag = 0
 		a.saveState()

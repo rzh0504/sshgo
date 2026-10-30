@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"os/user"
@@ -178,7 +179,7 @@ func (a *App) handleFor(id string) *ui.Handle {
 }
 
 func (a *App) sidebarWidth() float32 {
-	return min(max(a.state.SidebarWidth, minSidebar), maxSidebar)
+	return float32(math.Round(float64(min(max(a.state.SidebarWidth, minSidebar), maxSidebar))))
 }
 
 func (a *App) toggleSidebar() {

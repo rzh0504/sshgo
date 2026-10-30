@@ -344,6 +344,45 @@ func fontLabel(family string) string {
 	return family
 }
 
+// terminalPreview shows text as the terminals would draw it: the chosen
+// font and size, in the colors of the window's appearance.
+func (a *App) terminalPreview(c *ui.Context, pal *palette) {
+	light, dark := termThemes()
+	th := light
+	if pal.dark {
+		th = dark
+	}
+	font := a.state.FontFamily
+	if font == "" {
+		font = "monospace"
+	}
+	line := func(spans ...ui.Span) {
+		for i := range spans {
+			spans[i].Font, spans[i].Size, spans[i].Weight = font, float32(a.state.FontSize), 400
+		}
+		ui.RichText(c, spans...).LineHeight(1).SingleLine()
+	}
+	box := raised(ui.Column(c).Radius(12).Padding(16, 18).Gap(0).Background(th.Background), pal)
+	box.Children(func() {
+		// Nerd Fonts' folder and branch icons: fonts without them show
+		// boxes, which is worth knowing before picking one.
+		line(ui.Span{Text: "\uf07b ~/dev/sshgo ", Color: th.Palette[4]},
+			ui.Span{Text: "\ue0a0 main ", Color: th.Palette[5]},
+			ui.Span{Text: "❯ ", Color: th.Palette[2]},
+			ui.Span{Text: "git status", Color: th.Foreground})
+		line(ui.Span{Text: "modified:   ", Color: th.Foreground},
+			ui.Span{Text: "settings.go", Color: th.Palette[1]})
+		line(ui.Span{Text: "func ", Color: th.Palette[5]},
+			ui.Span{Text: "main", Color: th.Palette[4]},
+			ui.Span{Text: "() { x := a != b && c >= d => ok }", Color: th.Foreground})
+		ui.Row(c).Gap(4).Margin(10, 0, 0, 0).Children(func() {
+			for i := range 16 {
+				ui.Box(c).Size(16, 10).Radius(3).Background(th.Palette[i])
+			}
+		})
+	})
+}
+
 // monoFamilies are the monospaced families the system has, asked once.
 var monoFamilies = sync.OnceValue(func() []string {
 	var out []string
@@ -369,6 +408,7 @@ func (a *App) fontOptions() []string {
 // --- Terminal ---
 
 func (a *App) terminalPage(c *ui.Context, pal *palette) {
+	a.terminalPreview(c, pal)
 	settingsGroup(c, pal, "", "", func() {
 		settingRow(c, pal, locales.SetFontFamily(), "", func() {
 			cb := ui.Combobox(c.Key("font-"+a.state.Language), &a.fontPick, a.fontOptions()).
