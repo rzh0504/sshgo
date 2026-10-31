@@ -7,5 +7,9 @@
   "i18n": {
     "dir": "locales",
     "source": "en"
+  },
+  "updates": {
+    "publicKey": "NlAQ0svLvqeY82ZghXCEDAghqWoLt0zXM6pxeLoZHvk=",
+    "github": "rzh0504/sshgo"
   }
 }
