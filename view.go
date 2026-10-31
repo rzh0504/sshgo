@@ -180,7 +180,6 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32)
 		bg = pal.rowHover
 	}
 	row.Background(row.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	row.Tooltip(a.mask(a.hostTip(h, rt)))
 	if (row.Pressed() || row.Clicked()) && !selected {
 		a.selectHost(h.ID)
 	}
@@ -222,26 +221,6 @@ func (a *App) hostState(c *ui.Context, pal *palette, rt *hostRuntime) {
 	case connFailed:
 		ui.Box(c).Size(7, 7).Radius(3.5).Background(pal.danger).Shrink(0).Label(locales.StatusDisconnected())
 	}
-}
-
-func (a *App) hostTip(h store.Host, rt *hostRuntime) string {
-	tip := h.Address()
-	if rt != nil {
-		switch rt.state {
-		case connConnecting:
-			tip += "\n" + locales.StatusConnecting()
-		case connConnected:
-			tip += "\n" + locales.StatusConnected()
-		case connEnded:
-			tip += "\n" + locales.StatusEnded()
-			if rt.err != "" {
-				tip += "\n" + rt.err
-			}
-		case connFailed:
-			tip += "\n" + rt.err
-		}
-	}
-	return tip
 }
 
 func (a *App) sidebarFooter(c *ui.Context, pal *palette) {

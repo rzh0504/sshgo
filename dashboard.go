@@ -103,7 +103,6 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 		bg = pal.chip.Mix(pal.text, 0.05)
 	}
 	card.Background(card.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	card.Tooltip(a.mask(a.hostTip(h, rt)))
 	card.ContextMenu(func(m *ui.Menu) { a.hostMenu(m, h) })
 	if card.Clicked() {
 		a.selectHost(h.ID)

@@ -106,7 +106,6 @@ func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name stri
 		bg = pal.rowHover
 	}
 	hdr.Background(hdr.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	hdr.Tooltip(name)
 	hdr.ContextMenu(func(m *ui.Menu) { a.hostGroupMenu(m, g.ID) })
 	if hdr.Clicked() {
 		a.toggleGroup(g.ID)
