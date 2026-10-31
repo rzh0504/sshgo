@@ -90,9 +90,14 @@
   "windowClose": "Close",
   "actionSettings": "Settings…",
   "settingsTitle": "Settings",
+  "pageGeneral": "General",
   "pageAppearance": "Appearance",
   "pageTerminal": "Terminal",
   "pageAbout": "About",
+  "setCloseBehavior": "When Closing the Window",
+  "setCloseBehaviorDetail": "Quit ends sshgo; Keep in Tray lets it run on, its icon opening the window again.",
+  "closeQuit": "Quit",
+  "closeTray": "Keep in Tray",
   "setAppearance": "Theme",
   "setThemeSystem": "System",
   "setThemeLight": "Light",
@@ -125,5 +130,7 @@
   "aboutConfig": "Hosts and settings",
   "aboutKnownHosts": "Trusted host keys",
   "aboutIcons": "System icons from Dashboard Icons (Apache 2.0).",
-  "aboutOpenFolder": "Open Settings Folder"
+  "aboutOpenFolder": "Open Settings Folder",
+  "trayOpen": "Open {app}",
+  "trayQuit": "Quit {app}"
 }

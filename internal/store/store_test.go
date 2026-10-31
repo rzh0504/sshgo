@@ -16,7 +16,8 @@ func TestLoadMissingIsEmpty(t *testing.T) {
 		t.Fatalf("state = %+v, want empty hosts", s)
 	}
 	if s.Appearance != "system" || s.Theme != "mist" ||
-		s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" {
+		s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" ||
+		s.CloseBehavior != "tray" {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }
@@ -28,18 +29,19 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", OS: "ubuntu", Group: "g1", SavePassword: true},
 			{ID: "b", Name: "home", Host: "10.0.0.2", Port: 22, User: "root"},
 		},
-		Groups:       []Group{{ID: "g1", Name: "work"}},
-		Selected:     "b",
-		SidebarWidth: 300,
-		Appearance:   "dark",
-		Theme:        "mist",
-		FontFamily:   "Cascadia Mono",
-		FontSize:     15,
-		Cursor:       "bar",
-		NoBlink:      true,
-		Language:     "en",
-		Privacy:      true,
-		NoVibrancy:   true,
+		Groups:        []Group{{ID: "g1", Name: "work"}},
+		Selected:      "b",
+		SidebarWidth:  300,
+		Appearance:    "dark",
+		Theme:         "mist",
+		FontFamily:    "Cascadia Mono",
+		FontSize:      15,
+		Cursor:        "bar",
+		NoBlink:       true,
+		Language:      "en",
+		Privacy:       true,
+		NoVibrancy:    true,
+		CloseBehavior: "quit",
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -53,7 +55,8 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	}
 	if got.Appearance != want.Appearance || got.Theme != want.Theme || got.FontFamily != want.FontFamily ||
 		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink ||
-		got.Language != want.Language || got.Privacy != want.Privacy || got.NoVibrancy != want.NoVibrancy {
+		got.Language != want.Language || got.Privacy != want.Privacy || got.NoVibrancy != want.NoVibrancy ||
+		got.CloseBehavior != want.CloseBehavior {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if got.LightTheme != "" || got.DarkTheme != "" {
@@ -177,14 +180,15 @@ func TestLoadMigratesSeparateThemes(t *testing.T) {
 
 func TestLoadClampsSettings(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
-	if err := os.WriteFile(path, []byte(`{"appearance":"blue","fontSize":99,"cursor":"beam","language":"fr"}`), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte(`{"appearance":"blue","fontSize":99,"cursor":"beam","language":"fr","closeBehavior":"hide"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	s, err := loadFrom(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Appearance != "system" || s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" {
+	if s.Appearance != "system" || s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" ||
+		s.CloseBehavior != "tray" {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }

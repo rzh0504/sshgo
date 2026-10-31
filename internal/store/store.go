@@ -81,6 +81,9 @@ type State struct {
 	Language   string  `json:"language,omitempty"`    // "system", "en" or "zh-Hans"
 	Privacy    bool    `json:"privacyMode,omitempty"` // mask IP addresses in host cards
 	NoVibrancy bool    `json:"noVibrancy,omitempty"`  // keep the window opaque
+	// CloseBehavior is what the main window's close button does: "quit"
+	// ends sshgo, "tray" leaves it running in the notification area.
+	CloseBehavior string `json:"closeBehavior,omitempty"`
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.
@@ -241,6 +244,11 @@ func (s *State) fillDefaults() {
 	case "system", "en", "zh-Hans":
 	default:
 		s.Language = "system"
+	}
+	switch s.CloseBehavior {
+	case "quit", "tray":
+	default:
+		s.CloseBehavior = "tray"
 	}
 }
 

@@ -13,6 +13,9 @@ import (
 )
 
 func main() {
+	if !mygo.App.RequestSingleInstanceLock() {
+		return
+	}
 	a := newApp()
 	a.load()
 	mygo.Theme.SetSource(mygo.ThemeSource(a.state.Appearance))
@@ -28,17 +31,39 @@ func main() {
 			Content:   ui.View(a.view),
 		}))
 		a.win.SetVibrancy(a.vibrancy())
+		a.win.OnClose(a.windowClosing)
 		a.updateTitle()
 		mygo.App.SetMenu(a.buildMenu())
+		a.applyTray()
+	})
+	mygo.App.OnSecondInstance(func([]string, string) { a.showWindow() })
+	mygo.App.OnActivate(func(hasVisible bool) {
+		if !hasVisible {
+			a.showWindow()
+		}
 	})
 	mygo.App.OnWindowAllClosed(func() { mygo.App.Quit() })
-	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.closeAll() })
+	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) {
+		a.quitting = true
+		a.closeAll()
+	})
+	// Windows leaves an icon in the notification area after its app until
+	// the pointer passes over it.
+	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
+		if a.tray != nil {
+			a.tray.Destroy()
+			a.tray = nil
+		}
+	})
 	mygo.App.OnLocaleChanged(func(string) {
 		a.fontPick = fontLabel(a.state.FontFamily)
 		mygo.App.SetMenu(a.buildMenu())
 		a.updateTitle()
 		if a.win != nil {
 			a.win.Invalidate()
+		}
+		if a.tray != nil {
+			a.tray.SetMenu(a.trayMenu())
 		}
 		if a.setWin != nil {
 			a.setWin.SetTitle(locales.SettingsTitle())

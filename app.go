@@ -81,6 +81,9 @@ type App struct {
 	collapsed   map[string]bool
 	dashScroll  ui.ScrollState
 
+	tray     *mygo.Tray // the icon in the notification area, while it shows
+	quitting bool       // a quit is on its way: let the windows close
+
 	setWin  *mygo.Window
 	ss      settingsState
 	applied settingsValues

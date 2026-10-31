@@ -21,6 +21,7 @@ type settingsPage struct {
 }
 
 var settingsPages = []settingsPage{
+	{id: "general", title: locales.PageGeneral, icon: gearIcon},
 	{id: "appearance", title: locales.PageAppearance, icon: paintbrushIcon},
 	{id: "terminal", title: locales.PageTerminal, icon: terminalIcon},
 	{id: "about", title: locales.PageAbout, icon: infoIcon},
@@ -55,13 +56,14 @@ type settingsValues struct {
 	language          string
 	privacy           bool
 	noVibrancy        bool
+	closeBehavior     string
 }
 
 func valuesOf(s store.State) settingsValues {
 	return settingsValues{
 		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
-		privacy: s.Privacy, noVibrancy: s.NoVibrancy,
+		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
 	}
 }
 
@@ -121,6 +123,8 @@ func (a *App) settingsView(c *ui.Context) {
 					TrackScroll(a.ss.scrollOf(page.id)).Children(func() {
 					ui.Column(c).Gap(22).MaxWidth(620).Children(func() {
 						switch page.id {
+						case "general":
+							a.generalPage(c, pal)
 						case "appearance":
 							a.appearancePage(c, pal)
 						case "terminal":
@@ -245,6 +249,18 @@ func segmented(c *ui.Context, key string, value *string, ids, labels []string) {
 	})
 	// The choice lands after this runs: take it then.
 	seg.Track.OnChange(func() { *value = ids[i] })
+}
+
+// --- General ---
+
+func (a *App) generalPage(c *ui.Context, pal *palette) {
+	settingsGroup(c, pal, "", "", func() {
+		settingRow(c, pal, locales.SetCloseBehavior(), locales.SetCloseBehaviorDetail(), func() {
+			segmented(c, "close-behavior", &a.state.CloseBehavior,
+				[]string{"quit", "tray"},
+				[]string{locales.CloseQuit(), locales.CloseTray()})
+		})
+	})
 }
 
 // --- Appearance ---
@@ -541,6 +557,9 @@ func (a *App) applySettings() {
 	}
 	if old.language != now.language {
 		mygo.App.SetLocale(localeTag(now.language))
+	}
+	if old.closeBehavior != now.closeBehavior {
+		a.applyCloseBehavior()
 	}
 	if a.win != nil {
 		a.win.Invalidate()

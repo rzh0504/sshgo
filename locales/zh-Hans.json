@@ -90,9 +90,14 @@
   "windowClose": "关闭",
   "actionSettings": "设置…",
   "settingsTitle": "设置",
+  "pageGeneral": "通用",
   "pageAppearance": "外观",
   "pageTerminal": "终端",
   "pageAbout": "关于",
+  "setCloseBehavior": "关闭主窗口时",
+  "setCloseBehaviorDetail": "直接退出会结束程序；保留在托盘会继续运行，点击托盘图标可重新打开。",
+  "closeQuit": "直接退出",
+  "closeTray": "保留在托盘",
   "setAppearance": "主题模式",
   "setThemeSystem": "跟随系统",
   "setThemeLight": "浅色",
@@ -125,5 +130,7 @@
   "aboutConfig": "主机与设置文件",
   "aboutKnownHosts": "已信任的主机密钥",
   "aboutIcons": "系统图标来自 Dashboard Icons（Apache 2.0）。",
-  "aboutOpenFolder": "打开设置文件夹"
+  "aboutOpenFolder": "打开设置文件夹",
+  "trayOpen": "打开 {app}",
+  "trayQuit": "退出 {app}"
 }

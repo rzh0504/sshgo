@@ -940,6 +940,16 @@ func (msgs Messages) SettingsTitle() string {
 	return Catalog.Format(msgs.locale, "settingsTitle", nil)
 }
 
+// PageGeneral says "General"
+// in the language the app shows.
+func PageGeneral() string { return In(i18n.Locale()).PageGeneral() }
+
+// PageGeneral says "General"
+// in the language of msgs.
+func (msgs Messages) PageGeneral() string {
+	return Catalog.Format(msgs.locale, "pageGeneral", nil)
+}
+
 // PageAppearance says "Appearance"
 // in the language the app shows.
 func PageAppearance() string { return In(i18n.Locale()).PageAppearance() }
@@ -968,6 +978,46 @@ func PageAbout() string { return In(i18n.Locale()).PageAbout() }
 // in the language of msgs.
 func (msgs Messages) PageAbout() string {
 	return Catalog.Format(msgs.locale, "pageAbout", nil)
+}
+
+// SetCloseBehavior says "When Closing the Window"
+// in the language the app shows.
+func SetCloseBehavior() string { return In(i18n.Locale()).SetCloseBehavior() }
+
+// SetCloseBehavior says "When Closing the Window"
+// in the language of msgs.
+func (msgs Messages) SetCloseBehavior() string {
+	return Catalog.Format(msgs.locale, "setCloseBehavior", nil)
+}
+
+// SetCloseBehaviorDetail says "Quit ends sshgo; Keep in Tray lets it run on, its icon opening the window again."
+// in the language the app shows.
+func SetCloseBehaviorDetail() string { return In(i18n.Locale()).SetCloseBehaviorDetail() }
+
+// SetCloseBehaviorDetail says "Quit ends sshgo; Keep in Tray lets it run on, its icon opening the window again."
+// in the language of msgs.
+func (msgs Messages) SetCloseBehaviorDetail() string {
+	return Catalog.Format(msgs.locale, "setCloseBehaviorDetail", nil)
+}
+
+// CloseQuit says "Quit"
+// in the language the app shows.
+func CloseQuit() string { return In(i18n.Locale()).CloseQuit() }
+
+// CloseQuit says "Quit"
+// in the language of msgs.
+func (msgs Messages) CloseQuit() string {
+	return Catalog.Format(msgs.locale, "closeQuit", nil)
+}
+
+// CloseTray says "Keep in Tray"
+// in the language the app shows.
+func CloseTray() string { return In(i18n.Locale()).CloseTray() }
+
+// CloseTray says "Keep in Tray"
+// in the language of msgs.
+func (msgs Messages) CloseTray() string {
+	return Catalog.Format(msgs.locale, "closeTray", nil)
 }
 
 // SetAppearance says "Theme"
@@ -1298,4 +1348,24 @@ func AboutOpenFolder() string { return In(i18n.Locale()).AboutOpenFolder() }
 // in the language of msgs.
 func (msgs Messages) AboutOpenFolder() string {
 	return Catalog.Format(msgs.locale, "aboutOpenFolder", nil)
+}
+
+// TrayOpen says "Open {app}"
+// in the language the app shows.
+func TrayOpen(app string) string { return In(i18n.Locale()).TrayOpen(app) }
+
+// TrayOpen says "Open {app}"
+// in the language of msgs.
+func (msgs Messages) TrayOpen(app string) string {
+	return Catalog.Format(msgs.locale, "trayOpen", map[string]any{"app": app})
+}
+
+// TrayQuit says "Quit {app}"
+// in the language the app shows.
+func TrayQuit(app string) string { return In(i18n.Locale()).TrayQuit(app) }
+
+// TrayQuit says "Quit {app}"
+// in the language of msgs.
+func (msgs Messages) TrayQuit(app string) string {
+	return Catalog.Format(msgs.locale, "trayQuit", map[string]any{"app": app})
 }
