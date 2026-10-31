@@ -99,7 +99,7 @@
   "setThemeDark": "深色",
   "setTheme": "主题",
   "setPrivacyMode": "隐私模式",
-  "setPrivacyModeDetail": "将主机卡片里的ip地址中间两位改为x.x",
+  "setPrivacyModeDetail": "将主机卡片里 IP 地址的中间两位模糊处理",
   "setVibrancy": "毛玻璃侧栏",
   "actionSwitchLight": "切换到浅色模式",
   "actionSwitchDark": "切换到深色模式",

@@ -4,9 +4,11 @@ import (
 	"math"
 	"regexp"
 	"time"
+	"unicode/utf8"
 
 	"github.com/egoist/mygo/plugins/terminal"
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/shader"
 
 	"sshgo/internal/store"
 	"sshgo/locales"
@@ -150,17 +152,76 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 
 var ipv4Pattern = regexp.MustCompile(`\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b`)
 
-// maskIPv4s hides the middle two parts of every IPv4 address in s.
-func maskIPv4s(s string) string {
-	return ipv4Pattern.ReplaceAllString(s, "${1}.x.x.${4}")
+// textPart is a run of a host's text: plain, or the middle two octets of
+// an IPv4 address, which privacy mode blurs.
+type textPart struct {
+	text   string
+	hidden bool
 }
 
-// mask hides IP addresses in what a host card shows, in privacy mode.
-func (a *App) mask(s string) string {
-	if !a.state.Privacy {
-		return s
+// ipv4Parts splits s around the middle two octets of every IPv4 address
+// in it.
+func ipv4Parts(s string) []textPart {
+	var parts []textPart
+	pos := 0
+	for _, m := range ipv4Pattern.FindAllStringSubmatchIndex(s, -1) {
+		parts = append(parts, textPart{text: s[pos:m[4]]})
+		parts = append(parts, textPart{text: s[m[4]:m[7]], hidden: true})
+		pos = m[7]
 	}
-	return maskIPv4s(s)
+	if pos < len(s) {
+		parts = append(parts, textPart{text: s[pos:]})
+	}
+	return parts
+}
+
+// textParts is s in runs, with the middle two octets of every IPv4
+// address split out while privacy mode is on.
+func (a *App) textParts(s string) []textPart {
+	if !a.state.Privacy {
+		return []textPart{{text: s}}
+	}
+	return ipv4Parts(s)
+}
+
+// addressBlur blurs what lies under it, as privacy mode shows an
+// address's hidden octets as a soft smudge.
+var addressBlur = shader.MustCompile(`package main
+
+func Fragment(dst vec4, pos vec2) vec4 {
+	return backdropSample(pos)
+}
+`)
+
+// maskedText shows s, blurring the middle two octets of every IPv4
+// address in it in privacy mode.
+func (a *App) maskedText(c *ui.Context, s string, size float32, weight int, color ui.Color) ui.Element {
+	parts := a.textParts(s)
+	if len(parts) == 1 && !parts[0].hidden {
+		return ui.Text(c, s).FontSize(size).FontWeight(weight).TextColor(color)
+	}
+	spans := make([]ui.Span, 0, len(parts))
+	hidden := map[int][]ui.Glyph{}
+	at := 0
+	for _, p := range parts {
+		style := ui.Span{Text: p.text, Size: size, Weight: weight}
+		if p.hidden {
+			w, _ := c.MeasureText(0, style)
+			hidden[at] = ui.Shape(p.text, ui.Font{Family: uiFontFamily(), Size: size, Weight: weight})
+			style.Text = "\uFFFC"
+			style.ObjectWidth, style.ObjectHeight, style.ObjectDescent = w, size*0.8, size*0.1
+		}
+		spans = append(spans, style)
+		at += utf8.RuneCountInString(style.Text)
+	}
+	return ui.RichText(c, spans...).TextColor(color).DrawObjects(func(p *ui.Painter, at int, r ui.Rect) {
+		glyphs, ok := hidden[at]
+		if !ok {
+			return
+		}
+		p.Glyphs(glyphs, r.X, r.Y+size*0.8, color)
+		addressBlur.Draw(p, r, shader.Options{BackdropBlur: size * 0.18})
+	})
 }
 
 func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32) {
@@ -191,7 +252,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32)
 		a.hostGlyph(c, pal, h, 16)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, a.mask(h.Name)).FontSize(13.5).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0).TextColor(pal.text)
+				a.maskedText(c, h.Name, 13.5, 400, pal.text).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
 				ui.Spacer(c)
 				a.hostState(c, pal, rt)
 			})
@@ -201,7 +262,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32)
 				detail = rt.err
 				fg = pal.danger
 			}
-			ui.Text(c, a.mask(detail)).FontSize(12).TextColor(fg).SingleLine().Ellipsis("…").MinWidth(0)
+			a.maskedText(c, detail, 12, 400, fg).SingleLine().Ellipsis("…").MinWidth(0)
 		})
 	})
 }

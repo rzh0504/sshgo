@@ -1,6 +1,7 @@
 package main
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/egoist/mygo"
@@ -35,30 +36,36 @@ func TestVibrancyChoice(t *testing.T) {
 	}
 }
 
-func TestMaskIPv4s(t *testing.T) {
-	cases := map[string]string{
-		"root@185.92.47.30":                 "root@185.x.x.30",
-		"root@185.92.47.30:2222":            "root@185.x.x.30:2222",
-		"dial tcp 185.92.47.30:22: refused": "dial tcp 185.x.x.30:22: refused",
-		"root@dev.example.com":              "root@dev.example.com",
-		"2001:db8::1":                       "2001:db8::1",
-		"10.0.0.1 and 192.168.1.20":         "10.x.x.1 and 192.x.x.20",
+func TestIPv4Parts(t *testing.T) {
+	cases := []struct {
+		in   string
+		want []textPart
+	}{
+		{"root@185.92.47.30", []textPart{{text: "root@185."}, {text: "92.47", hidden: true}, {text: ".30"}}},
+		{"root@185.92.47.30:2222", []textPart{{text: "root@185."}, {text: "92.47", hidden: true}, {text: ".30:2222"}}},
+		{"dial tcp 185.92.47.30:22: refused", []textPart{{text: "dial tcp 185."}, {text: "92.47", hidden: true}, {text: ".30:22: refused"}}},
+		{"root@dev.example.com", []textPart{{text: "root@dev.example.com"}}},
+		{"2001:db8::1", []textPart{{text: "2001:db8::1"}}},
+		{"10.0.0.1 and 192.168.1.20", []textPart{
+			{text: "10."}, {text: "0.0", hidden: true}, {text: ".1 and 192."}, {text: "168.1", hidden: true}, {text: ".20"},
+		}},
 	}
-	for in, want := range cases {
-		if got := maskIPv4s(in); got != want {
-			t.Errorf("maskIPv4s(%q) = %q, want %q", in, got, want)
+	for _, c := range cases {
+		if got := ipv4Parts(c.in); !slices.Equal(got, c.want) {
+			t.Errorf("ipv4Parts(%q) = %+v, want %+v", c.in, got, c.want)
 		}
 	}
 }
 
-func TestPrivacyModeMasksHostCardsOnly(t *testing.T) {
+func TestPrivacyModeSplitsAddressesOnlyWhenOn(t *testing.T) {
 	a := &App{}
-	if got := a.mask("root@185.92.47.30"); got != "root@185.92.47.30" {
-		t.Fatalf("mask without privacy = %q, want the address", got)
+	if got := a.textParts("root@185.92.47.30"); len(got) != 1 || got[0].hidden {
+		t.Fatalf("parts without privacy = %+v, want the whole address", got)
 	}
 	a.state.Privacy = true
-	if got := a.mask("root@185.92.47.30"); got != "root@185.x.x.30" {
-		t.Fatalf("mask with privacy = %q, want root@185.x.x.30", got)
+	got := a.textParts("root@185.92.47.30")
+	if len(got) != 3 || got[1] != (textPart{text: "92.47", hidden: true}) {
+		t.Fatalf("parts with privacy = %+v, want the middle octets apart", got)
 	}
 }
 

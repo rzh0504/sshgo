@@ -99,7 +99,7 @@
   "setThemeDark": "Dark",
   "setTheme": "Theme",
   "setPrivacyMode": "Privacy Mode",
-  "setPrivacyModeDetail": "Replace the middle two parts of an IP address in host cards with x.x",
+  "setPrivacyModeDetail": "Blur the middle two parts of an IP address in host cards",
   "setVibrancy": "Frosted Sidebar",
   "actionSwitchLight": "Switch to Light Mode",
   "actionSwitchDark": "Switch to Dark Mode",

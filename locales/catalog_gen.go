@@ -1030,11 +1030,11 @@ func (msgs Messages) SetPrivacyMode() string {
 	return Catalog.Format(msgs.locale, "setPrivacyMode", nil)
 }
 
-// SetPrivacyModeDetail says "Replace the middle two parts of an IP address in host cards with x.x"
+// SetPrivacyModeDetail says "Blur the middle two parts of an IP address in host cards"
 // in the language the app shows.
 func SetPrivacyModeDetail() string { return In(i18n.Locale()).SetPrivacyModeDetail() }
 
-// SetPrivacyModeDetail says "Replace the middle two parts of an IP address in host cards with x.x"
+// SetPrivacyModeDetail says "Blur the middle two parts of an IP address in host cards"
 // in the language of msgs.
 func (msgs Messages) SetPrivacyModeDetail() string {
 	return Catalog.Format(msgs.locale, "setPrivacyModeDetail", nil)

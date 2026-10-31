@@ -115,14 +115,13 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 			a.hostGlyph(c, pal, h, 20)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-			ui.Text(c, a.mask(h.Name)).FontSize(13).FontWeight(600).TextColor(pal.text).
-				SingleLine().Ellipsis("…")
+			a.maskedText(c, h.Name, 13, 600, pal.text).SingleLine().Ellipsis("…")
 			detail := h.Address()
 			fg := pal.textFaint
 			if rt != nil && rt.state == connFailed {
 				detail, fg = rt.err, pal.danger
 			}
-			ui.Text(c, a.mask(detail)).FontSize(11.5).TextColor(fg).SingleLine().Ellipsis("…")
+			a.maskedText(c, detail, 11.5, 400, fg).SingleLine().Ellipsis("…")
 		})
 		if card.Hovered() {
 			b := ui.ButtonBase(c.Key("dash-connect-"+h.ID)).Size(24, 24).Radius(6).Center().
