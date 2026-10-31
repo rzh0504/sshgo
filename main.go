@@ -7,6 +7,8 @@ import (
 	"runtime"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/updater"
+	updaternative "github.com/egoist/mygo/plugins/updater/native"
 	"github.com/egoist/mygo/ui"
 
 	"sshgo/locales"
@@ -16,6 +18,7 @@ func main() {
 	if !mygo.App.RequestSingleInstanceLock() {
 		return
 	}
+	mygo.Use(updaternative.New(updater.Options{Icon: appIcon}))
 	a := newApp()
 	a.load()
 	mygo.Theme.SetSource(mygo.ThemeSource(a.state.Appearance))
@@ -93,6 +96,7 @@ func (a *App) buildMenu() *mygo.Menu {
 		{Label: locales.ActionSettings(), Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) {
 			a.openSettings()
 		}},
+		updater.MenuItem(),
 		mygo.Separator(),
 		{Label: locales.ActionNewHost(), Accelerator: "CmdOrCtrl+Shift+N", Click: func(*mygo.MenuItem, *mygo.Window) {
 			a.openEditor("")

@@ -1160,6 +1160,66 @@ func (msgs Messages) ActionQuit() string {
 	return Catalog.Format(msgs.locale, "actionQuit", nil)
 }
 
+// SetUpdates says "Updates"
+// in the language the app shows.
+func SetUpdates() string { return In(i18n.Locale()).SetUpdates() }
+
+// SetUpdates says "Updates"
+// in the language of msgs.
+func (msgs Messages) SetUpdates() string {
+	return Catalog.Format(msgs.locale, "setUpdates", nil)
+}
+
+// SetVersion says "Version"
+// in the language the app shows.
+func SetVersion() string { return In(i18n.Locale()).SetVersion() }
+
+// SetVersion says "Version"
+// in the language of msgs.
+func (msgs Messages) SetVersion() string {
+	return Catalog.Format(msgs.locale, "setVersion", nil)
+}
+
+// SetVersionNoUpdate says "this build cannot update itself"
+// in the language the app shows.
+func SetVersionNoUpdate() string { return In(i18n.Locale()).SetVersionNoUpdate() }
+
+// SetVersionNoUpdate says "this build cannot update itself"
+// in the language of msgs.
+func (msgs Messages) SetVersionNoUpdate() string {
+	return Catalog.Format(msgs.locale, "setVersionNoUpdate", nil)
+}
+
+// SetCheckForUpdates says "Check for Updates…"
+// in the language the app shows.
+func SetCheckForUpdates() string { return In(i18n.Locale()).SetCheckForUpdates() }
+
+// SetCheckForUpdates says "Check for Updates…"
+// in the language of msgs.
+func (msgs Messages) SetCheckForUpdates() string {
+	return Catalog.Format(msgs.locale, "setCheckForUpdates", nil)
+}
+
+// SetAutoCheck says "Check Automatically"
+// in the language the app shows.
+func SetAutoCheck() string { return In(i18n.Locale()).SetAutoCheck() }
+
+// SetAutoCheck says "Check Automatically"
+// in the language of msgs.
+func (msgs Messages) SetAutoCheck() string {
+	return Catalog.Format(msgs.locale, "setAutoCheck", nil)
+}
+
+// SetAutoCheckDetail says "Look for updates in the background once a day."
+// in the language the app shows.
+func SetAutoCheckDetail() string { return In(i18n.Locale()).SetAutoCheckDetail() }
+
+// SetAutoCheckDetail says "Look for updates in the background once a day."
+// in the language of msgs.
+func (msgs Messages) SetAutoCheckDetail() string {
+	return Catalog.Format(msgs.locale, "setAutoCheckDetail", nil)
+}
+
 // SetAppearance says "Theme"
 // in the language the app shows.
 func SetAppearance() string { return In(i18n.Locale()).SetAppearance() }

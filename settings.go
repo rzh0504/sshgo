@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/ui"
 
 	"sshgo/internal/store"
@@ -84,6 +85,13 @@ func (a *App) openSettings() {
 		return
 	}
 	a.openAtLogin = mygo.App.OpenAtLogin()
+	a.refreshUpdates()
+	offUpdates := updater.OnChange(func() {
+		a.refreshUpdates()
+		if a.setWin != nil {
+			a.setWin.Invalidate()
+		}
+	})
 	a.fontPick = fontLabel(a.state.FontFamily)
 	a.setWin = mygo.NewWindow(framed(mygo.WindowOptions{
 		Title:     locales.SettingsTitle(),
@@ -95,7 +103,10 @@ func (a *App) openSettings() {
 		Content:   ui.View(a.settingsView),
 	}))
 	a.setWin.SetVibrancy(a.vibrancy())
-	a.setWin.OnClosed(func() { a.setWin = nil })
+	a.setWin.OnClosed(func() {
+		offUpdates()
+		a.setWin = nil
+	})
 }
 
 func (a *App) settingsView(c *ui.Context) {
@@ -291,6 +302,7 @@ func (a *App) generalPage(c *ui.Context, pal *palette) {
 			toggle(c.Key("auto-connect"), &a.state.AutoConnect, pal)
 		})
 	})
+	a.updatesGroup(c, pal)
 }
 
 // --- Appearance ---

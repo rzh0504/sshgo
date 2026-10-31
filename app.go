@@ -92,6 +92,7 @@ type App struct {
 	// the family's name.
 	fontPick    string
 	openAtLogin bool // the login item, as last read from the system
+	updates     updatePrefs
 
 	askMu sync.Mutex // one host key question at a time
 }
