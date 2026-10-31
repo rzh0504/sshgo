@@ -1070,26 +1070,6 @@ func (msgs Messages) ActionSwitchDark() string {
 	return Catalog.Format(msgs.locale, "actionSwitchDark", nil)
 }
 
-// ThemePaper says "Paper"
-// in the language the app shows.
-func ThemePaper() string { return In(i18n.Locale()).ThemePaper() }
-
-// ThemePaper says "Paper"
-// in the language of msgs.
-func (msgs Messages) ThemePaper() string {
-	return Catalog.Format(msgs.locale, "themePaper", nil)
-}
-
-// ThemePlain says "Plain"
-// in the language the app shows.
-func ThemePlain() string { return In(i18n.Locale()).ThemePlain() }
-
-// ThemePlain says "Plain"
-// in the language of msgs.
-func (msgs Messages) ThemePlain() string {
-	return Catalog.Format(msgs.locale, "themePlain", nil)
-}
-
 // ThemePetal says "Petal"
 // in the language the app shows.
 func ThemePetal() string { return In(i18n.Locale()).ThemePetal() }

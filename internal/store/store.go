@@ -225,7 +225,7 @@ func (s *State) fillDefaults() {
 		case s.DarkTheme != "":
 			s.Theme = s.DarkTheme
 		default:
-			s.Theme = "paper"
+			s.Theme = "mist"
 		}
 	}
 	s.LightTheme, s.DarkTheme = "", ""

@@ -32,12 +32,12 @@ func TestEveryThemeBuildsBothAppearances(t *testing.T) {
 	}
 }
 
-func TestUnknownThemeFallsBackToPaper(t *testing.T) {
-	if got := knownTheme("nope"); got != "paper" {
-		t.Fatalf("knownTheme(nope) = %q, want paper", got)
+func TestUnknownThemeFallsBackToMist(t *testing.T) {
+	if got := knownTheme("nope"); got != "mist" {
+		t.Fatalf("knownTheme(nope) = %q, want mist", got)
 	}
-	if themeLook("nope", false) != themeLook("paper", false) {
-		t.Fatal("an unknown theme is not the paper theme")
+	if themeLook("nope", false) != themeLook("mist", false) {
+		t.Fatal("an unknown theme is not the mist theme")
 	}
 }
 
@@ -58,7 +58,7 @@ func TestDarkLooksAreDerivedFromTheirTheme(t *testing.T) {
 }
 
 func TestDarkWashesKeepTheirThemeColor(t *testing.T) {
-	for _, id := range []string{"rex", "mist", "meadow", "dusk", "tide", "apricot", "aurora", "dune"} {
+	for _, id := range themeIDs {
 		l := themeLook(id, true)
 		_, chroma, _ := oklch(l.base.Stops[0].Color)
 		if chroma < 0.02 {

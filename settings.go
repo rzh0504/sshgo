@@ -283,10 +283,6 @@ func (a *App) appearancePage(c *ui.Context, pal *palette) {
 
 func themeName(id string) string {
 	switch id {
-	case "paper":
-		return locales.ThemePaper()
-	case "plain":
-		return locales.ThemePlain()
 	case "rex":
 		return locales.ThemePetal()
 	case "mist":

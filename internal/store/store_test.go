@@ -15,7 +15,7 @@ func TestLoadMissingIsEmpty(t *testing.T) {
 	if len(s.Hosts) != 0 || s.Selected != "" {
 		t.Fatalf("state = %+v, want empty hosts", s)
 	}
-	if s.Appearance != "system" || s.Theme != "paper" ||
+	if s.Appearance != "system" || s.Theme != "mist" ||
 		s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
@@ -143,7 +143,7 @@ func TestLoadFillsDefaults(t *testing.T) {
 	if s.Hosts[0].Name != "me@dev" {
 		t.Fatalf("name = %q, want me@dev", s.Hosts[0].Name)
 	}
-	if s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Theme != "paper" || s.FontFamily != "" {
+	if s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Theme != "mist" || s.FontFamily != "" {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }

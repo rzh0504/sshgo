@@ -49,7 +49,7 @@ func setLooks(theme string) *looks {
 func lookFor(c *ui.Context) *look {
 	l := currentLooks.Load()
 	if l == nil {
-		return themeLook("paper", c.Theme().Dark)
+		return themeLook("mist", c.Theme().Dark)
 	}
 	if c.Theme().Dark {
 		return l.dark
@@ -64,18 +64,18 @@ func paletteFor(c *ui.Context) *palette { return lookFor(c).pal }
 func termThemes() (light, dark *terminal.Theme) {
 	l := currentLooks.Load()
 	if l == nil {
-		return themeLook("paper", false).term, themeLook("paper", true).term
+		return themeLook("mist", false).term, themeLook("mist", true).term
 	}
 	return l.light.term, l.dark.term
 }
 
-var themeIDs = []string{"paper", "plain", "rex", "mist", "meadow", "dusk", "tide", "apricot", "aurora", "dune"}
+var themeIDs = []string{"mist", "rex", "meadow", "dusk", "tide", "apricot", "aurora", "dune"}
 
 func knownTheme(id string) string {
 	if _, ok := washTable[id]; ok {
 		return id
 	}
-	return "paper"
+	return "mist"
 }
 
 func themeLook(id string, dark bool) *look {
@@ -105,19 +105,6 @@ func buildLook(id string, w wash, dark bool) *look {
 	} else {
 		l.base = ui.LinearGradient{Angle: 180, Oklab: true, Stops: lightWash(w.light)}
 	}
-	if id == "plain" {
-		// kero's own colors, on its card's white or gray.
-		l.term, l.pal = lightTermTheme, &lightPalette
-		if dark {
-			l.term, l.pal = darkTermTheme, &darkPalette
-		}
-		if dark {
-			l.glow = glowOf(ui.RGBA(0, 0, 0, 0))
-		} else {
-			l.glow = glowOf(w.lightGlow)
-		}
-		return l
-	}
 	var accent ui.Color
 	l.term, accent = toneTheme(w.tone, dark)
 	l.pal = tinted(l.term, accent, dark)
@@ -145,8 +132,8 @@ func darkWash(hexes []string) []ui.GradientStop {
 	for i := range stops {
 		src := hexes[i*(len(hexes)-1)/2]
 		_, chroma, hue := oklch(ui.Hex(src))
-		chroma = min(chroma*2.2, 0.05)
-		l := 0.13 + float32(i)*0.008
+		chroma = min(chroma*2.2, 0.045)
+		l := 0.145 + float32(i)*0.008
 		stops[i] = ui.GradientStop{Color: ui.Oklch(l, chroma, hue), At: float32(i) / 2}
 	}
 	return stops
@@ -179,37 +166,6 @@ func backdrop(c *ui.Context, row ui.Element) {
 	}
 	c.Root().LinearGradient(base)
 	row.LinearGradient(l.glow)
-}
-
-// Terminal themes on the card's color, for the plain theme.
-var lightTermTheme = &terminal.Theme{
-	Foreground:    ui.Hex("#1d1d1f"),
-	Background:    lightPalette.card,
-	Cursor:        ui.Hex("#1d1d1f"),
-	CursorText:    ui.Hex("#ffffff"),
-	Selection:     ui.Hex("#cfdcfb"),
-	SelectionText: ui.Hex("#1d1d1f"),
-	Palette: [16]ui.Color{
-		ui.Hex("#1d1d1f"), ui.Hex("#d3302f"), ui.Hex("#22863a"), ui.Hex("#b08800"),
-		ui.Hex("#2f5bd8"), ui.Hex("#a033c4"), ui.Hex("#0f8199"), ui.Hex("#8e8e93"),
-		ui.Hex("#5f5f66"), ui.Hex("#ef4444"), ui.Hex("#2fa84f"), ui.Hex("#d4a017"),
-		ui.Hex("#3b82f6"), ui.Hex("#c04ee0"), ui.Hex("#14a3bf"), ui.Hex("#b4b4bb"),
-	},
-}
-
-var darkTermTheme = &terminal.Theme{
-	Foreground:    ui.Hex("#e6e6ea"),
-	Background:    darkPalette.card,
-	Cursor:        ui.Hex("#e6e6ea"),
-	CursorText:    ui.Hex("#161618"),
-	Selection:     ui.Hex("#2f4170"),
-	SelectionText: ui.Hex("#ffffff"),
-	Palette: [16]ui.Color{
-		ui.Hex("#3a3a40"), ui.Hex("#ff6b64"), ui.Hex("#4fd17a"), ui.Hex("#f2c14e"),
-		ui.Hex("#6b9bff"), ui.Hex("#d07cf0"), ui.Hex("#4cc9e0"), ui.Hex("#c9c9cf"),
-		ui.Hex("#6c6c78"), ui.Hex("#ff8a84"), ui.Hex("#74e397"), ui.Hex("#ffd479"),
-		ui.Hex("#8fb3ff"), ui.Hex("#e09cf7"), ui.Hex("#7fdcec"), ui.Hex("#f5f5f7"),
-	},
 }
 
 // borderless returns the theme with sshgo's look: its palette and accent,
@@ -285,14 +241,14 @@ func toneTheme(t tone, dark bool) (*terminal.Theme, ui.Color) {
 		bright = 0.06
 		th.Background, th.Foreground = tint(0.255, 0.02), tint(0.92, 0.015)
 		th.Palette[0], th.Palette[7], th.Palette[8], th.Palette[15] = tint(0.36, 0.02), tint(0.82, 0.012), tint(0.5, 0.02), tint(0.96, 0.01)
-		th.Selection = ui.Oklch(0.38, 0.06, t.accent)
-		accent = ui.Oklch(0.74, 0.13, t.accent)
+		th.Selection = ui.Oklch(0.38, 0.055, t.accent)
+		accent = ui.Oklch(0.75, 0.12, t.accent)
 	} else {
 		paper := 0.978 + 0.022*max(0, 1-t.tint/0.5)
 		th.Background, th.Foreground = tint(paper, 0.012), tint(0.28, 0.03)
 		th.Palette[0], th.Palette[7], th.Palette[8], th.Palette[15] = th.Foreground, tint(0.7, 0.02), tint(0.52, 0.02), tint(0.8, 0.015)
-		th.Selection = ui.Oklch(0.9, 0.045, t.accent)
-		accent = ui.Oklch(0.55, 0.13, t.accent)
+		th.Selection = ui.Oklch(0.9, 0.04, t.accent)
+		accent = ui.Oklch(0.56, 0.115, t.accent)
 	}
 	for i := range 6 {
 		d := float32(math.Remainder(float64(t.hue-hues[i]), 360))
@@ -332,43 +288,37 @@ type wash struct {
 }
 
 var washTable = map[string]wash{
-	"rex": {
-		light: []string{"#ebe0f3", "#f3e7f1", "#f7eee4", "#f6efcf"}, lightGlow: ui.RGBA(247, 220, 241, 0.75),
-		tone: tone{350, 1, 0.95, 350},
-	},
+	// Blue above, warm paper below: the window's quietest wash.
 	"mist": {
 		light: []string{"#e3e9f4", "#ebeff6", "#f1f2f3", "#f2f1ec"}, lightGlow: ui.RGBA(210, 225, 248, 0.75),
 		tone: tone{255, 1, 0.8, 255},
 	},
+	"rex": {
+		light: []string{"#efe3ec", "#f5eaed", "#f6efea", "#f3f0e5"}, lightGlow: ui.RGBA(241, 220, 236, 0.62),
+		tone: tone{350, 1, 0.85, 350},
+	},
 	"meadow": {
-		light: []string{"#e2eee5", "#ebf2e7", "#f3f2e2", "#f5f0d6"}, lightGlow: ui.RGBA(214, 240, 222, 0.75),
-		tone: tone{140, 1, 0.9, 140},
+		light: []string{"#e2ede5", "#ecf1e8", "#f2f2ea", "#f3f1e6"}, lightGlow: ui.RGBA(211, 234, 218, 0.62),
+		tone: tone{140, 1, 0.8, 140},
 	},
 	"dusk": {
-		light: []string{"#e4dbf3", "#efdeee", "#f6e3dc", "#f7e6cf"}, lightGlow: ui.RGBA(246, 206, 222, 0.8),
-		tone: tone{315, 1, 1.1, 315},
+		light: []string{"#e7e4f2", "#f2e8f2", "#f7ede9", "#f6eee4"}, lightGlow: ui.RGBA(245, 219, 229, 0.62),
+		tone: tone{315, 1, 0.9, 315},
 	},
 	"tide": {
-		light: []string{"#dbebef", "#e3eff1", "#ecf3f0", "#f2f2e8"}, lightGlow: ui.RGBA(194, 232, 238, 0.75),
-		tone: tone{205, 1, 0.85, 205},
+		light: []string{"#dcebef", "#e6f0f2", "#eef3f1", "#f1f1ea"}, lightGlow: ui.RGBA(204, 233, 238, 0.62),
+		tone: tone{205, 1, 0.8, 205},
 	},
 	"apricot": {
-		light: []string{"#f5e1d6", "#f8e7dc", "#f8eedf", "#f6f0da"}, lightGlow: ui.RGBA(252, 212, 194, 0.78),
-		tone: tone{50, 1, 1.05, 50},
+		light: []string{"#f3e5dd", "#f6ebe4", "#f5f0e9", "#f4f1e5"}, lightGlow: ui.RGBA(246, 221, 210, 0.62),
+		tone: tone{50, 1, 0.9, 50},
 	},
 	"aurora": {
-		light: []string{"#dbefe8", "#e1ebf2", "#e8e4f4", "#f0e6f1"}, lightGlow: ui.RGBA(198, 238, 224, 0.75),
-		tone: tone{170, 1, 1.15, 170},
+		light: []string{"#e0eee9", "#e6eef3", "#ece9f4", "#f1ebf2"}, lightGlow: ui.RGBA(207, 234, 224, 0.62),
+		tone: tone{170, 1, 0.95, 170},
 	},
 	"dune": {
-		light: []string{"#ede4d8", "#f1e9de", "#f4eee4", "#f3efe8"}, lightGlow: ui.RGBA(242, 222, 194, 0.7),
+		light: []string{"#ede6dd", "#f1ebe3", "#f3f0ea", "#f3f0eb"}, lightGlow: ui.RGBA(240, 225, 204, 0.62),
 		tone: tone{80, 0.7, 0.55, 80},
-	},
-	"paper": {
-		light: []string{"#f6f6f7", "#f7f7f8", "#f8f8f8"}, lightGlow: ui.RGBA(255, 255, 255, 0),
-		tone: tone{260, 0, 0.9, 262},
-	},
-	"plain": {
-		light: []string{"#eceef4", "#eceef4"}, lightGlow: ui.RGBA(0, 0, 0, 0),
 	},
 }
