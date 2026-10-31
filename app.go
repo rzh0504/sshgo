@@ -81,8 +81,9 @@ type App struct {
 	collapsed   map[string]bool
 	dashScroll  ui.ScrollState
 
-	tray     *mygo.Tray // the icon in the notification area, while it shows
-	quitting bool       // a quit is on its way: let the windows close
+	tray          *mygo.Tray // the icon in the notification area, while it shows
+	quitting      bool       // a quit is on its way: let the windows close
+	quitConfirmed bool       // the user answered the quit's question
 
 	setWin  *mygo.Window
 	ss      settingsState
@@ -433,6 +434,31 @@ func (a *App) closeAll() {
 	for id := range a.runtimes {
 		a.resetRuntime(id)
 	}
+}
+
+// quitNeedsConfirm reports whether a quit should ask first: the settings
+// say so, sessions are open, and this is not the quit the user answered.
+func (a *App) quitNeedsConfirm() bool {
+	if !a.state.ConfirmQuit || a.quitConfirmed || a.connectedCount() == 0 {
+		return false
+	}
+	return a.win != nil && !a.win.IsDestroyed()
+}
+
+// askQuit shows the window and asks before the quit disconnects the
+// sessions that are open.
+func (a *App) askQuit() {
+	a.showWindow()
+	a.confirm = &confirmState{open: true, quit: true}
+	if a.win != nil {
+		a.win.Invalidate()
+	}
+}
+
+// quitNow quits as the user confirmed, without asking again.
+func (a *App) quitNow() {
+	a.quitConfirmed = true
+	mygo.App.Quit()
 }
 
 func (a *App) connectError(h store.Host, err error) string {

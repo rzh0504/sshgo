@@ -58,6 +58,7 @@ type settingsValues struct {
 	noVibrancy        bool
 	closeBehavior     string
 	hideAtLogin       bool
+	confirmQuit       bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -65,7 +66,7 @@ func valuesOf(s store.State) settingsValues {
 		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
-		hideAtLogin: s.HideAtLogin,
+		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit,
 	}
 }
 
@@ -279,6 +280,11 @@ func (a *App) generalPage(c *ui.Context, pal *palette) {
 			segmented(c, "close-behavior", &a.state.CloseBehavior,
 				[]string{"quit", "tray"},
 				[]string{locales.CloseQuit(), locales.CloseTray()})
+		})
+	})
+	settingsGroup(c, pal, locales.GroupSessions(), "", func() {
+		settingRow(c, pal, locales.SetConfirmQuit(), locales.SetConfirmQuitDetail(), func() {
+			toggle(c.Key("confirm-quit"), &a.state.ConfirmQuit, pal)
 		})
 	})
 }

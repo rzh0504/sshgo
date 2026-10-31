@@ -1080,6 +1080,66 @@ func (msgs Messages) GroupWindow() string {
 	return Catalog.Format(msgs.locale, "groupWindow", nil)
 }
 
+// GroupSessions says "Sessions"
+// in the language the app shows.
+func GroupSessions() string { return In(i18n.Locale()).GroupSessions() }
+
+// GroupSessions says "Sessions"
+// in the language of msgs.
+func (msgs Messages) GroupSessions() string {
+	return Catalog.Format(msgs.locale, "groupSessions", nil)
+}
+
+// SetConfirmQuit says "Confirm Before Quitting"
+// in the language the app shows.
+func SetConfirmQuit() string { return In(i18n.Locale()).SetConfirmQuit() }
+
+// SetConfirmQuit says "Confirm Before Quitting"
+// in the language of msgs.
+func (msgs Messages) SetConfirmQuit() string {
+	return Catalog.Format(msgs.locale, "setConfirmQuit", nil)
+}
+
+// SetConfirmQuitDetail says "Ask before a quit disconnects open sessions."
+// in the language the app shows.
+func SetConfirmQuitDetail() string { return In(i18n.Locale()).SetConfirmQuitDetail() }
+
+// SetConfirmQuitDetail says "Ask before a quit disconnects open sessions."
+// in the language of msgs.
+func (msgs Messages) SetConfirmQuitDetail() string {
+	return Catalog.Format(msgs.locale, "setConfirmQuitDetail", nil)
+}
+
+// QuitTitle says "Quit sshgo?"
+// in the language the app shows.
+func QuitTitle() string { return In(i18n.Locale()).QuitTitle() }
+
+// QuitTitle says "Quit sshgo?"
+// in the language of msgs.
+func (msgs Messages) QuitTitle() string {
+	return Catalog.Format(msgs.locale, "quitTitle", nil)
+}
+
+// QuitDetail says "{count, plural, one {# session is connected; quitting disconnects it.} other {# sessions are connected; quitting disc…"
+// in the language the app shows.
+func QuitDetail(count int) string { return In(i18n.Locale()).QuitDetail(count) }
+
+// QuitDetail says "{count, plural, one {# session is connected; quitting disconnects it.} other {# sessions are connected; quitting disc…"
+// in the language of msgs.
+func (msgs Messages) QuitDetail(count int) string {
+	return Catalog.Format(msgs.locale, "quitDetail", map[string]any{"count": count})
+}
+
+// ActionQuit says "Quit"
+// in the language the app shows.
+func ActionQuit() string { return In(i18n.Locale()).ActionQuit() }
+
+// ActionQuit says "Quit"
+// in the language of msgs.
+func (msgs Messages) ActionQuit() string {
+	return Catalog.Format(msgs.locale, "actionQuit", nil)
+}
+
 // SetAppearance says "Theme"
 // in the language the app shows.
 func SetAppearance() string { return In(i18n.Locale()).SetAppearance() }

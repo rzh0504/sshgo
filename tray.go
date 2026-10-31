@@ -22,13 +22,22 @@ func (a *App) closeToTray() bool {
 
 // windowClosing is the main window's close button: in the tray, the window
 // hides with its terminals, and the app keeps running until the tray icon
-// opens it again. A quit closes the windows too, which passes through.
+// opens it again. Otherwise the window's close ends the app, which asks
+// first when sessions are open. A quit closes the windows too, which
+// passes through.
 func (a *App) windowClosing(e *mygo.CloseEvent) {
-	if a.quitting || a.tray == nil || !a.closeToTray() {
+	if a.quitting {
 		return
 	}
-	e.PreventDefault()
-	e.Window.Hide()
+	if a.closeToTray() && a.tray != nil {
+		e.PreventDefault()
+		e.Window.Hide()
+		return
+	}
+	if a.quitNeedsConfirm() {
+		e.PreventDefault()
+		a.askQuit()
+	}
 }
 
 // applyTray shows or removes the icon, as the settings say.

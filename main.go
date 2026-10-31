@@ -48,7 +48,12 @@ func main() {
 		}
 	})
 	mygo.App.OnWindowAllClosed(func() { mygo.App.Quit() })
-	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) {
+	mygo.App.OnBeforeQuit(func(e *mygo.QuitEvent) {
+		if a.quitNeedsConfirm() {
+			e.PreventDefault()
+			a.askQuit()
+			return
+		}
 		a.quitting = true
 		a.closeAll()
 	})

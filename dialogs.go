@@ -59,6 +59,7 @@ type confirmState struct {
 	open  bool
 	host  store.Host
 	group *store.Group
+	quit  bool // the app's quit, with sessions open
 }
 
 func (a *App) openEditor(id string) {
@@ -610,12 +611,15 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 	if cf == nil || !cf.open {
 		return
 	}
-	title, detail := locales.DeleteTitle(), locales.DeleteDetail(cf.host.Name)
-	if cf.group != nil {
+	title, detail, action, key := locales.DeleteTitle(), locales.DeleteDetail(cf.host.Name), locales.ActionDelete(), "delete"
+	switch {
+	case cf.quit:
+		title, detail, action, key = locales.QuitTitle(), locales.QuitDetail(a.connectedCount()), locales.ActionQuit(), "quit"
+	case cf.group != nil:
 		title, detail = locales.DeleteGroupTitle(), locales.DeleteGroupDetail(cf.group.Name)
 	}
 	run := false
-	ui.DialogBase(c.Key("confirm"), &cf.open, func(backdrop, panel ui.Element) {
+	ui.DialogBase(c.Key("confirm-"+key), &cf.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(pal.overlay)
 		floating(panel.Width(400).Padding(22).Gap(8).Radius(14).Background(pal.popover), pal).
 			Label(title)
@@ -624,7 +628,7 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 			if button(c, "cancel", locales.ActionCancel(), "esc", false, pal) || c.Shortcut(0, ui.KeyEscape) {
 				cf.open = false
 			}
-			if dangerButton(c, "delete", locales.ActionDelete(), pal) {
+			if dangerButton(c, key, action, pal) {
 				run = true
 				cf.open = false
 			}
@@ -633,9 +637,12 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 	if !cf.open {
 		a.confirm = nil
 		if run {
-			if cf.group != nil {
+			switch {
+			case cf.quit:
+				a.quitNow()
+			case cf.group != nil:
 				a.deleteGroup(*cf.group)
-			} else {
+			default:
 				a.deleteHost(cf.host)
 			}
 		}
