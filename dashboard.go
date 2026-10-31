@@ -78,24 +78,41 @@ func (a *App) dashboardRecent(c *ui.Context, pal *palette, hosts []store.Host) {
 
 func (a *App) dashboardSection(c *ui.Context, pal *palette, s hostSection) {
 	ui.Column(c).Gap(10).Children(func() {
+		open := s.id == "" || !a.groupCollapsed(s.id)
 		if s.name != "" {
 			tip := locales.ActionAddHost()
 			if s.id != "" {
 				tip = locales.ActionNewHostInGroup()
 			}
-			hdr := ui.Row(c).Height(26).Gap(8).AlignItems(ui.Center)
+			hdr := ui.Row(c.Key("dash-group-" + s.id)).Height(26).Gap(8).AlignItems(ui.Center)
 			hdr.ContextMenu(func(m *ui.Menu) { a.hostGroupMenu(m, s.id) })
+			if s.id != "" {
+				hdr.Cursor(ui.CursorPointer)
+				if hdr.Clicked() {
+					a.toggleGroup(s.id)
+				}
+			}
 			hdr.Children(func() {
 				ui.Icon(c, folderIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
 				ui.Text(c, s.name).FontSize(12.5).FontWeight(600).TextColor(pal.textMuted).
 					SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
 				ui.Text(c, strconv.Itoa(len(s.hosts))).FontSize(11).FontFeatures("tnum").
 					TextColor(pal.textFaint).Background(pal.chip).Radius(4).Padding(1, 6)
+				if s.id != "" {
+					chevron := chevronRightIcon
+					if open {
+						chevron = chevronDownIcon
+					}
+					ui.Icon(c, chevron).Size(11, 11).TextColor(pal.textFaint).Shrink(0)
+				}
 				ui.Spacer(c)
 				iconButton(c, "dash-add-"+s.id, plusIcon, tip, pal, func() {
 					a.openEditorInGroup(s.id)
 				})
 			})
+		}
+		if !open {
+			return
 		}
 		if len(s.hosts) == 0 {
 			ui.Text(c, locales.GroupEmpty()).FontSize(12).TextColor(pal.textFaint).Padding(0, 2)
