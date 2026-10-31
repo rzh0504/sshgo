@@ -94,14 +94,11 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 	selected := h.ID == a.selected
 	card := ui.ButtonBase(c.Key("dash-"+h.ID)).Row().Width(hostCardW).Height(hostCardH).Shrink(0).
 		Padding(12, 12).Gap(10).Radius(12).AlignItems(ui.Center).Label(h.Name)
-	if pal.dark {
-		card.Border(1, ui.Transparent)
-	}
 	bg := pal.chip
 	switch {
 	case selected:
-		bg = pal.accent.Alpha(0.09)
-		card.Border(1, pal.accent.Alpha(0.45))
+		bg = pal.rowSelected
+		chosen(card, pal)
 	case card.Hovered():
 		bg = pal.chip.Mix(pal.text, 0.05)
 	}
