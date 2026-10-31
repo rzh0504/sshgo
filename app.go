@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"math"
 	"net"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -17,6 +19,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	kh "sshgo/internal/knownhosts"
+	"sshgo/internal/sshkey"
 	"sshgo/internal/sshx"
 	"sshgo/internal/store"
 	"sshgo/locales"
@@ -47,14 +50,22 @@ type connectAttempt struct {
 // hostRuntime is what the app holds of a host while it connects or is
 // connected: its terminal, its SSH session, and where it stands.
 type hostRuntime struct {
-	state    connState
-	err      string
-	term     *terminal.Terminal
-	ssh      *sshx.Session
+	state      connState
+	err        string
+	term       *terminal.Terminal
+	ssh        *sshx.Session
+	password   string
+	passphrase string
+	gen        int
+	title      string
+	attempt    *connectAttempt
+}
+
+// connectAuth is how a connection signs in: with a password or a private
+// key.
+type connectAuth struct {
 	password string
-	gen      int
-	title    string
-	attempt  *connectAttempt
+	signer   ssh.Signer
 }
 
 // App is the app's state. It lives on the main thread; goroutines change
@@ -70,6 +81,7 @@ type App struct {
 	editor    *editorState
 	groupEdit *groupEditState
 	password  *passwordState
+	keyPass   *keyPassState
 	hostKey   *hostKeyState
 	confirm   *confirmState
 
@@ -271,8 +283,8 @@ func (a *App) connectedCount() int {
 
 func (a *App) anyDialogOpen() bool {
 	return (a.editor != nil && a.editor.open) || (a.groupEdit != nil && a.groupEdit.open) ||
-		(a.password != nil && a.password.open) || (a.hostKey != nil && a.hostKey.open) ||
-		(a.confirm != nil && a.confirm.open)
+		(a.password != nil && a.password.open) || (a.keyPass != nil && a.keyPass.open) ||
+		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open)
 }
 
 func (a *App) connect(id string) {
@@ -286,25 +298,67 @@ func (a *App) connect(id string) {
 		a.selectHost(id)
 		return
 	}
+	if h.UsesKey() {
+		a.connectKey(h, rt)
+		return
+	}
+	a.connectPassword(h, rt)
+}
+
+func (a *App) connectPassword(h store.Host, rt *hostRuntime) {
 	pw := rt.password
 	if pw == "" && h.SavePassword {
-		b, err := mygo.Secrets.Get(passwordKey(h))
-		switch {
-		case err == nil:
-			pw = string(b)
-		case errors.Is(err, mygo.ErrSecretNotFound), errors.Is(err, errors.ErrUnsupported):
-		default:
-			a.toast = err.Error()
-		}
+		pw = a.savedSecret(passwordKey(h))
 	}
 	if pw == "" {
 		a.openPassword(h)
 		return
 	}
-	a.beginConnect(h, pw)
+	a.beginConnect(h, connectAuth{password: pw})
 }
 
-func (a *App) beginConnect(h store.Host, password string) {
+func (a *App) connectKey(h store.Host, rt *hostRuntime) {
+	if strings.TrimSpace(h.KeyPath) == "" {
+		a.failConnect(h, locales.ErrorKeyRequired())
+		return
+	}
+	passphrase := rt.passphrase
+	if passphrase == "" && h.SavePassphrase {
+		passphrase = a.savedSecret(passphraseKey(h))
+	}
+	signer, err := sshkey.Load(h.KeyPath, passphrase)
+	if err != nil {
+		var pathErr *fs.PathError
+		needsPassphrase := errors.Is(err, sshkey.ErrPassphrase) ||
+			(passphrase != "" && !errors.As(err, &pathErr))
+		if needsPassphrase {
+			if passphrase != "" {
+				// What was saved no longer opens the key; ask for it again.
+				rt.passphrase = ""
+				a.forgetSavedPassphrase(h)
+			}
+			a.openKeyPassphrase(h)
+			return
+		}
+		a.failConnect(h, locales.ErrorKeyLoad(err.Error()))
+		return
+	}
+	rt.passphrase = passphrase
+	a.beginConnect(h, connectAuth{signer: signer})
+}
+
+// failConnect shows a connection that could not start, with its reason.
+func (a *App) failConnect(h store.Host, detail string) {
+	a.resetRuntime(h.ID)
+	rt := a.runtime(h.ID)
+	rt.state = connFailed
+	rt.err = detail
+	a.selected = h.ID
+	a.saveState()
+	a.updateTitle()
+}
+
+func (a *App) beginConnect(h store.Host, auth connectAuth) {
 	rt := a.runtime(h.ID)
 	a.resetRuntime(h.ID)
 	rt.gen++
@@ -313,7 +367,7 @@ func (a *App) beginConnect(h store.Host, password string) {
 	rt.attempt = attempt
 	rt.state = connConnecting
 	rt.err = ""
-	rt.password = password
+	rt.password = auth.password
 	a.selected = h.ID
 	a.focusWanted = h.ID
 	a.saveState()
@@ -322,7 +376,8 @@ func (a *App) beginConnect(h store.Host, password string) {
 		sess, err := sshx.Connect(context.Background(), sshx.Config{
 			Address:         h.Endpoint(),
 			User:            h.User,
-			Password:        password,
+			Password:        auth.password,
+			Signer:          auth.signer,
 			HostKeyCallback: a.hostKeyCallback(h, attempt),
 		})
 		if err != nil {
@@ -332,7 +387,7 @@ func (a *App) beginConnect(h store.Host, password string) {
 				}
 				rt.state = connFailed
 				rt.err = a.connectError(h, err)
-				if errors.Is(err, sshx.ErrAuth) {
+				if errors.Is(err, sshx.ErrAuth) && !h.UsesKey() {
 					rt.password = ""
 					a.forgetSavedPassword(h)
 				}
@@ -482,6 +537,9 @@ func (a *App) connectLast() {
 func (a *App) connectError(h store.Host, err error) string {
 	switch {
 	case errors.Is(err, sshx.ErrAuth):
+		if h.UsesKey() {
+			return locales.ErrorAuthKey()
+		}
 		return locales.ErrorAuth()
 	case errors.Is(err, sshx.ErrHostKeyRejected), errors.Is(err, kh.ErrUnknown), errors.Is(err, kh.ErrChanged):
 		return locales.ErrorHostKey()
@@ -547,6 +605,22 @@ func (a *App) answerHostKey(trust bool) {
 
 func passwordKey(h store.Host) string { return "host-" + h.ID }
 
+func passphraseKey(h store.Host) string { return "key-" + h.ID }
+
+// savedSecret reads a secret the app keeps in the system's credential
+// store, "" when there is none.
+func (a *App) savedSecret(key string) string {
+	b, err := mygo.Secrets.Get(key)
+	switch {
+	case err == nil:
+		return string(b)
+	case errors.Is(err, mygo.ErrSecretNotFound), errors.Is(err, errors.ErrUnsupported):
+	default:
+		a.toast = err.Error()
+	}
+	return ""
+}
+
 // termFont is the terminal's text, as the settings choose it.
 func (a *App) termFont() terminal.Font {
 	return terminal.Font{Family: a.state.FontFamily, Size: float32(a.state.FontSize)}
@@ -574,6 +648,22 @@ func (a *App) forgetSavedPassword(h store.Host) {
 func (a *App) savePassword(h store.Host, password string) bool {
 	if err := mygo.Secrets.Set(passwordKey(h), []byte(password)); err != nil {
 		a.toast = locales.PasswordSaveFailed(err.Error())
+		return false
+	}
+	return true
+}
+
+func (a *App) forgetSavedPassphrase(h store.Host) {
+	_ = mygo.Secrets.Delete(passphraseKey(h))
+	if idx := a.state.Index(h.ID); idx >= 0 && a.state.Hosts[idx].SavePassphrase {
+		a.state.Hosts[idx].SavePassphrase = false
+		a.saveState()
+	}
+}
+
+func (a *App) savePassphrase(h store.Host, passphrase string) bool {
+	if err := mygo.Secrets.Set(passphraseKey(h), []byte(passphrase)); err != nil {
+		a.toast = locales.PassphraseSaveFailed(err.Error())
 		return false
 	}
 	return true

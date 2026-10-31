@@ -20,6 +20,12 @@ type Group struct {
 	Name string `json:"name"`
 }
 
+// Authentication methods a host signs in with.
+const (
+	AuthPassword = "password"
+	AuthKey      = "key"
+)
+
 // Host is a machine sshgo reaches over SSH.
 type Host struct {
 	ID           string `json:"id"`
@@ -29,8 +35,16 @@ type Host struct {
 	User         string `json:"user"`
 	OS           string `json:"os,omitempty"`    // the system it runs, as the app names them
 	Group        string `json:"group,omitempty"` // the id of its group
+	Auth         string `json:"auth,omitempty"`  // AuthPassword or AuthKey
+	KeyPath      string `json:"keyPath,omitempty"`
 	SavePassword bool   `json:"savePassword,omitempty"`
+	// SavePassphrase keeps the private key's passphrase, when it has one, in
+	// the system's credential store.
+	SavePassphrase bool `json:"savePassphrase,omitempty"`
 }
+
+// UsesKey reports whether the host signs in with a private key.
+func (h Host) UsesKey() bool { return h.Auth == AuthKey }
 
 // Address is the host's address for a terminal or a tooltip, as
 // "user@host:port".
@@ -255,6 +269,18 @@ func loadFrom(path string) (State, error) {
 		if !seen[h.Group] {
 			h.Group = ""
 		}
+		h.KeyPath = strings.TrimSpace(h.KeyPath)
+		switch h.Auth {
+		case AuthKey:
+			if h.KeyPath == "" {
+				h.SavePassphrase = false
+			}
+			h.SavePassword = false
+		default:
+			h.Auth = AuthPassword
+			h.KeyPath = ""
+			h.SavePassphrase = false
+		}
 	}
 	s.fillDefaults()
 	return s, nil
@@ -362,7 +388,8 @@ func New(name, host string, port int, user string, savePassword bool) (Host, err
 	if err != nil {
 		return Host{}, err
 	}
-	h := Host{ID: id, Name: name, Host: strings.TrimSpace(host), Port: port, User: strings.TrimSpace(user), SavePassword: savePassword}
+	h := Host{ID: id, Name: name, Host: strings.TrimSpace(host), Port: port, User: strings.TrimSpace(user),
+		Auth: AuthPassword, SavePassword: savePassword}
 	h.Host = strings.TrimSuffix(h.Host, ".")
 	if h.Port == 0 {
 		h.Port = 22

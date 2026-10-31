@@ -586,6 +586,78 @@ func (msgs Messages) PasswordSaveFailed(error string) string {
 	return Catalog.Format(msgs.locale, "passwordSaveFailed", map[string]any{"error": error})
 }
 
+// KeyPassphraseTitle says "Unlock the key for {name}"
+// in the language the app shows.
+func KeyPassphraseTitle(name string) string { return In(i18n.Locale()).KeyPassphraseTitle(name) }
+
+// KeyPassphraseTitle says "Unlock the key for {name}"
+// in the language of msgs.
+func (msgs Messages) KeyPassphraseTitle(name string) string {
+	return Catalog.Format(msgs.locale, "keyPassphraseTitle", map[string]any{"name": name})
+}
+
+// KeyPassphraseDetail says "{user} at {address}"
+// in the language the app shows.
+func KeyPassphraseDetail(user string, address string) string {
+	return In(i18n.Locale()).KeyPassphraseDetail(user, address)
+}
+
+// KeyPassphraseDetail says "{user} at {address}"
+// in the language of msgs.
+func (msgs Messages) KeyPassphraseDetail(user string, address string) string {
+	return Catalog.Format(msgs.locale, "keyPassphraseDetail", map[string]any{"user": user, "address": address})
+}
+
+// FieldPassphrase says "Passphrase"
+// in the language the app shows.
+func FieldPassphrase() string { return In(i18n.Locale()).FieldPassphrase() }
+
+// FieldPassphrase says "Passphrase"
+// in the language of msgs.
+func (msgs Messages) FieldPassphrase() string {
+	return Catalog.Format(msgs.locale, "fieldPassphrase", nil)
+}
+
+// PassphraseEmptyError says "Enter the passphrase."
+// in the language the app shows.
+func PassphraseEmptyError() string { return In(i18n.Locale()).PassphraseEmptyError() }
+
+// PassphraseEmptyError says "Enter the passphrase."
+// in the language of msgs.
+func (msgs Messages) PassphraseEmptyError() string {
+	return Catalog.Format(msgs.locale, "passphraseEmptyError", nil)
+}
+
+// PassphraseSaveLabel says "Save passphrase in the system credential store"
+// in the language the app shows.
+func PassphraseSaveLabel() string { return In(i18n.Locale()).PassphraseSaveLabel() }
+
+// PassphraseSaveLabel says "Save passphrase in the system credential store"
+// in the language of msgs.
+func (msgs Messages) PassphraseSaveLabel() string {
+	return Catalog.Format(msgs.locale, "passphraseSaveLabel", nil)
+}
+
+// PassphraseSaveFailed says "Could not save the passphrase: {error}"
+// in the language the app shows.
+func PassphraseSaveFailed(error string) string { return In(i18n.Locale()).PassphraseSaveFailed(error) }
+
+// PassphraseSaveFailed says "Could not save the passphrase: {error}"
+// in the language of msgs.
+func (msgs Messages) PassphraseSaveFailed(error string) string {
+	return Catalog.Format(msgs.locale, "passphraseSaveFailed", map[string]any{"error": error})
+}
+
+// ActionUnlock says "Unlock"
+// in the language the app shows.
+func ActionUnlock() string { return In(i18n.Locale()).ActionUnlock() }
+
+// ActionUnlock says "Unlock"
+// in the language of msgs.
+func (msgs Messages) ActionUnlock() string {
+	return Catalog.Format(msgs.locale, "actionUnlock", nil)
+}
+
 // HostKeyTitle says "Trust this host?"
 // in the language the app shows.
 func HostKeyTitle() string { return In(i18n.Locale()).HostKeyTitle() }
@@ -718,6 +790,96 @@ func (msgs Messages) FieldOS() string {
 	return Catalog.Format(msgs.locale, "fieldOS", nil)
 }
 
+// FieldAuth says "Authentication"
+// in the language the app shows.
+func FieldAuth() string { return In(i18n.Locale()).FieldAuth() }
+
+// FieldAuth says "Authentication"
+// in the language of msgs.
+func (msgs Messages) FieldAuth() string {
+	return Catalog.Format(msgs.locale, "fieldAuth", nil)
+}
+
+// AuthPassword says "Password"
+// in the language the app shows.
+func AuthPassword() string { return In(i18n.Locale()).AuthPassword() }
+
+// AuthPassword says "Password"
+// in the language of msgs.
+func (msgs Messages) AuthPassword() string {
+	return Catalog.Format(msgs.locale, "authPassword", nil)
+}
+
+// AuthKey says "Private Key"
+// in the language the app shows.
+func AuthKey() string { return In(i18n.Locale()).AuthKey() }
+
+// AuthKey says "Private Key"
+// in the language of msgs.
+func (msgs Messages) AuthKey() string {
+	return Catalog.Format(msgs.locale, "authKey", nil)
+}
+
+// FieldPrivateKey says "Private key"
+// in the language the app shows.
+func FieldPrivateKey() string { return In(i18n.Locale()).FieldPrivateKey() }
+
+// FieldPrivateKey says "Private key"
+// in the language of msgs.
+func (msgs Messages) FieldPrivateKey() string {
+	return Catalog.Format(msgs.locale, "fieldPrivateKey", nil)
+}
+
+// PlaceholderPrivateKey says "~/.ssh/id_ed25519"
+// in the language the app shows.
+func PlaceholderPrivateKey() string { return In(i18n.Locale()).PlaceholderPrivateKey() }
+
+// PlaceholderPrivateKey says "~/.ssh/id_ed25519"
+// in the language of msgs.
+func (msgs Messages) PlaceholderPrivateKey() string {
+	return Catalog.Format(msgs.locale, "placeholderPrivateKey", nil)
+}
+
+// PlaceholderKeyPassphrase says "Only for an encrypted key"
+// in the language the app shows.
+func PlaceholderKeyPassphrase() string { return In(i18n.Locale()).PlaceholderKeyPassphrase() }
+
+// PlaceholderKeyPassphrase says "Only for an encrypted key"
+// in the language of msgs.
+func (msgs Messages) PlaceholderKeyPassphrase() string {
+	return Catalog.Format(msgs.locale, "placeholderKeyPassphrase", nil)
+}
+
+// KeyFormatsHint says "OpenSSH and PEM private keys are supported."
+// in the language the app shows.
+func KeyFormatsHint() string { return In(i18n.Locale()).KeyFormatsHint() }
+
+// KeyFormatsHint says "OpenSSH and PEM private keys are supported."
+// in the language of msgs.
+func (msgs Messages) KeyFormatsHint() string {
+	return Catalog.Format(msgs.locale, "keyFormatsHint", nil)
+}
+
+// ActionBrowse says "Browse…"
+// in the language the app shows.
+func ActionBrowse() string { return In(i18n.Locale()).ActionBrowse() }
+
+// ActionBrowse says "Browse…"
+// in the language of msgs.
+func (msgs Messages) ActionBrowse() string {
+	return Catalog.Format(msgs.locale, "actionBrowse", nil)
+}
+
+// ChoosePrivateKey says "Choose a Private Key"
+// in the language the app shows.
+func ChoosePrivateKey() string { return In(i18n.Locale()).ChoosePrivateKey() }
+
+// ChoosePrivateKey says "Choose a Private Key"
+// in the language of msgs.
+func (msgs Messages) ChoosePrivateKey() string {
+	return Catalog.Format(msgs.locale, "choosePrivateKey", nil)
+}
+
 // OsOther says "Other"
 // in the language the app shows.
 func OsOther() string { return In(i18n.Locale()).OsOther() }
@@ -818,11 +980,11 @@ func (msgs Messages) DeleteTitle() string {
 	return Catalog.Format(msgs.locale, "deleteTitle", nil)
 }
 
-// DeleteDetail says "Delete {name}? Its saved password is removed too."
+// DeleteDetail says "Delete {name}? Its saved password or passphrase is removed too."
 // in the language the app shows.
 func DeleteDetail(name string) string { return In(i18n.Locale()).DeleteDetail(name) }
 
-// DeleteDetail says "Delete {name}? Its saved password is removed too."
+// DeleteDetail says "Delete {name}? Its saved password or passphrase is removed too."
 // in the language of msgs.
 func (msgs Messages) DeleteDetail(name string) string {
 	return Catalog.Format(msgs.locale, "deleteDetail", map[string]any{"name": name})
@@ -846,6 +1008,46 @@ func ErrorAuth() string { return In(i18n.Locale()).ErrorAuth() }
 // in the language of msgs.
 func (msgs Messages) ErrorAuth() string {
 	return Catalog.Format(msgs.locale, "errorAuth", nil)
+}
+
+// ErrorAuthKey says "Authentication failed. Check the username and private key."
+// in the language the app shows.
+func ErrorAuthKey() string { return In(i18n.Locale()).ErrorAuthKey() }
+
+// ErrorAuthKey says "Authentication failed. Check the username and private key."
+// in the language of msgs.
+func (msgs Messages) ErrorAuthKey() string {
+	return Catalog.Format(msgs.locale, "errorAuthKey", nil)
+}
+
+// ErrorKeyRequired says "Choose a private key file."
+// in the language the app shows.
+func ErrorKeyRequired() string { return In(i18n.Locale()).ErrorKeyRequired() }
+
+// ErrorKeyRequired says "Choose a private key file."
+// in the language of msgs.
+func (msgs Messages) ErrorKeyRequired() string {
+	return Catalog.Format(msgs.locale, "errorKeyRequired", nil)
+}
+
+// ErrorKeyLoad says "Could not use the private key: {error}"
+// in the language the app shows.
+func ErrorKeyLoad(error string) string { return In(i18n.Locale()).ErrorKeyLoad(error) }
+
+// ErrorKeyLoad says "Could not use the private key: {error}"
+// in the language of msgs.
+func (msgs Messages) ErrorKeyLoad(error string) string {
+	return Catalog.Format(msgs.locale, "errorKeyLoad", map[string]any{"error": error})
+}
+
+// ErrorKeyUnlock says "Could not unlock the private key. Check the passphrase."
+// in the language the app shows.
+func ErrorKeyUnlock() string { return In(i18n.Locale()).ErrorKeyUnlock() }
+
+// ErrorKeyUnlock says "Could not unlock the private key. Check the passphrase."
+// in the language of msgs.
+func (msgs Messages) ErrorKeyUnlock() string {
+	return Catalog.Format(msgs.locale, "errorKeyUnlock", nil)
 }
 
 // ErrorNetwork says "Could not reach {address}: {error}"

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -10,23 +13,28 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"sshgo/internal/knownhosts"
+	"sshgo/internal/sshkey"
 	"sshgo/internal/store"
 	"sshgo/locales"
 )
 
 type editorState struct {
-	open     bool
-	id       string
-	name     string
-	group    string
-	os       string
-	osName   string
-	host     string
-	port     string
-	user     string
-	password string
-	save     bool
-	err      string
+	open        bool
+	id          string
+	name        string
+	group       string
+	os          string
+	osName      string
+	host        string
+	port        string
+	user        string
+	auth        string
+	keyPath     string
+	passphrase  string
+	password    string
+	save        bool
+	saveKeyPass bool
+	err         string
 }
 
 // groupEditState is the dialog that makes a group, or renames one.
@@ -43,6 +51,15 @@ type passwordState struct {
 	password string
 	save     bool
 	err      string
+}
+
+// keyPassState is the dialog that unlocks an encrypted private key.
+type keyPassState struct {
+	open       bool
+	host       store.Host
+	passphrase string
+	save       bool
+	err        string
 }
 
 type hostKeyState struct {
@@ -64,7 +81,7 @@ type confirmState struct {
 
 func (a *App) openEditor(id string) {
 	linux := osKindByID("linux")
-	ed := &editorState{open: true, port: "22", os: linux.id, osName: linux.name}
+	ed := &editorState{open: true, port: "22", os: linux.id, osName: linux.name, auth: store.AuthPassword}
 	if id != "" {
 		if h, ok := a.state.Host(id); ok {
 			k := osKindByID(h.OS)
@@ -75,7 +92,10 @@ func (a *App) openEditor(id string) {
 			ed.host = h.Host
 			ed.port = strconv.Itoa(h.Port)
 			ed.user = h.User
-			ed.save = h.SavePassword
+			ed.auth = h.Auth
+			ed.keyPath = h.KeyPath
+			ed.save = !h.UsesKey() && h.SavePassword
+			ed.saveKeyPass = h.UsesKey() && h.SavePassphrase
 		}
 	}
 	a.editor = ed
@@ -98,6 +118,42 @@ func (a *App) openGroupEditor(id string) {
 func (a *App) openPassword(h store.Host) {
 	a.showWindow()
 	a.password = &passwordState{open: true, host: h, save: h.SavePassword}
+}
+
+func (a *App) openKeyPassphrase(h store.Host) {
+	a.showWindow()
+	if kp := a.keyPass; kp != nil && kp.open && kp.host.ID == h.ID {
+		return
+	}
+	a.keyPass = &keyPassState{open: true, host: h, save: h.SavePassphrase}
+}
+
+// pickPrivateKey asks the system for a private key file, "" when the user
+// cancels.
+func (a *App) pickPrivateKey(current string) string {
+	start := sshkey.Expand(current)
+	if start == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			start = filepath.Join(home, ".ssh")
+			if st, err := os.Stat(start); err != nil || !st.IsDir() {
+				start = home
+			}
+		}
+	}
+	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
+		Parent:          a.win,
+		Title:           locales.ChoosePrivateKey(),
+		DefaultPath:     start,
+		ShowHiddenFiles: true,
+	})
+	if err != nil {
+		a.toast = err.Error()
+		return ""
+	}
+	if len(paths) == 0 {
+		return ""
+	}
+	return paths[0]
 }
 
 func (a *App) openDelete(h store.Host) {
@@ -140,6 +196,7 @@ func (a *App) dialogs(c *ui.Context, pal *palette) {
 	a.editorView(c, pal)
 	a.groupEditorView(c, pal)
 	a.passwordView(c, pal)
+	a.keyPassView(c, pal)
 	a.hostKeyView(c, pal)
 	a.confirmView(c, pal)
 }
@@ -241,7 +298,7 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 		}
 		floating(panel.Width(460).Padding(22).Gap(14).Radius(14).Background(pal.popover), pal).Label(title)
 		dialogHead(c, pal, title, "")
-		var inName, inGroup, inHost, inPort, inUser, inPass ui.Element
+		var inName, inGroup, inHost, inPort, inUser, inKey, inKeyPass, inPass ui.Element
 		ui.Row(c).Gap(10).AlignItems(ui.Start).Children(func() {
 			ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 				inName = formField(c, "name", locales.FieldName(), locales.PlaceholderName(), &ed.name, pal, false).AutoFocus()
@@ -273,14 +330,38 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 				inUser = formField(c, "user", locales.FieldUser(), locales.PlaceholderUser(), &ed.user, pal, false)
 			})
 		})
-		ui.Column(c).Gap(5).Children(func() {
-			placeholder := ""
-			if ed.save {
-				placeholder = locales.PlaceholderPassword()
-			}
-			inPass = formField(c, "password", locales.FieldPassword(), placeholder, &ed.password, pal, true)
+		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.FieldAuth()).FontSize(12).FontWeight(550).TextColor(pal.textMuted)
+			segmented(c, "auth-"+ed.id, &ed.auth,
+				[]string{store.AuthPassword, store.AuthKey},
+				[]string{locales.AuthPassword(), locales.AuthKey()})
 		})
-		ui.Checkbox(c, &ed.save, locales.PasswordSaveLabel())
+		if ed.auth == store.AuthKey {
+			ui.Row(c).Gap(8).AlignItems(ui.End).Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
+					inKey = formField(c, "key-path", locales.FieldPrivateKey(), locales.PlaceholderPrivateKey(), &ed.keyPath, pal, false)
+				})
+				if button(c, "browse-key", locales.ActionBrowse(), "", false, pal) {
+					if path := a.pickPrivateKey(ed.keyPath); path != "" {
+						ed.keyPath = path
+					}
+				}
+			})
+			ui.Text(c, locales.KeyFormatsHint()).FontSize(11).TextColor(pal.textFaint).LineHeight(1.3)
+			ui.Column(c).Gap(5).Children(func() {
+				inKeyPass = formField(c, "key-pass", locales.FieldPassphrase(), locales.PlaceholderKeyPassphrase(), &ed.passphrase, pal, true)
+			})
+			ui.Checkbox(c, &ed.saveKeyPass, locales.PassphraseSaveLabel())
+		} else {
+			ui.Column(c).Gap(5).Children(func() {
+				placeholder := ""
+				if ed.save {
+					placeholder = locales.PlaceholderPassword()
+				}
+				inPass = formField(c, "password", locales.FieldPassword(), placeholder, &ed.password, pal, true)
+			})
+			ui.Checkbox(c, &ed.save, locales.PasswordSaveLabel())
+		}
 		if ed.err != "" {
 			ui.Text(c, ed.err).FontSize(12.5).TextColor(pal.danger).LineHeight(1.35)
 		}
@@ -296,7 +377,8 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 				submit = 2
 				ed.open = false
 			}
-			if inName.Submitted() || inGroup.Submitted() || inHost.Submitted() || inPort.Submitted() || inUser.Submitted() || inPass.Submitted() {
+			if inName.Submitted() || inGroup.Submitted() || inHost.Submitted() || inPort.Submitted() ||
+				inUser.Submitted() || inKey.Submitted() || inKeyPass.Submitted() || inPass.Submitted() {
 				submit = 2
 				ed.open = false
 			}
@@ -346,23 +428,48 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		name = user + "@" + host
 	}
 	password := ed.password
+	auth := ed.auth
+	if auth != store.AuthKey {
+		auth = store.AuthPassword
+	}
+	keyPath := strings.TrimSpace(ed.keyPath)
+	if auth == store.AuthKey && keyPath == "" {
+		return locales.ErrorKeyRequired()
+	}
+	if auth == store.AuthKey {
+		if _, err := sshkey.Load(keyPath, ""); err != nil && !errors.Is(err, sshkey.ErrPassphrase) {
+			return locales.ErrorKeyLoad(err.Error())
+		}
+		if ed.passphrase != "" {
+			if _, err := sshkey.Load(keyPath, ed.passphrase); err != nil {
+				return locales.ErrorKeyUnlock()
+			}
+		}
+	}
 	group, err := a.groupFor(ed.group)
 	if err != nil {
 		return err.Error()
 	}
 
 	if ed.id == "" {
-		h, err := store.New(name, host, port, user, ed.save)
+		h, err := store.New(name, host, port, user, auth == store.AuthPassword && ed.save)
 		if err != nil {
 			return err.Error()
 		}
 		h.Group = group
 		h.OS = ed.os
-		if ed.save && password != "" {
+		h.Auth = auth
+		if auth == store.AuthKey {
+			h.KeyPath = keyPath
+			h.SavePassphrase = ed.saveKeyPass && (ed.passphrase == "" || a.savePassphrase(h, ed.passphrase))
+		} else if ed.save && password != "" {
 			h.SavePassword = a.savePassword(h, password)
 		}
 		a.state.Hosts = append(a.state.Hosts, h)
 		a.selected = h.ID
+		if auth == store.AuthKey && ed.passphrase != "" {
+			a.runtime(h.ID).passphrase = ed.passphrase
+		}
 	} else {
 		idx := a.state.Index(ed.id)
 		if idx < 0 {
@@ -373,20 +480,51 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		h.Name, h.Host, h.Port, h.User = name, host, port, user
 		h.Group = group
 		h.OS = ed.os
-		h.SavePassword = ed.save
-		changed := old.Host != host || old.Port != port || old.User != user
-		if ed.save {
-			if password != "" {
-				h.SavePassword = a.savePassword(h, password)
+		h.Auth = auth
+		if auth == store.AuthKey {
+			h.KeyPath = keyPath
+			h.SavePassphrase = ed.saveKeyPass
+			h.SavePassword = false
+			_ = mygo.Secrets.Delete(passwordKey(h))
+			keyChanged := old.Auth != auth || old.KeyPath != keyPath
+			switch {
+			case ed.passphrase != "":
+				if keyChanged || !h.SavePassphrase {
+					_ = mygo.Secrets.Delete(passphraseKey(h))
+				}
+				if h.SavePassphrase {
+					h.SavePassphrase = a.savePassphrase(h, ed.passphrase)
+					if !h.SavePassphrase {
+						_ = mygo.Secrets.Delete(passphraseKey(h))
+					}
+				}
+			case keyChanged || !h.SavePassphrase:
+				_ = mygo.Secrets.Delete(passphraseKey(h))
 			}
 		} else {
-			_ = mygo.Secrets.Delete(passwordKey(h))
+			h.KeyPath = ""
+			h.SavePassphrase = false
+			_ = mygo.Secrets.Delete(passphraseKey(h))
+			h.SavePassword = ed.save
+			if ed.save {
+				if password != "" {
+					h.SavePassword = a.savePassword(h, password)
+				}
+			} else {
+				_ = mygo.Secrets.Delete(passwordKey(h))
+			}
 		}
+		changed := old.Host != host || old.Port != port || old.User != user ||
+			old.Auth != h.Auth || old.KeyPath != h.KeyPath
 		if changed {
 			a.resetRuntime(h.ID)
 			if rt := a.runtimes[h.ID]; rt != nil {
 				rt.password = ""
+				rt.passphrase = ""
 			}
+		}
+		if auth == store.AuthKey && ed.passphrase != "" {
+			a.runtime(h.ID).passphrase = ed.passphrase
 		}
 		a.state.Hosts[idx] = h
 		a.selected = h.ID
@@ -535,7 +673,81 @@ func (a *App) submitPassword(p *passwordState) string {
 	}
 	a.state.Hosts[idx] = h
 	a.saveState()
-	a.beginConnect(h, p.password)
+	a.beginConnect(h, connectAuth{password: p.password})
+	return ""
+}
+
+func (a *App) keyPassView(c *ui.Context, pal *palette) {
+	p := a.keyPass
+	if p == nil || !p.open {
+		return
+	}
+	submit := false
+	ui.DialogBase(c.Key("key-passphrase"), &p.open, func(backdrop, panel ui.Element) {
+		backdrop.Background(pal.overlay)
+		title := locales.KeyPassphraseTitle(p.host.Name)
+		floating(panel.Width(420).Padding(22).Gap(12).Radius(14).Background(pal.popover), pal).Label(title)
+		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+			ui.Box(c).Size(30, 30).Radius(9).Center().Background(pal.chip).Children(func() {
+				ui.Icon(c, keyIcon).Size(16, 16).TextColor(pal.textMuted)
+			})
+			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+				ui.Text(c, title).FontSize(15).FontWeight(650).TextColor(pal.text)
+				ui.Text(c, locales.KeyPassphraseDetail(p.host.User, p.host.Endpoint())).FontSize(12.5).
+					TextColor(pal.textMuted).SingleLine().Ellipsis("…")
+			})
+		})
+		in := ui.TextInputBase(c.Key("key-passphrase"), &p.passphrase).Height(32).Padding(0, 10).Radius(8).FontSize(13.5).
+			TextColor(pal.text).Password().AutoFocus().Label(locales.FieldPassphrase()).Placeholder(locales.FieldPassphrase())
+		fieldFace(in, pal)
+		focusEdge(in, in.Focused(), pal)
+		ui.Checkbox(c, &p.save, locales.PassphraseSaveLabel())
+		if p.err != "" {
+			ui.Text(c, p.err).FontSize(12.5).TextColor(pal.danger).LineHeight(1.35)
+		}
+		ui.Row(c).Gap(8).Justify(ui.End).Margin(4, 0, 0, 0).Children(func() {
+			if button(c, "cancel", locales.ActionCancel(), "esc", false, pal) || c.Shortcut(0, ui.KeyEscape) {
+				p.open = false
+			}
+			if button(c, "unlock", locales.ActionUnlock(), "", true, pal) || in.Submitted() {
+				submit = true
+				p.open = false
+			}
+		})
+	})
+	if !p.open {
+		a.keyPass = nil
+		if submit {
+			if err := a.submitKeyPassphrase(p); err != "" {
+				p.err = err
+				p.open = true
+				a.keyPass = p
+			}
+		}
+	}
+}
+
+func (a *App) submitKeyPassphrase(p *keyPassState) string {
+	if p.passphrase == "" {
+		return locales.PassphraseEmptyError()
+	}
+	idx := a.state.Index(p.host.ID)
+	if idx < 0 {
+		return ""
+	}
+	h := a.state.Hosts[idx]
+	signer, err := sshkey.Load(h.KeyPath, p.passphrase)
+	if err != nil {
+		return locales.ErrorKeyUnlock()
+	}
+	h.SavePassphrase = p.save && a.savePassphrase(h, p.passphrase)
+	if !h.SavePassphrase {
+		_ = mygo.Secrets.Delete(passphraseKey(h))
+	}
+	a.state.Hosts[idx] = h
+	a.saveState()
+	a.runtime(h.ID).passphrase = p.passphrase
+	a.beginConnect(h, connectAuth{signer: signer})
 	return ""
 }
 
@@ -656,6 +868,7 @@ func (a *App) deleteHost(h store.Host) {
 	delete(a.runtimes, h.ID)
 	delete(a.handles, h.ID)
 	_ = mygo.Secrets.Delete(passwordKey(h))
+	_ = mygo.Secrets.Delete(passphraseKey(h))
 	a.state.ForgetRecent(h.ID)
 	if idx >= 0 {
 		a.state.Hosts = append(a.state.Hosts[:idx], a.state.Hosts[idx+1:]...)

@@ -27,8 +27,10 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nested", "state.json")
 	want := State{
 		Hosts: []Host{
-			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", OS: "ubuntu", Group: "g1", SavePassword: true},
-			{ID: "b", Name: "home", Host: "10.0.0.2", Port: 22, User: "root"},
+			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", OS: "ubuntu", Group: "g1",
+				Auth: AuthPassword, SavePassword: true},
+			{ID: "b", Name: "home", Host: "10.0.0.2", Port: 22, User: "root",
+				Auth: AuthKey, KeyPath: "~/.ssh/id_ed25519", SavePassphrase: true},
 		},
 		Groups:        []Group{{ID: "g1", Name: "work"}},
 		Selected:      "b",
@@ -205,8 +207,40 @@ func TestLoadFillsDefaults(t *testing.T) {
 	if s.Hosts[0].Name != "me@dev" {
 		t.Fatalf("name = %q, want me@dev", s.Hosts[0].Name)
 	}
+	if s.Hosts[0].Auth != AuthPassword {
+		t.Fatalf("auth = %q, want password", s.Hosts[0].Auth)
+	}
 	if s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Theme != "mist" || s.FontFamily != "" {
 		t.Fatalf("settings = %+v, want the defaults", s)
+	}
+}
+
+func TestLoadNormalizesAuthentication(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	state := `{"hosts":[` +
+		`{"id":"a","host":"a"},` +
+		`{"id":"b","host":"b","auth":"key","keyPath":" ~/.ssh/id_ed25519 ","savePassword":true,"savePassphrase":true},` +
+		`{"id":"c","host":"c","auth":"key","savePassphrase":true},` +
+		`{"id":"d","host":"d","auth":"agent","keyPath":"~/.ssh/other","savePassphrase":true}]}`
+	if err := os.WriteFile(path, []byte(state), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := loadFrom(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, b, c, d := s.Hosts[0], s.Hosts[1], s.Hosts[2], s.Hosts[3]
+	if a.Auth != AuthPassword || a.KeyPath != "" || a.SavePassphrase {
+		t.Fatalf("password host = %+v, want the password defaults", a)
+	}
+	if b.Auth != AuthKey || b.KeyPath != "~/.ssh/id_ed25519" || b.SavePassword || !b.SavePassphrase {
+		t.Fatalf("key host = %+v, want its key kept", b)
+	}
+	if c.Auth != AuthKey || c.SavePassphrase {
+		t.Fatalf("key host without a path = %+v, want no saved passphrase", c)
+	}
+	if d.Auth != AuthPassword || d.KeyPath != "" || d.SavePassphrase {
+		t.Fatalf("unknown auth host = %+v, want the password defaults", d)
 	}
 }
 

@@ -17,7 +17,7 @@ import (
 
 var (
 	// ErrAuth is what Connect fails with when the server refused the
-	// password.
+	// password or the key.
 	ErrAuth = errors.New("ssh: authentication failed")
 	// ErrHostKeyRejected is what Connect fails with when the host key
 	// callback refused the host's key.
@@ -31,6 +31,9 @@ type Config struct {
 	User    string
 	// Password is the password the server takes.
 	Password string
+	// Signer is the private key to sign in with. It is tried before the
+	// password.
+	Signer ssh.Signer
 	// HostKeyCallback checks the host's key, as ssh.HostKeyCallback does.
 	HostKeyCallback ssh.HostKeyCallback
 	// Timeout bounds the connection and the sign-in; 20 seconds when zero.
@@ -63,20 +66,13 @@ func Connect(ctx context.Context, cfg Config) (*Session, error) {
 	if hostKey == nil {
 		return nil, errors.New("sshx: no host key callback")
 	}
+	auth := authMethods(cfg)
+	if len(auth) == 0 {
+		return nil, errors.New("sshx: no authentication method")
+	}
 	clientConfig := &ssh.ClientConfig{
-		User: cfg.User,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(cfg.Password),
-			// Servers that ask for a password through keyboard-interactive,
-			// as PAM does, get the same password.
-			ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
-				answers := make([]string, len(questions))
-				for i := range answers {
-					answers[i] = cfg.Password
-				}
-				return answers, nil
-			}),
-		},
+		User:            cfg.User,
+		Auth:            auth,
 		HostKeyCallback: hostKey,
 		Timeout:         timeout,
 	}
@@ -136,6 +132,28 @@ func Connect(ctx context.Context, cfg Config) (*Session, error) {
 		return nil, err
 	}
 	return &Session{client: client, session: sess, stdin: stdin, stdout: stdout, raw: raw}, nil
+}
+
+func authMethods(cfg Config) []ssh.AuthMethod {
+	var methods []ssh.AuthMethod
+	if cfg.Signer != nil {
+		methods = append(methods, ssh.PublicKeys(cfg.Signer))
+	}
+	if cfg.Password != "" {
+		methods = append(methods,
+			ssh.Password(cfg.Password),
+			// Servers that ask for a password through keyboard-interactive,
+			// as PAM does, get the same password.
+			ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
+				answers := make([]string, len(questions))
+				for i := range answers {
+					answers[i] = cfg.Password
+				}
+				return answers, nil
+			}),
+		)
+	}
+	return methods
 }
 
 func isAuthError(err error) bool {

@@ -26,6 +26,7 @@ var (
 	maximizeIcon     = icon(`<rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/>`)
 	restoreIcon      = icon(`<rect x="3.5" y="5.5" width="7" height="7" rx="1.2"/><path d="M5.5 3.5h5.5a1.5 1.5 0 0 1 1.5 1.5v5.5"/>`)
 	lockIcon         = icon(`<rect x="3.2" y="7" width="9.6" height="6.6" rx="1.6"/><path d="M5.6 7V5a2.4 2.4 0 0 1 4.8 0v2"/><path d="M8 9.8v1.6"/>`)
+	keyIcon          = icon(`<circle cx="4.6" cy="8" r="2.4"/><path d="M7 8h6.4M11.4 8v2.2M9.4 8v1.7"/>`)
 	shieldIcon       = icon(`<path d="M8 1.9l5 2v4.2c0 2.9-2.1 5.2-5 6.2-2.9-1-5-3.3-5-6.2V3.9z"/><path d="M5.8 8.1l1.6 1.6 3-3.2"/>`)
 	copyIcon         = icon(`<rect x="5.4" y="5.4" width="8" height="8" rx="1.6"/><path d="M10.6 5.4V4a1.4 1.4 0 0 0-1.4-1.4H4A1.4 1.4 0 0 0 2.6 4v5.2A1.4 1.4 0 0 0 4 10.6h1.4"/>`)
 	trashIcon        = icon(`<path d="M2.8 4.5h10.4M6.4 4.5V3.2a.9.9 0 0 1 .9-.9h1.4a.9.9 0 0 1 .9.9v1.3M4.2 4.5l.6 8.1a1.3 1.3 0 0 0 1.3 1.2h3.8a1.3 1.3 0 0 0 1.3-1.2l.6-8.1"/>`)
