@@ -135,7 +135,13 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 	switch {
 	case selected:
 		bg = pal.rowSelected
-		chosen(card, pal)
+		if pal.dark {
+			chosen(card, pal)
+		} else {
+			// A crisp edge, as a border would give, and a shadow under it
+			// that makes the card read as raised, not blurred.
+			card.Shadow(0, 0, 0, 1, pal.cardBorder).Shadow(0, 1, 3, 0, pal.rowShadow)
+		}
 	case card.Hovered():
 		bg = pal.chip.Mix(pal.text, 0.05)
 	}
