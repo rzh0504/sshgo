@@ -55,8 +55,11 @@ func expand(path, home string) string {
 	if path == "~" {
 		return home
 	}
-	if strings.HasPrefix(path, "~/") || strings.HasPrefix(path, `~\`) {
+	if strings.HasPrefix(path, "~/") {
 		return filepath.Join(home, path[2:])
+	}
+	if strings.HasPrefix(path, `~\`) {
+		return filepath.Join(home, strings.ReplaceAll(path[2:], `\`, "/"))
 	}
 	return path
 }
