@@ -274,6 +274,16 @@ func (msgs Messages) DashboardTitle() string {
 	return Catalog.Format(msgs.locale, "dashboardTitle", nil)
 }
 
+// DashboardRecent says "Recent Hosts"
+// in the language the app shows.
+func DashboardRecent() string { return In(i18n.Locale()).DashboardRecent() }
+
+// DashboardRecent says "Recent Hosts"
+// in the language of msgs.
+func (msgs Messages) DashboardRecent() string {
+	return Catalog.Format(msgs.locale, "dashboardRecent", nil)
+}
+
 // ActionNewGroup says "New Group"
 // in the language the app shows.
 func ActionNewGroup() string { return In(i18n.Locale()).ActionNewGroup() }

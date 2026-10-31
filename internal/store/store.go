@@ -63,14 +63,18 @@ func joinHostPort(host string, port int) string {
 // picks another.
 const DefaultFontSize = 13
 
+// RecentHostsMax is how many hosts the dashboard's recent group keeps.
+const RecentHostsMax = 6
+
 // State is what sshgo remembers: its hosts and groups, the window as it
 // was, and the settings.
 type State struct {
-	Hosts         []Host  `json:"hosts"`
-	Groups        []Group `json:"groups,omitempty"`
-	Selected      string  `json:"selected,omitempty"`
-	SidebarWidth  float32 `json:"sidebarWidth,omitempty"`
-	SidebarHidden bool    `json:"sidebarHidden,omitempty"`
+	Hosts         []Host   `json:"hosts"`
+	Groups        []Group  `json:"groups,omitempty"`
+	Selected      string   `json:"selected,omitempty"`
+	Recent        []string `json:"recent,omitempty"` // host ids connected last, newest first
+	SidebarWidth  float32  `json:"sidebarWidth,omitempty"`
+	SidebarHidden bool     `json:"sidebarHidden,omitempty"`
 
 	Appearance string  `json:"appearance,omitempty"` // "system", "light" or "dark"
 	Theme      string  `json:"theme,omitempty"`      // one theme for both appearances
@@ -112,6 +116,46 @@ func (s State) Index(id string) int {
 		}
 	}
 	return -1
+}
+
+// RecordRecent puts a host first among those connected last, dropping
+// duplicates and the ones past the limit.
+func (s *State) RecordRecent(id string) {
+	if id == "" {
+		return
+	}
+	out := make([]string, 0, RecentHostsMax)
+	out = append(out, id)
+	for _, x := range s.Recent {
+		if x == id || len(out) >= RecentHostsMax {
+			continue
+		}
+		out = append(out, x)
+	}
+	s.Recent = out
+}
+
+// ForgetRecent drops a host from those connected last.
+func (s *State) ForgetRecent(id string) {
+	out := s.Recent[:0]
+	for _, x := range s.Recent {
+		if x != id {
+			out = append(out, x)
+		}
+	}
+	s.Recent = out
+}
+
+// RecentHosts returns the hosts connected last, newest first, skipping
+// the ids of hosts that are gone.
+func (s State) RecentHosts() []Host {
+	out := make([]Host, 0, len(s.Recent))
+	for _, id := range s.Recent {
+		if h, ok := s.Host(id); ok {
+			out = append(out, h)
+		}
+	}
+	return out
 }
 
 // Group returns the group of an id.
@@ -253,6 +297,19 @@ func (s *State) fillDefaults() {
 	default:
 		s.CloseBehavior = "tray"
 	}
+	seen := map[string]bool{}
+	recent := s.Recent[:0]
+	for _, id := range s.Recent {
+		if id == "" || seen[id] || len(recent) >= RecentHostsMax {
+			continue
+		}
+		if _, ok := s.Host(id); !ok {
+			continue
+		}
+		seen[id] = true
+		recent = append(recent, id)
+	}
+	s.Recent = recent
 }
 
 // Save writes the state, replacing the file in one step.

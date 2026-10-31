@@ -142,6 +142,12 @@ func (a *App) saveState() {
 	}
 }
 
+// recordRecent remembers a host as connected just now.
+func (a *App) recordRecent(id string) {
+	a.state.RecordRecent(id)
+	a.saveState()
+}
+
 func (a *App) runtime(id string) *hostRuntime {
 	rt := a.runtimes[id]
 	if rt == nil {
@@ -392,6 +398,7 @@ func (a *App) beginConnect(h store.Host, password string) {
 			default:
 				rt.state = connConnected
 			}
+			a.recordRecent(h.ID)
 			a.updateTitle()
 			a.focusTerminal(h.ID)
 		})

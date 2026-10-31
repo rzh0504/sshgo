@@ -40,8 +40,8 @@ func (a *App) dashboardSections() []hostSection {
 	return out
 }
 
-// dashboard is what the card shows while no shell does: the hosts to
-// manage, by group, with how many there are.
+// dashboard is what the card shows while no shell does: the hosts
+// connected last, then the hosts to manage, by group.
 func (a *App) dashboard(c *ui.Context, pal *palette) {
 	ui.Scroll(c.Key("dashboard")).Fill().TrackScroll(&a.dashScroll).Children(func() {
 		ui.Column(c).Padding(18, dashPad, 26, dashPad).Gap(20).Children(func() {
@@ -49,10 +49,30 @@ func (a *App) dashboard(c *ui.Context, pal *palette) {
 				a.dashboardEmpty(c, pal)
 				return
 			}
+			if recent := a.state.RecentHosts(); len(recent) > 0 {
+				a.dashboardRecent(c, pal, recent)
+			}
 			for _, s := range a.dashboardSections() {
 				a.dashboardSection(c, pal, s)
 			}
 		})
+	})
+}
+
+// dashboardRecent lists the hosts connected last, above a rule that sets
+// the groups below apart.
+func (a *App) dashboardRecent(c *ui.Context, pal *palette, hosts []store.Host) {
+	ui.Column(c).Gap(10).Children(func() {
+		ui.Row(c).Height(26).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, clockIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
+			ui.Text(c, locales.DashboardRecent()).FontSize(12.5).FontWeight(600).TextColor(pal.textMuted)
+		})
+		ui.Row(c).Wrap().Gap(10).Children(func() {
+			for _, h := range hosts {
+				a.dashboardHost(c, pal, h)
+			}
+		})
+		ui.Box(c).Height(1).Shrink(0).Background(pal.divider).Margin(2, 0, 0, 0)
 	})
 }
 

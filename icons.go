@@ -33,6 +33,7 @@ var (
 	retryIcon        = icon(`<path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2.8v3.4h-3.4"/>`)
 	infoIcon         = icon(`<circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v4M8 4.9v.1"/>`)
 	folderIcon       = icon(`<path d="M1.9 4.3a1.4 1.4 0 0 1 1.4-1.4h2.6l1.4 1.6h5.4a1.4 1.4 0 0 1 1.4 1.4v5.8a1.4 1.4 0 0 1-1.4 1.4H3.3a1.4 1.4 0 0 1-1.4-1.4z"/>`)
+	clockIcon        = icon(`<circle cx="8" cy="8" r="6.2"/><path d="M8 4.8V8l2.2 1.3"/>`)
 	chevronRightIcon = icon(`<path d="M6 3.4L10.6 8 6 12.6"/>`)
 	chevronDownIcon  = icon(`<path d="M3.4 6L8 10.6 12.6 6"/>`)
 	sunIcon          = icon(`<circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1"/>`)

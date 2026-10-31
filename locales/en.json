@@ -24,6 +24,7 @@
   "sidebarNoHosts": "No hosts yet",
   "sidebarConnectedCount": "{count, plural, =0 {None connected} one {# connected} other {# connected}}",
   "dashboardTitle": "Hosts",
+  "dashboardRecent": "Recent Hosts",
   "actionNewGroup": "New Group",
   "actionNewHostInGroup": "New Host in Group",
   "actionRenameGroup": "Rename Group…",

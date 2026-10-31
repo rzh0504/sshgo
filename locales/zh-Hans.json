@@ -24,6 +24,7 @@
   "sidebarNoHosts": "还没有主机",
   "sidebarConnectedCount": "{count, plural, other {# 台已连接}}",
   "dashboardTitle": "主机",
+  "dashboardRecent": "最近连接主机",
   "actionNewGroup": "新建分组",
   "actionNewHostInGroup": "在此分组中新建主机",
   "actionRenameGroup": "重命名分组…",

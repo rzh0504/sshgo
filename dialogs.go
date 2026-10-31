@@ -656,6 +656,7 @@ func (a *App) deleteHost(h store.Host) {
 	delete(a.runtimes, h.ID)
 	delete(a.handles, h.ID)
 	_ = mygo.Secrets.Delete(passwordKey(h))
+	a.state.ForgetRecent(h.ID)
 	if idx >= 0 {
 		a.state.Hosts = append(a.state.Hosts[:idx], a.state.Hosts[idx+1:]...)
 	}

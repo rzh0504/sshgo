@@ -3,6 +3,7 @@ package store
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -31,6 +32,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		},
 		Groups:        []Group{{ID: "g1", Name: "work"}},
 		Selected:      "b",
+		Recent:        []string{"b", "a"},
 		SidebarWidth:  300,
 		Appearance:    "dark",
 		Theme:         "mist",
@@ -81,6 +83,59 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		if got.Groups[i] != want.Groups[i] {
 			t.Fatalf("group %d = %+v, want %+v", i, got.Groups[i], want.Groups[i])
 		}
+	}
+	if !slices.Equal(got.Recent, want.Recent) {
+		t.Fatalf("recent = %v, want %v", got.Recent, want.Recent)
+	}
+}
+
+func TestRecordRecent(t *testing.T) {
+	var s State
+	s.RecordRecent("a")
+	s.RecordRecent("b")
+	s.RecordRecent("a")
+	if want := []string{"a", "b"}; !slices.Equal(s.Recent, want) {
+		t.Fatalf("recent = %v, want %v", s.Recent, want)
+	}
+	for _, id := range []string{"c", "d", "e", "f", "g", "h"} {
+		s.RecordRecent(id)
+	}
+	if len(s.Recent) != RecentHostsMax || s.Recent[0] != "h" {
+		t.Fatalf("recent = %v, want %d hosts starting with h", s.Recent, RecentHostsMax)
+	}
+	s.RecordRecent("")
+	if s.Recent[0] != "h" {
+		t.Fatalf("recent = %v, want an empty id to change nothing", s.Recent)
+	}
+	s.ForgetRecent("h")
+	if slices.Contains(s.Recent, "h") {
+		t.Fatalf("recent = %v, want h gone", s.Recent)
+	}
+}
+
+func TestRecentHosts(t *testing.T) {
+	s := State{
+		Hosts:  []Host{{ID: "a", Name: "a"}, {ID: "b", Name: "b"}},
+		Recent: []string{"b", "gone", "a"},
+	}
+	got := s.RecentHosts()
+	if len(got) != 2 || got[0].ID != "b" || got[1].ID != "a" {
+		t.Fatalf("recent hosts = %+v, want b then a", got)
+	}
+}
+
+func TestLoadCleansRecent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	state := `{"hosts":[{"id":"a","host":"a"},{"id":"b","host":"b"}],"recent":["b","b","gone","a"]}`
+	if err := os.WriteFile(path, []byte(state), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := loadFrom(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"b", "a"}; !slices.Equal(s.Recent, want) {
+		t.Fatalf("recent = %v, want %v", s.Recent, want)
 	}
 }
 
