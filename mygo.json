@@ -1,7 +1,7 @@
 {
   "name": "sshgo",
   "identifier": "sh.sshgo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "out": "build",
   "icon": "assets/icons/icon.png",
   "resources": ["assets/os/LICENSE", "assets/os/NOTICE.md"],
