@@ -25,9 +25,10 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nested", "state.json")
 	want := State{
 		Hosts: []Host{
-			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", SavePassword: true},
+			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", Group: "g1", SavePassword: true},
 			{ID: "b", Name: "home", Host: "10.0.0.2", Port: 22, User: "root"},
 		},
+		Groups:       []Group{{ID: "g1", Name: "work"}},
 		Selected:     "b",
 		SidebarWidth: 300,
 		Appearance:   "dark",
@@ -65,6 +66,46 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		if got.Hosts[i] != want.Hosts[i] {
 			t.Fatalf("host %d = %+v, want %+v", i, got.Hosts[i], want.Hosts[i])
 		}
+	}
+	if len(got.Groups) != len(want.Groups) {
+		t.Fatalf("len(groups) = %d, want %d", len(got.Groups), len(want.Groups))
+	}
+	for i := range want.Groups {
+		if got.Groups[i] != want.Groups[i] {
+			t.Fatalf("group %d = %+v, want %+v", i, got.Groups[i], want.Groups[i])
+		}
+	}
+}
+
+func TestLoadDropsBrokenGroups(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	state := `{"groups":[{"id":"g1","name":" work "},{"id":"g1","name":"again"},{"id":"","name":"none"},{"id":"g2","name":"  "}],` +
+		`"hosts":[{"id":"a","host":"a","group":"g1"},{"id":"b","host":"b","group":"gone"}]}`
+	if err := os.WriteFile(path, []byte(state), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := loadFrom(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(s.Groups) != 1 || s.Groups[0] != (Group{ID: "g1", Name: "work"}) {
+		t.Fatalf("groups = %+v, want the one kept group", s.Groups)
+	}
+	if s.Hosts[0].Group != "g1" {
+		t.Fatalf("host a group = %q, want g1", s.Hosts[0].Group)
+	}
+	if s.Hosts[1].Group != "" {
+		t.Fatalf("host b group = %q, want none", s.Hosts[1].Group)
+	}
+}
+
+func TestGroupByNameIgnoresCase(t *testing.T) {
+	s := State{Groups: []Group{{ID: "g1", Name: "Work"}}}
+	if g, ok := s.GroupByName(" work "); !ok || g.ID != "g1" {
+		t.Fatalf("GroupByName = %+v, %v, want g1", g, ok)
+	}
+	if _, ok := s.GroupByName("home"); ok {
+		t.Fatal("GroupByName found a group that is not there")
 	}
 }
 

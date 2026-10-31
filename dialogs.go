@@ -18,12 +18,21 @@ type editorState struct {
 	open     bool
 	id       string
 	name     string
+	group    string
 	host     string
 	port     string
 	user     string
 	password string
 	save     bool
 	err      string
+}
+
+// groupEditState is the dialog that makes a group, or renames one.
+type groupEditState struct {
+	open bool
+	id   string
+	name string
+	err  string
 }
 
 type passwordState struct {
@@ -45,16 +54,18 @@ type hostKeyState struct {
 }
 
 type confirmState struct {
-	open bool
-	host store.Host
+	open  bool
+	host  store.Host
+	group *store.Group
 }
 
 func (a *App) openEditor(id string) {
-	ed := &editorState{open: true, port: "22", user: systemUser()}
+	ed := &editorState{open: true, port: "22"}
 	if id != "" {
 		if h, ok := a.state.Host(id); ok {
 			ed.id = h.ID
 			ed.name = h.Name
+			ed.group = a.groupName(h.Group)
 			ed.host = h.Host
 			ed.port = strconv.Itoa(h.Port)
 			ed.user = h.User
@@ -64,12 +75,30 @@ func (a *App) openEditor(id string) {
 	a.editor = ed
 }
 
+// openEditorInGroup makes a host in a group: "" makes one in no group.
+func (a *App) openEditorInGroup(group string) {
+	a.openEditor("")
+	a.editor.group = a.groupName(group)
+}
+
+func (a *App) openGroupEditor(id string) {
+	ge := &groupEditState{open: true, id: id}
+	if g, ok := a.state.Group(id); ok {
+		ge.name = g.Name
+	}
+	a.groupEdit = ge
+}
+
 func (a *App) openPassword(h store.Host) {
 	a.password = &passwordState{open: true, host: h, save: h.SavePassword}
 }
 
 func (a *App) openDelete(h store.Host) {
 	a.confirm = &confirmState{open: true, host: h}
+}
+
+func (a *App) openDeleteGroup(g store.Group) {
+	a.confirm = &confirmState{open: true, group: &g}
 }
 
 func (a *App) hostMenu(m *ui.Menu, h store.Host) {
@@ -102,6 +131,7 @@ func (a *App) hostMenu(m *ui.Menu, h store.Host) {
 
 func (a *App) dialogs(c *ui.Context, pal *palette) {
 	a.editorView(c, pal)
+	a.groupEditorView(c, pal)
 	a.passwordView(c, pal)
 	a.hostKeyView(c, pal)
 	a.confirmView(c, pal)
@@ -117,12 +147,77 @@ func dialogHead(c *ui.Context, pal *palette, title, detail string) {
 func formField(c *ui.Context, key, label, placeholder string, value *string, pal *palette, password bool) ui.Element {
 	ui.Text(c, label).FontSize(12).FontWeight(550).TextColor(pal.textMuted).Margin(0, 0, 2, 0)
 	in := ui.TextInputBase(c.Key(key), value).Height(32).Padding(0, 10).Radius(8).FontSize(13.5).
-		Border(0, ui.Transparent).TextColor(pal.text).Placeholder(placeholder).Label(label)
-	face(in, pal, pal.control)
+		TextColor(pal.text).Placeholder(placeholder).Label(label)
+	fieldFace(in, pal)
+	focusEdge(in, in.Focused(), pal)
 	if password {
 		in.Password()
 	}
 	return in
+}
+
+// groupField is a host's group: chosen among those there are, or a name
+// typed in for a new one.
+func groupField(c *ui.Context, key string, value *string, options []string, pal *palette) ui.Element {
+	ui.Text(c, locales.FieldGroup()).FontSize(12).FontWeight(550).TextColor(pal.textMuted).Margin(0, 0, 2, 0)
+	box := fieldFace(ui.Row(c).Height(32).Radius(8).AlignItems(ui.Center), pal)
+	var cb ui.ComboboxParts
+	box.Children(func() {
+		cb = ui.ComboboxBase(c.Key(key), value)
+		cb.Input.FillHeight().Grow(1).MinWidth(0).Padding(0, 28, 0, 10).Radius(8).FontSize(13.5).
+			TextColor(pal.text).Placeholder(locales.PlaceholderGroup()).Label(locales.FieldGroup())
+		arrow := ui.ButtonBase(c.Key(key+"-arrow")).Size(18, 18).Center().Radius(4).
+			Absolute().Right(7).Top(7).Label(locales.FieldGroup())
+		arrow.Children(func() {
+			ui.Icon(c, chevronDownIcon).Size(11, 11).TextColor(pal.textFaint)
+		})
+		if arrow.Clicked() {
+			cb.SetOpen(!cb.Open())
+			cb.Input.Focus()
+		}
+	})
+	focusEdge(box, cb.Input.Focused(), pal)
+	q := strings.ToLower(strings.TrimSpace(*value))
+	var shown []string
+	for _, o := range options {
+		if q == "" || strings.Contains(strings.ToLower(o), q) {
+			shown = append(shown, o)
+		}
+	}
+	cb.Popup(func(panel ui.Element) {
+		floating(panel.Padding(4).Radius(10).Background(pal.popover), pal)
+		panel.MaxHeight(240)
+		panel.Children(func() {
+			for _, name := range shown {
+				item := cb.Item(name).Padding(6, 10).Radius(6)
+				fg := pal.text
+				if item.Highlighted() {
+					item.Background(pal.accent)
+					fg = ui.Hex("#ffffff")
+				}
+				item.Children(func() {
+					ui.Text(c, name).FontSize(13).TextColor(fg).SingleLine().Ellipsis("…")
+				})
+			}
+		})
+	})
+	if v, ok := cb.Chosen(); ok {
+		*value = v
+	}
+	return cb.Input
+}
+
+// newGroupHint says when the group name is one no group has yet, which
+// saving makes.
+func (a *App) newGroupHint(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+	if _, ok := a.state.GroupByName(name); ok {
+		return ""
+	}
+	return locales.GroupWillCreate(name)
 }
 
 func (a *App) editorView(c *ui.Context, pal *palette) {
@@ -139,9 +234,17 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 		}
 		floating(panel.Width(460).Padding(22).Gap(14).Radius(14).Background(pal.popover), pal).Label(title)
 		dialogHead(c, pal, title, "")
-		var inName, inHost, inPort, inUser, inPass ui.Element
-		ui.Column(c).Gap(5).Children(func() {
-			inName = formField(c, "name", locales.FieldName(), locales.PlaceholderName(), &ed.name, pal, false)
+		var inName, inGroup, inHost, inPort, inUser, inPass ui.Element
+		ui.Row(c).Gap(10).AlignItems(ui.Start).Children(func() {
+			ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
+				inName = formField(c, "name", locales.FieldName(), locales.PlaceholderName(), &ed.name, pal, false).AutoFocus()
+			})
+			ui.Column(c).Width(180).Shrink(0).Gap(4).Children(func() {
+				inGroup = groupField(c, "group-"+ed.id, &ed.group, a.groupNames(), pal)
+				if hint := a.newGroupHint(ed.group); hint != "" {
+					ui.Text(c, hint).FontSize(11).TextColor(pal.textFaint).SingleLine().Ellipsis("…")
+				}
+			})
 		})
 		ui.Row(c).Gap(10).AlignItems(ui.End).Children(func() {
 			ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
@@ -177,7 +280,7 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 				submit = 2
 				ed.open = false
 			}
-			if inName.Submitted() || inHost.Submitted() || inPort.Submitted() || inUser.Submitted() || inPass.Submitted() {
+			if inName.Submitted() || inGroup.Submitted() || inHost.Submitted() || inPort.Submitted() || inUser.Submitted() || inPass.Submitted() {
 				submit = 2
 				ed.open = false
 			}
@@ -227,12 +330,17 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		name = user + "@" + host
 	}
 	password := ed.password
+	group, err := a.groupFor(ed.group)
+	if err != nil {
+		return err.Error()
+	}
 
 	if ed.id == "" {
 		h, err := store.New(name, host, port, user, ed.save)
 		if err != nil {
 			return err.Error()
 		}
+		h.Group = group
 		if ed.save && password != "" {
 			h.SavePassword = a.savePassword(h, password)
 		}
@@ -246,6 +354,7 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		old := a.state.Hosts[idx]
 		h := old
 		h.Name, h.Host, h.Port, h.User = name, host, port, user
+		h.Group = group
 		h.SavePassword = ed.save
 		changed := old.Host != host || old.Port != port || old.User != user
 		if ed.save {
@@ -272,6 +381,76 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 	return ""
 }
 
+func (a *App) groupEditorView(c *ui.Context, pal *palette) {
+	ge := a.groupEdit
+	if ge == nil || !ge.open {
+		return
+	}
+	submit := false
+	ui.DialogBase(c.Key("group-editor"), &ge.open, func(backdrop, panel ui.Element) {
+		backdrop.Background(pal.overlay)
+		title := locales.GroupAddTitle()
+		if ge.id != "" {
+			title = locales.GroupEditTitle()
+		}
+		floating(panel.Width(400).Padding(22).Gap(14).Radius(14).Background(pal.popover), pal).Label(title)
+		dialogHead(c, pal, title, locales.GroupEditDetail())
+		var in ui.Element
+		ui.Column(c).Gap(5).Children(func() {
+			in = formField(c, "group-name", locales.FieldGroupName(), locales.PlaceholderGroupName(), &ge.name, pal, false).AutoFocus()
+		})
+		if ge.err != "" {
+			ui.Text(c, ge.err).FontSize(12.5).TextColor(pal.danger).LineHeight(1.35)
+		}
+		ui.Row(c).Gap(8).Justify(ui.End).Margin(6, 0, 0, 0).Children(func() {
+			if button(c, "cancel", locales.ActionCancel(), "esc", false, pal) || c.Shortcut(0, ui.KeyEscape) {
+				ge.open = false
+			}
+			if button(c, "save-group", locales.ActionSave(), "", true, pal) || c.Shortcut(ui.Cmd, ui.KeyS) {
+				submit = true
+				ge.open = false
+			}
+			if in.Submitted() {
+				submit = true
+				ge.open = false
+			}
+		})
+	})
+	if !ge.open {
+		a.groupEdit = nil
+		if submit {
+			if err := a.commitGroup(ge); err != "" {
+				ge.err = err
+				ge.open = true
+				a.groupEdit = ge
+			}
+		}
+	}
+}
+
+// commitGroup saves a new group, or the new name of one, and returns what
+// is wrong with it, if anything.
+func (a *App) commitGroup(ge *groupEditState) string {
+	name := strings.TrimSpace(ge.name)
+	if name == "" {
+		return locales.ErrorGroupNameRequired()
+	}
+	if g, ok := a.state.GroupByName(name); ok && g.ID != ge.id {
+		return locales.ErrorGroupExists()
+	}
+	if ge.id == "" {
+		g, err := store.NewGroup(name)
+		if err != nil {
+			return err.Error()
+		}
+		a.state.Groups = append(a.state.Groups, g)
+	} else if idx := a.state.GroupIndex(ge.id); idx >= 0 {
+		a.state.Groups[idx].Name = name
+	}
+	a.saveState()
+	return ""
+}
+
 func (a *App) passwordView(c *ui.Context, pal *palette) {
 	p := a.password
 	if p == nil || !p.open {
@@ -292,8 +471,9 @@ func (a *App) passwordView(c *ui.Context, pal *palette) {
 			})
 		})
 		in := ui.TextInputBase(c.Key("password"), &p.password).Height(32).Padding(0, 10).Radius(8).FontSize(13.5).
-			Border(0, ui.Transparent).TextColor(pal.text).Password().AutoFocus().Label(locales.FieldPassword()).Placeholder(locales.FieldPassword())
-		face(in, pal, pal.control)
+			TextColor(pal.text).Password().AutoFocus().Label(locales.FieldPassword()).Placeholder(locales.FieldPassword())
+		fieldFace(in, pal)
+		focusEdge(in, in.Focused(), pal)
 		ui.Checkbox(c, &p.save, locales.PasswordSaveLabel())
 		if p.err != "" {
 			ui.Text(c, p.err).FontSize(12.5).TextColor(pal.danger)
@@ -414,12 +594,16 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 	if cf == nil || !cf.open {
 		return
 	}
+	title, detail := locales.DeleteTitle(), locales.DeleteDetail(cf.host.Name)
+	if cf.group != nil {
+		title, detail = locales.DeleteGroupTitle(), locales.DeleteGroupDetail(cf.group.Name)
+	}
 	run := false
 	ui.DialogBase(c.Key("confirm"), &cf.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(pal.overlay)
 		floating(panel.Width(400).Padding(22).Gap(8).Radius(14).Background(pal.popover), pal).
-			Label(locales.DeleteTitle())
-		dialogHead(c, pal, locales.DeleteTitle(), locales.DeleteDetail(cf.host.Name))
+			Label(title)
+		dialogHead(c, pal, title, detail)
 		ui.Row(c).Gap(8).Justify(ui.End).Margin(14, 0, 0, 0).Children(func() {
 			if button(c, "cancel", locales.ActionCancel(), "esc", false, pal) || c.Shortcut(0, ui.KeyEscape) {
 				cf.open = false
@@ -433,7 +617,11 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 	if !cf.open {
 		a.confirm = nil
 		if run {
-			a.deleteHost(cf.host)
+			if cf.group != nil {
+				a.deleteGroup(*cf.group)
+			} else {
+				a.deleteHost(cf.host)
+			}
 		}
 	}
 }
@@ -461,4 +649,20 @@ func (a *App) deleteHost(h store.Host) {
 	a.saveState()
 	a.updateTitle()
 	a.focusTerminal(a.selected)
+}
+
+// deleteGroup removes a group, and leaves its hosts in no group.
+func (a *App) deleteGroup(g store.Group) {
+	idx := a.state.GroupIndex(g.ID)
+	if idx < 0 {
+		return
+	}
+	a.state.Groups = append(a.state.Groups[:idx], a.state.Groups[idx+1:]...)
+	for i := range a.state.Hosts {
+		if a.state.Hosts[i].Group == g.ID {
+			a.state.Hosts[i].Group = ""
+		}
+	}
+	delete(a.collapsed, g.ID)
+	a.saveState()
 }

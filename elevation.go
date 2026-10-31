@@ -65,6 +65,24 @@ func face(e ui.Element, pal *palette, bg ui.Color) ui.Element {
 	return darkShadow(litEdge(e, pal))
 }
 
+// fieldFace styles an input: a crisp hairline edge on the control's
+// color, where a raised control's edge would blur.
+func fieldFace(e ui.Element, pal *palette) ui.Element {
+	edge := pal.text.Alpha(0.12)
+	if pal.dark {
+		edge = pal.text.Alpha(0.16)
+	}
+	return e.Background(pal.control).Border(1, edge)
+}
+
+// focusEdge marks the input of a field with the keyboard's focus.
+func focusEdge(e ui.Element, focused bool, pal *palette) ui.Element {
+	if focused {
+		e.Border(1, pal.accent.Alpha(0.65))
+	}
+	return e
+}
+
 // button is a raised surface, or the accent's for the primary one.
 func button(c *ui.Context, key, label, keys string, primary bool, pal *palette) bool {
 	return sizedButtonAt(c, key, label, keys, primary, 30, 8, pal, false)

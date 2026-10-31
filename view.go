@@ -126,14 +126,23 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 		ui.Text(c, "sshgo").FontSize(13.5).FontWeight(650).TextColor(pal.text).SingleLine().Padding(0, 4, 0, 2)
 	})
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
-		if len(a.state.Hosts) == 0 {
+		if len(a.state.Hosts) == 0 && len(a.state.Groups) == 0 {
 			ui.Column(c).Padding(8, 10).Children(func() {
 				ui.Text(c, locales.SidebarNoHosts()).FontSize(12.5).TextColor(pal.textFaint)
 			})
 			return
 		}
-		for _, h := range a.state.Hosts {
-			a.hostRow(c, pal, h)
+		if len(a.state.Groups) == 0 {
+			for _, h := range a.state.Hosts {
+				a.hostRow(c, pal, h, 0)
+			}
+			return
+		}
+		if ungrouped := a.hostsIn(""); len(ungrouped) > 0 {
+			a.sidebarGroup(c, pal, store.Group{}, locales.GroupUngrouped(), ungrouped)
+		}
+		for _, g := range a.state.Groups {
+			a.sidebarGroup(c, pal, g, g.Name, a.hostsIn(g.ID))
 		}
 	})
 	a.sidebarFooter(c, pal)
@@ -154,10 +163,10 @@ func (a *App) mask(s string) string {
 	return maskIPv4s(s)
 }
 
-func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host) {
+func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32) {
 	selected := h.ID == a.selected
 	rt := a.runtimes[h.ID]
-	row := ui.Row(c.Key(h.ID)).Height(rowH2).Padding(0, 10, 0, rowInset).Gap(10).AlignItems(ui.Center).Radius(8).Margin(0, 0, 1, 0)
+	row := ui.Row(c.Key(h.ID)).Height(rowH2).Padding(0, 10, 0, rowInset+indent).Gap(10).AlignItems(ui.Center).Radius(8).Margin(0, 0, 1, 0)
 	hovered := row.Hovered()
 	if pal.dark {
 		row.Border(1, ui.Transparent)
@@ -261,6 +270,7 @@ func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 
 func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) {
 	h, hasHost := a.selectedHost()
+	dashboard := a.showsDashboard()
 	card := paned(ui.Column(c).Grow(1).MinHeight(0).Radius(14).Background(pal.card), pal).Clip()
 	card.Children(func() {
 		ui.Row(c).Height(headerH).Shrink(0).AlignItems(ui.Center).Padding(0, 10, 0, a.chrome.headerPad).DragWindow().Children(func() {
@@ -270,13 +280,26 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 					iconButton(c, "new-host-2", plusIcon, locales.ActionNewHost(), pal, func() { a.openEditor("") })
 				})
 			}
-			if hasHost {
+			if hasHost && !dashboard {
 				ui.Icon(c, serverIcon).Size(15, 15).TextColor(hostColor(pal, h.Name)).Shrink(0)
 				ui.Text(c, h.Name).FontSize(14).FontWeight(600).TextColor(pal.text).SingleLine().Ellipsis("…").
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
+			} else {
+				ui.Icon(c, serverIcon).Size(15, 15).TextColor(pal.textMuted).Shrink(0)
+				ui.Text(c, locales.DashboardTitle()).FontSize(14).FontWeight(600).TextColor(pal.text).
+					SingleLine().Margin(0, 0, 0, 8)
 			}
 			ui.Spacer(c)
-			if hasHost {
+			if dashboard {
+				ui.Row(c).Gap(8).Shrink(0).Margin(0, 8, 0, 8).Children(func() {
+					if button(c, "dash-new-group", locales.ActionNewGroup(), "", false, pal) {
+						a.openGroupEditor("")
+					}
+					if button(c, "dash-new-host", locales.ActionNewHost(), "", true, pal) {
+						a.openEditor("")
+					}
+				})
+			} else if hasHost {
 				if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
 					iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
 				}
@@ -288,13 +311,13 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 }
 
 func (a *App) cardBody(c *ui.Context, pal *palette) {
-	h, ok := a.selectedHost()
-	if !ok {
-		a.emptyState(c, pal)
+	if a.showsDashboard() {
+		a.dashboard(c, pal)
 		return
 	}
+	h, _ := a.selectedHost()
 	rt := a.runtimes[h.ID]
-	if rt != nil && rt.term != nil && (rt.state == connConnected || rt.state == connEnded) {
+	if rt.term != nil {
 		handle := a.handleFor(h.ID)
 		terminal.View(c.Key("term-"+h.ID), rt.term).Fill().Bind(handle)
 		if a.focusWanted == h.ID && !a.anyDialogOpen() {
@@ -303,7 +326,7 @@ func (a *App) cardBody(c *ui.Context, pal *palette) {
 		}
 		return
 	}
-	if rt != nil && rt.state == connConnecting {
+	if rt.state == connConnecting {
 		ui.Column(c).Fill().Center().Gap(10).Padding(24).Children(func() {
 			ui.Spinner(c).Size(18, 18)
 			ui.Text(c, locales.ConnectingTitle(h.Name)).FontSize(17).FontWeight(600).TextColor(pal.text)
@@ -314,22 +337,11 @@ func (a *App) cardBody(c *ui.Context, pal *palette) {
 		})
 		return
 	}
-	if rt != nil && rt.state == connFailed {
-		a.message(c, pal, locales.FailedTitle(), rt.err, func() {
-			if button(c, "retry", locales.ActionRetry(), "", true, pal) {
-				a.connect(h.ID)
-			}
-			if button(c, "edit-failed", locales.ActionEditHost(), "", false, pal) {
-				a.openEditor(h.ID)
-			}
-		})
-		return
-	}
-	a.message(c, pal, locales.HostIdleTitle(h.Name), "", func() {
-		if button(c, "connect", locales.ActionConnect(), "", true, pal) {
+	a.message(c, pal, locales.FailedTitle(), rt.err, func() {
+		if button(c, "retry", locales.ActionRetry(), "", true, pal) {
 			a.connect(h.ID)
 		}
-		if button(c, "edit-host", locales.ActionEditHost(), "", false, pal) {
+		if button(c, "edit-failed", locales.ActionEditHost(), "", false, pal) {
 			a.openEditor(h.ID)
 		}
 	})
@@ -344,20 +356,6 @@ func (a *App) message(c *ui.Context, pal *palette, title, detail string, actions
 		if actions != nil {
 			ui.Row(c).Gap(10).Margin(10, 0, 0, 0).Children(actions)
 		}
-	})
-}
-
-func (a *App) emptyState(c *ui.Context, pal *palette) {
-	ui.Column(c).Fill().Center().Gap(0).Padding(24).Children(func() {
-		ui.Box(c).Size(52, 52).Radius(14).Center().Background(pal.chip).TextColor(pal.textMuted).Margin(0, 0, 18, 0).Children(func() {
-			ui.Icon(c, terminalIcon).Size(26, 26)
-		})
-		ui.Text(c, locales.EmptyTitle()).FontSize(19).FontWeight(650).TextColor(pal.text)
-		ui.Row(c).Gap(10).Margin(22, 0, 0, 0).Children(func() {
-			if button(c, "empty-add", locales.ActionAddHost(), "", true, pal) {
-				a.openEditor("")
-			}
-		})
 	})
 }
 

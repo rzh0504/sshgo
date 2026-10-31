@@ -264,6 +264,196 @@ func (msgs Messages) SidebarConnectedCount(count int) string {
 	return Catalog.Format(msgs.locale, "sidebarConnectedCount", map[string]any{"count": count})
 }
 
+// DashboardTitle says "Hosts"
+// in the language the app shows.
+func DashboardTitle() string { return In(i18n.Locale()).DashboardTitle() }
+
+// DashboardTitle says "Hosts"
+// in the language of msgs.
+func (msgs Messages) DashboardTitle() string {
+	return Catalog.Format(msgs.locale, "dashboardTitle", nil)
+}
+
+// ActionNewGroup says "New Group"
+// in the language the app shows.
+func ActionNewGroup() string { return In(i18n.Locale()).ActionNewGroup() }
+
+// ActionNewGroup says "New Group"
+// in the language of msgs.
+func (msgs Messages) ActionNewGroup() string {
+	return Catalog.Format(msgs.locale, "actionNewGroup", nil)
+}
+
+// ActionNewHostInGroup says "New Host in Group"
+// in the language the app shows.
+func ActionNewHostInGroup() string { return In(i18n.Locale()).ActionNewHostInGroup() }
+
+// ActionNewHostInGroup says "New Host in Group"
+// in the language of msgs.
+func (msgs Messages) ActionNewHostInGroup() string {
+	return Catalog.Format(msgs.locale, "actionNewHostInGroup", nil)
+}
+
+// ActionRenameGroup says "Rename Group…"
+// in the language the app shows.
+func ActionRenameGroup() string { return In(i18n.Locale()).ActionRenameGroup() }
+
+// ActionRenameGroup says "Rename Group…"
+// in the language of msgs.
+func (msgs Messages) ActionRenameGroup() string {
+	return Catalog.Format(msgs.locale, "actionRenameGroup", nil)
+}
+
+// ActionDeleteGroup says "Delete Group…"
+// in the language the app shows.
+func ActionDeleteGroup() string { return In(i18n.Locale()).ActionDeleteGroup() }
+
+// ActionDeleteGroup says "Delete Group…"
+// in the language of msgs.
+func (msgs Messages) ActionDeleteGroup() string {
+	return Catalog.Format(msgs.locale, "actionDeleteGroup", nil)
+}
+
+// GroupUngrouped says "Ungrouped"
+// in the language the app shows.
+func GroupUngrouped() string { return In(i18n.Locale()).GroupUngrouped() }
+
+// GroupUngrouped says "Ungrouped"
+// in the language of msgs.
+func (msgs Messages) GroupUngrouped() string {
+	return Catalog.Format(msgs.locale, "groupUngrouped", nil)
+}
+
+// GroupEmpty says "No hosts in this group yet"
+// in the language the app shows.
+func GroupEmpty() string { return In(i18n.Locale()).GroupEmpty() }
+
+// GroupEmpty says "No hosts in this group yet"
+// in the language of msgs.
+func (msgs Messages) GroupEmpty() string {
+	return Catalog.Format(msgs.locale, "groupEmpty", nil)
+}
+
+// FieldGroup says "Group"
+// in the language the app shows.
+func FieldGroup() string { return In(i18n.Locale()).FieldGroup() }
+
+// FieldGroup says "Group"
+// in the language of msgs.
+func (msgs Messages) FieldGroup() string {
+	return Catalog.Format(msgs.locale, "fieldGroup", nil)
+}
+
+// PlaceholderGroup says "Choose or create a group"
+// in the language the app shows.
+func PlaceholderGroup() string { return In(i18n.Locale()).PlaceholderGroup() }
+
+// PlaceholderGroup says "Choose or create a group"
+// in the language of msgs.
+func (msgs Messages) PlaceholderGroup() string {
+	return Catalog.Format(msgs.locale, "placeholderGroup", nil)
+}
+
+// GroupWillCreate says "A new group, {name}, is made when you save."
+// in the language the app shows.
+func GroupWillCreate(name string) string { return In(i18n.Locale()).GroupWillCreate(name) }
+
+// GroupWillCreate says "A new group, {name}, is made when you save."
+// in the language of msgs.
+func (msgs Messages) GroupWillCreate(name string) string {
+	return Catalog.Format(msgs.locale, "groupWillCreate", map[string]any{"name": name})
+}
+
+// GroupAddTitle says "New Group"
+// in the language the app shows.
+func GroupAddTitle() string { return In(i18n.Locale()).GroupAddTitle() }
+
+// GroupAddTitle says "New Group"
+// in the language of msgs.
+func (msgs Messages) GroupAddTitle() string {
+	return Catalog.Format(msgs.locale, "groupAddTitle", nil)
+}
+
+// GroupEditTitle says "Rename Group"
+// in the language the app shows.
+func GroupEditTitle() string { return In(i18n.Locale()).GroupEditTitle() }
+
+// GroupEditTitle says "Rename Group"
+// in the language of msgs.
+func (msgs Messages) GroupEditTitle() string {
+	return Catalog.Format(msgs.locale, "groupEditTitle", nil)
+}
+
+// GroupEditDetail says "Hosts of the same group are listed together in the sidebar."
+// in the language the app shows.
+func GroupEditDetail() string { return In(i18n.Locale()).GroupEditDetail() }
+
+// GroupEditDetail says "Hosts of the same group are listed together in the sidebar."
+// in the language of msgs.
+func (msgs Messages) GroupEditDetail() string {
+	return Catalog.Format(msgs.locale, "groupEditDetail", nil)
+}
+
+// FieldGroupName says "Group name"
+// in the language the app shows.
+func FieldGroupName() string { return In(i18n.Locale()).FieldGroupName() }
+
+// FieldGroupName says "Group name"
+// in the language of msgs.
+func (msgs Messages) FieldGroupName() string {
+	return Catalog.Format(msgs.locale, "fieldGroupName", nil)
+}
+
+// PlaceholderGroupName says "e.g. Production"
+// in the language the app shows.
+func PlaceholderGroupName() string { return In(i18n.Locale()).PlaceholderGroupName() }
+
+// PlaceholderGroupName says "e.g. Production"
+// in the language of msgs.
+func (msgs Messages) PlaceholderGroupName() string {
+	return Catalog.Format(msgs.locale, "placeholderGroupName", nil)
+}
+
+// ErrorGroupNameRequired says "Enter a group name."
+// in the language the app shows.
+func ErrorGroupNameRequired() string { return In(i18n.Locale()).ErrorGroupNameRequired() }
+
+// ErrorGroupNameRequired says "Enter a group name."
+// in the language of msgs.
+func (msgs Messages) ErrorGroupNameRequired() string {
+	return Catalog.Format(msgs.locale, "errorGroupNameRequired", nil)
+}
+
+// ErrorGroupExists says "A group of that name already exists."
+// in the language the app shows.
+func ErrorGroupExists() string { return In(i18n.Locale()).ErrorGroupExists() }
+
+// ErrorGroupExists says "A group of that name already exists."
+// in the language of msgs.
+func (msgs Messages) ErrorGroupExists() string {
+	return Catalog.Format(msgs.locale, "errorGroupExists", nil)
+}
+
+// DeleteGroupTitle says "Delete group?"
+// in the language the app shows.
+func DeleteGroupTitle() string { return In(i18n.Locale()).DeleteGroupTitle() }
+
+// DeleteGroupTitle says "Delete group?"
+// in the language of msgs.
+func (msgs Messages) DeleteGroupTitle() string {
+	return Catalog.Format(msgs.locale, "deleteGroupTitle", nil)
+}
+
+// DeleteGroupDetail says "Delete {name}? Its hosts stay, ungrouped."
+// in the language the app shows.
+func DeleteGroupDetail(name string) string { return In(i18n.Locale()).DeleteGroupDetail(name) }
+
+// DeleteGroupDetail says "Delete {name}? Its hosts stay, ungrouped."
+// in the language of msgs.
+func (msgs Messages) DeleteGroupDetail(name string) string {
+	return Catalog.Format(msgs.locale, "deleteGroupDetail", map[string]any{"name": name})
+}
+
 // StatusConnected says "Connected"
 // in the language the app shows.
 func StatusConnected() string { return In(i18n.Locale()).StatusConnected() }
@@ -302,26 +492,6 @@ func StatusEnded() string { return In(i18n.Locale()).StatusEnded() }
 // in the language of msgs.
 func (msgs Messages) StatusEnded() string {
 	return Catalog.Format(msgs.locale, "statusEnded", nil)
-}
-
-// EmptyTitle says "Connect to a remote host"
-// in the language the app shows.
-func EmptyTitle() string { return In(i18n.Locale()).EmptyTitle() }
-
-// EmptyTitle says "Connect to a remote host"
-// in the language of msgs.
-func (msgs Messages) EmptyTitle() string {
-	return Catalog.Format(msgs.locale, "emptyTitle", nil)
-}
-
-// HostIdleTitle says "Connect to {name}"
-// in the language the app shows.
-func HostIdleTitle(name string) string { return In(i18n.Locale()).HostIdleTitle(name) }
-
-// HostIdleTitle says "Connect to {name}"
-// in the language of msgs.
-func (msgs Messages) HostIdleTitle(name string) string {
-	return Catalog.Format(msgs.locale, "hostIdleTitle", map[string]any{"name": name})
 }
 
 // ConnectingTitle says "Connecting to {name}…"

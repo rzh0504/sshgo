@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -69,16 +67,19 @@ type App struct {
 	handles  map[string]*ui.Handle
 	selected string
 
-	editor   *editorState
-	password *passwordState
-	hostKey  *hostKeyState
-	confirm  *confirmState
+	editor    *editorState
+	groupEdit *groupEditState
+	password  *passwordState
+	hostKey   *hostKeyState
+	confirm   *confirmState
 
 	chrome      chrome
 	sidebarDrag float32
 	toast       string
 	menuBar     *mygo.Menu
 	focusWanted string
+	collapsed   map[string]bool
+	dashScroll  ui.ScrollState
 
 	setWin  *mygo.Window
 	ss      settingsState
@@ -212,6 +213,10 @@ func (a *App) updateTitle() {
 	if a.win == nil {
 		return
 	}
+	if a.showsDashboard() {
+		a.win.SetTitle("sshgo")
+		return
+	}
 	title := "sshgo"
 	if h, ok := a.selectedHost(); ok {
 		title = h.Name + " — sshgo"
@@ -220,6 +225,24 @@ func (a *App) updateTitle() {
 		}
 	}
 	a.win.SetTitle(title)
+}
+
+// showsDashboard reports whether the card holds the dashboard: no shell,
+// no connection on its way, and no failure to report.
+func (a *App) showsDashboard() bool {
+	h, ok := a.selectedHost()
+	if !ok {
+		return true
+	}
+	rt := a.runtimes[h.ID]
+	if rt == nil {
+		return true
+	}
+	switch rt.state {
+	case connConnecting, connFailed:
+		return false
+	}
+	return rt.term == nil || (rt.state != connConnected && rt.state != connEnded)
 }
 
 func (a *App) connectedCount() int {
@@ -233,8 +256,9 @@ func (a *App) connectedCount() int {
 }
 
 func (a *App) anyDialogOpen() bool {
-	return (a.editor != nil && a.editor.open) || (a.password != nil && a.password.open) ||
-		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open)
+	return (a.editor != nil && a.editor.open) || (a.groupEdit != nil && a.groupEdit.open) ||
+		(a.password != nil && a.password.open) || (a.hostKey != nil && a.hostKey.open) ||
+		(a.confirm != nil && a.confirm.open)
 }
 
 func (a *App) connect(id string) {
@@ -504,22 +528,4 @@ func (a *App) savePassword(h store.Host, password string) bool {
 		return false
 	}
 	return true
-}
-
-// systemUser is the name the editor offers as the username: this
-// computer's account.
-func systemUser() string {
-	if u, err := user.Current(); err == nil && u.Username != "" {
-		name := u.Username
-		for i := len(name) - 1; i >= 0; i-- {
-			if name[i] == '\\' || name[i] == '/' {
-				return name[i+1:]
-			}
-		}
-		return name
-	}
-	if name := os.Getenv("USERNAME"); name != "" {
-		return name
-	}
-	return os.Getenv("USER")
 }
