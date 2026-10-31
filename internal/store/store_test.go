@@ -25,7 +25,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nested", "state.json")
 	want := State{
 		Hosts: []Host{
-			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", Group: "g1", SavePassword: true},
+			{ID: "a", Name: "dev", Host: "dev.example.com", Port: 2222, User: "me", OS: "ubuntu", Group: "g1", SavePassword: true},
 			{ID: "b", Name: "home", Host: "10.0.0.2", Port: 22, User: "root"},
 		},
 		Groups:       []Group{{ID: "g1", Name: "work"}},

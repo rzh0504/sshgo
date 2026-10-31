@@ -188,7 +188,7 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32)
 	}
 	row.ContextMenu(func(m *ui.Menu) { a.hostMenu(m, h) })
 	row.Children(func() {
-		ui.Icon(c, serverIcon).Size(15, 15).TextColor(hostColor(pal, h.Name)).Shrink(0)
+		a.hostGlyph(c, pal, h, 16)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, a.mask(h.Name)).FontSize(13.5).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0).TextColor(pal.text)
@@ -260,7 +260,7 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 				})
 			}
 			if hasHost && !dashboard {
-				ui.Icon(c, serverIcon).Size(15, 15).TextColor(hostColor(pal, h.Name)).Shrink(0)
+				a.hostGlyph(c, pal, h, 16)
 				ui.Text(c, h.Name).FontSize(14).FontWeight(600).TextColor(pal.text).SingleLine().Ellipsis("…").
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
 			} else {

@@ -27,6 +27,7 @@ type Host struct {
 	Host         string `json:"host"`
 	Port         int    `json:"port"`
 	User         string `json:"user"`
+	OS           string `json:"os,omitempty"`    // the system it runs, as the app names them
 	Group        string `json:"group,omitempty"` // the id of its group
 	SavePassword bool   `json:"savePassword,omitempty"`
 }

@@ -484,6 +484,8 @@ func (a *App) aboutPage(c *ui.Context, pal *palette) {
 			}
 		})
 	}
+	ui.Text(c, locales.AboutIcons()).FontSize(11.5).TextColor(pal.textFaint).
+		TextAlign(ui.Center).LineHeight(1.4).Selectable()
 }
 
 func pathRow(c *ui.Context, pal *palette, label, path string) {

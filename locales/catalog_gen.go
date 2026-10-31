@@ -698,6 +698,26 @@ func (msgs Messages) FieldUser() string {
 	return Catalog.Format(msgs.locale, "fieldUser", nil)
 }
 
+// FieldOS says "System"
+// in the language the app shows.
+func FieldOS() string { return In(i18n.Locale()).FieldOS() }
+
+// FieldOS says "System"
+// in the language of msgs.
+func (msgs Messages) FieldOS() string {
+	return Catalog.Format(msgs.locale, "fieldOS", nil)
+}
+
+// OsOther says "Other"
+// in the language the app shows.
+func OsOther() string { return In(i18n.Locale()).OsOther() }
+
+// OsOther says "Other"
+// in the language of msgs.
+func (msgs Messages) OsOther() string {
+	return Catalog.Format(msgs.locale, "osOther", nil)
+}
+
 // PlaceholderName says "Optional; user@host when empty"
 // in the language the app shows.
 func PlaceholderName() string { return In(i18n.Locale()).PlaceholderName() }
@@ -1278,6 +1298,16 @@ func AboutKnownHosts() string { return In(i18n.Locale()).AboutKnownHosts() }
 // in the language of msgs.
 func (msgs Messages) AboutKnownHosts() string {
 	return Catalog.Format(msgs.locale, "aboutKnownHosts", nil)
+}
+
+// AboutIcons says "System icons from Dashboard Icons (Apache 2.0)."
+// in the language the app shows.
+func AboutIcons() string { return In(i18n.Locale()).AboutIcons() }
+
+// AboutIcons says "System icons from Dashboard Icons (Apache 2.0)."
+// in the language of msgs.
+func (msgs Messages) AboutIcons() string {
+	return Catalog.Format(msgs.locale, "aboutIcons", nil)
 }
 
 // AboutOpenFolder says "Open Settings Folder"

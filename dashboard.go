@@ -111,9 +111,8 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 		a.connect(h.ID)
 	}
 	card.Children(func() {
-		col := hostColor(pal, h.Name)
-		ui.Box(c).Size(30, 30).Radius(9).Center().Background(col.Alpha(0.14)).Shrink(0).Children(func() {
-			ui.Icon(c, serverIcon).Size(15, 15).TextColor(col)
+		ui.Box(c).Size(30, 30).Radius(9).Center().Background(pal.chip).Shrink(0).Children(func() {
+			a.hostGlyph(c, pal, h, 20)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Text(c, a.mask(h.Name)).FontSize(13).FontWeight(600).TextColor(pal.text).

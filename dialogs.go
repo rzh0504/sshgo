@@ -19,6 +19,8 @@ type editorState struct {
 	id       string
 	name     string
 	group    string
+	os       string
+	osName   string
 	host     string
 	port     string
 	user     string
@@ -60,12 +62,15 @@ type confirmState struct {
 }
 
 func (a *App) openEditor(id string) {
-	ed := &editorState{open: true, port: "22"}
+	linux := osKindByID("linux")
+	ed := &editorState{open: true, port: "22", os: linux.id, osName: linux.name}
 	if id != "" {
 		if h, ok := a.state.Host(id); ok {
+			k := osKindByID(h.OS)
 			ed.id = h.ID
 			ed.name = h.Name
 			ed.group = a.groupName(h.Group)
+			ed.os, ed.osName = k.id, k.name
 			ed.host = h.Host
 			ed.port = strconv.Itoa(h.Port)
 			ed.user = h.User
@@ -254,8 +259,17 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 				inPort = formField(c, "port", locales.FieldPort(), locales.PlaceholderPort(), &ed.port, pal, false)
 			})
 		})
-		ui.Column(c).Gap(5).Children(func() {
-			inUser = formField(c, "user", locales.FieldUser(), locales.PlaceholderUser(), &ed.user, pal, false)
+		ui.Row(c).Gap(10).AlignItems(ui.End).Children(func() {
+			ui.Column(c).Width(190).Shrink(0).Gap(5).Children(func() {
+				ui.Text(c, locales.FieldOS()).FontSize(12).FontWeight(550).TextColor(pal.textMuted).Margin(0, 0, 2, 0)
+				if ui.Combobox(c.Key("os-"+ed.id), &ed.osName, osNames()).Height(32).Width(190).
+					Label(locales.FieldOS()).Changed() {
+					ed.os = osKindByName(ed.osName).id
+				}
+			})
+			ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
+				inUser = formField(c, "user", locales.FieldUser(), locales.PlaceholderUser(), &ed.user, pal, false)
+			})
 		})
 		ui.Column(c).Gap(5).Children(func() {
 			placeholder := ""
@@ -341,6 +355,7 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 			return err.Error()
 		}
 		h.Group = group
+		h.OS = ed.os
 		if ed.save && password != "" {
 			h.SavePassword = a.savePassword(h, password)
 		}
@@ -355,6 +370,7 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		h := old
 		h.Name, h.Host, h.Port, h.User = name, host, port, user
 		h.Group = group
+		h.OS = ed.os
 		h.SavePassword = ed.save
 		changed := old.Host != host || old.Port != port || old.User != user
 		if ed.save {

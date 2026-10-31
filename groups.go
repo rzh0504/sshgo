@@ -126,6 +126,6 @@ func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name stri
 		return
 	}
 	for _, h := range hosts {
-		a.hostRow(c, pal, h, 10)
+		a.hostRow(c, pal, h, 4)
 	}
 }

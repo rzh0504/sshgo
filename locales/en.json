@@ -66,6 +66,8 @@
   "fieldHost": "Host",
   "fieldPort": "Port",
   "fieldUser": "Username",
+  "fieldOS": "System",
+  "osOther": "Other",
   "placeholderName": "Optional; user@host when empty",
   "placeholderHost": "example.com or 192.168.1.10",
   "placeholderPort": "22",
@@ -124,5 +126,6 @@
   "aboutVersion": "Version {version}",
   "aboutConfig": "Hosts and settings",
   "aboutKnownHosts": "Trusted host keys",
+  "aboutIcons": "System icons from Dashboard Icons (Apache 2.0).",
   "aboutOpenFolder": "Open Settings Folder"
 }

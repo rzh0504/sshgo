@@ -66,6 +66,8 @@
   "fieldHost": "主机",
   "fieldPort": "端口",
   "fieldUser": "用户名",
+  "fieldOS": "系统",
+  "osOther": "其他",
   "placeholderName": "可选，留空时使用 user@host",
   "placeholderHost": "example.com 或 192.168.1.10",
   "placeholderPort": "22",
@@ -124,5 +126,6 @@
   "aboutVersion": "版本 {version}",
   "aboutConfig": "主机与设置文件",
   "aboutKnownHosts": "已信任的主机密钥",
+  "aboutIcons": "系统图标来自 Dashboard Icons（Apache 2.0）。",
   "aboutOpenFolder": "打开设置文件夹"
 }
