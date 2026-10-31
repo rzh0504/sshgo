@@ -301,6 +301,15 @@ func (a *App) generalPage(c *ui.Context, pal *palette) {
 			toggle(c.Key("auto-connect"), &a.state.AutoConnect, pal)
 		})
 	})
+	if dir, err := store.Dir(); err == nil {
+		settingsGroup(c, pal, locales.GroupStorage(), "", func() {
+			settingRow(c, pal, locales.SetSettingsFolder(), "", func() {
+				if button(c, "open-settings-dir", locales.ActionOpen(), "", false, pal) {
+					mygo.Shell.OpenPath(dir)
+				}
+			})
+		})
+	}
 }
 
 // --- Appearance ---
@@ -522,18 +531,10 @@ func (a *App) aboutPage(c *ui.Context, pal *palette) {
 		settingRow(c, pal, locales.AboutRepository(), "", func() {
 			ui.Link(c, "github.com/rzh0504/sshgo", repoURL).FontSize(12.5)
 		})
-	})
-	dir, err := store.Dir()
-	if err != nil {
-		dir = ""
-	}
-	if dir != "" {
-		ui.Row(c).Justify(ui.Center).Children(func() {
-			if button(c, "open-settings-dir", locales.AboutOpenFolder(), "", false, pal) {
-				mygo.Shell.OpenPath(dir)
-			}
+		settingRow(c, pal, locales.AboutLicense(), "", func() {
+			ui.Link(c, "MIT", repoURL+"/blob/main/LICENSE").FontSize(12.5)
 		})
-	}
+	})
 	settingsGroup(c, pal, locales.AboutCredits(), "", func() {
 		creditRow(c, pal, "kero", locales.AboutCreditKero(), "github.com/egoist/kero")
 		creditRow(c, pal, "MyGo", locales.AboutCreditMygo(), "github.com/egoist/mygo")
@@ -542,10 +543,10 @@ func (a *App) aboutPage(c *ui.Context, pal *palette) {
 	})
 }
 
-// creditRow is a project in the About page's credits: its part in sshgo,
-// and where its source is.
-func creditRow(c *ui.Context, pal *palette, name, part, repo string) {
-	settingRow(c, pal, name, part, func() {
+// creditRow is a project in the About page's credits: its license, and
+// where its source is.
+func creditRow(c *ui.Context, pal *palette, name, license, repo string) {
+	settingRow(c, pal, name, license, func() {
 		ui.Link(c, repo, "https://"+repo).FontSize(12.5)
 	})
 }

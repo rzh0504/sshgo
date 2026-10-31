@@ -1160,6 +1160,36 @@ func (msgs Messages) ActionQuit() string {
 	return Catalog.Format(msgs.locale, "actionQuit", nil)
 }
 
+// ActionOpen says "Open"
+// in the language the app shows.
+func ActionOpen() string { return In(i18n.Locale()).ActionOpen() }
+
+// ActionOpen says "Open"
+// in the language of msgs.
+func (msgs Messages) ActionOpen() string {
+	return Catalog.Format(msgs.locale, "actionOpen", nil)
+}
+
+// GroupStorage says "Storage"
+// in the language the app shows.
+func GroupStorage() string { return In(i18n.Locale()).GroupStorage() }
+
+// GroupStorage says "Storage"
+// in the language of msgs.
+func (msgs Messages) GroupStorage() string {
+	return Catalog.Format(msgs.locale, "groupStorage", nil)
+}
+
+// SetSettingsFolder says "Config Folder"
+// in the language the app shows.
+func SetSettingsFolder() string { return In(i18n.Locale()).SetSettingsFolder() }
+
+// SetSettingsFolder says "Config Folder"
+// in the language of msgs.
+func (msgs Messages) SetSettingsFolder() string {
+	return Catalog.Format(msgs.locale, "setSettingsFolder", nil)
+}
+
 // SetUpdates says "Updates"
 // in the language the app shows.
 func SetUpdates() string { return In(i18n.Locale()).SetUpdates() }
@@ -1520,6 +1550,16 @@ func (msgs Messages) AboutRepository() string {
 	return Catalog.Format(msgs.locale, "aboutRepository", nil)
 }
 
+// AboutLicense says "License"
+// in the language the app shows.
+func AboutLicense() string { return In(i18n.Locale()).AboutLicense() }
+
+// AboutLicense says "License"
+// in the language of msgs.
+func (msgs Messages) AboutLicense() string {
+	return Catalog.Format(msgs.locale, "aboutLicense", nil)
+}
+
 // AboutCredits says "Credits"
 // in the language the app shows.
 func AboutCredits() string { return In(i18n.Locale()).AboutCredits() }
@@ -1530,54 +1570,44 @@ func (msgs Messages) AboutCredits() string {
 	return Catalog.Format(msgs.locale, "aboutCredits", nil)
 }
 
-// AboutCreditKero says "UI inspiration · MIT"
+// AboutCreditKero says "MIT"
 // in the language the app shows.
 func AboutCreditKero() string { return In(i18n.Locale()).AboutCreditKero() }
 
-// AboutCreditKero says "UI inspiration · MIT"
+// AboutCreditKero says "MIT"
 // in the language of msgs.
 func (msgs Messages) AboutCreditKero() string {
 	return Catalog.Format(msgs.locale, "aboutCreditKero", nil)
 }
 
-// AboutCreditMygo says "Native UI framework · MIT"
+// AboutCreditMygo says "MIT"
 // in the language the app shows.
 func AboutCreditMygo() string { return In(i18n.Locale()).AboutCreditMygo() }
 
-// AboutCreditMygo says "Native UI framework · MIT"
+// AboutCreditMygo says "MIT"
 // in the language of msgs.
 func (msgs Messages) AboutCreditMygo() string {
 	return Catalog.Format(msgs.locale, "aboutCreditMygo", nil)
 }
 
-// AboutCreditGhostty says "Terminal engine · MIT"
+// AboutCreditGhostty says "MIT"
 // in the language the app shows.
 func AboutCreditGhostty() string { return In(i18n.Locale()).AboutCreditGhostty() }
 
-// AboutCreditGhostty says "Terminal engine · MIT"
+// AboutCreditGhostty says "MIT"
 // in the language of msgs.
 func (msgs Messages) AboutCreditGhostty() string {
 	return Catalog.Format(msgs.locale, "aboutCreditGhostty", nil)
 }
 
-// AboutCreditIcons says "System icons · Apache 2.0"
+// AboutCreditIcons says "Apache 2.0"
 // in the language the app shows.
 func AboutCreditIcons() string { return In(i18n.Locale()).AboutCreditIcons() }
 
-// AboutCreditIcons says "System icons · Apache 2.0"
+// AboutCreditIcons says "Apache 2.0"
 // in the language of msgs.
 func (msgs Messages) AboutCreditIcons() string {
 	return Catalog.Format(msgs.locale, "aboutCreditIcons", nil)
-}
-
-// AboutOpenFolder says "Open Settings Folder"
-// in the language the app shows.
-func AboutOpenFolder() string { return In(i18n.Locale()).AboutOpenFolder() }
-
-// AboutOpenFolder says "Open Settings Folder"
-// in the language of msgs.
-func (msgs Messages) AboutOpenFolder() string {
-	return Catalog.Format(msgs.locale, "aboutOpenFolder", nil)
 }
 
 // TrayOpen says "Open {app}"
