@@ -96,6 +96,7 @@ func (a *App) openGroupEditor(id string) {
 }
 
 func (a *App) openPassword(h store.Host) {
+	a.showWindow()
 	a.password = &passwordState{open: true, host: h, save: h.SavePassword}
 }
 

@@ -107,6 +107,8 @@
   "groupSessions": "会话",
   "setConfirmQuit": "退出前确认",
   "setConfirmQuitDetail": "有会话连接时，退出前先询问。",
+  "setAutoConnect": "启动时自动连接",
+  "setAutoConnectDetail": "启动 sshgo 时连接上次选择的主机。",
   "quitTitle": "退出 sshgo？",
   "quitDetail": "{count, plural, other {还有 # 个会话连接，退出后会断开。}}",
   "actionQuit": "退出",

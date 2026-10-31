@@ -1110,6 +1110,26 @@ func (msgs Messages) SetConfirmQuitDetail() string {
 	return Catalog.Format(msgs.locale, "setConfirmQuitDetail", nil)
 }
 
+// SetAutoConnect says "Connect on Launch"
+// in the language the app shows.
+func SetAutoConnect() string { return In(i18n.Locale()).SetAutoConnect() }
+
+// SetAutoConnect says "Connect on Launch"
+// in the language of msgs.
+func (msgs Messages) SetAutoConnect() string {
+	return Catalog.Format(msgs.locale, "setAutoConnect", nil)
+}
+
+// SetAutoConnectDetail says "Connect the host selected last when sshgo starts."
+// in the language the app shows.
+func SetAutoConnectDetail() string { return In(i18n.Locale()).SetAutoConnectDetail() }
+
+// SetAutoConnectDetail says "Connect the host selected last when sshgo starts."
+// in the language of msgs.
+func (msgs Messages) SetAutoConnectDetail() string {
+	return Catalog.Format(msgs.locale, "setAutoConnectDetail", nil)
+}
+
 // QuitTitle says "Quit sshgo?"
 // in the language the app shows.
 func QuitTitle() string { return In(i18n.Locale()).QuitTitle() }

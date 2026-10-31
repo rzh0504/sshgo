@@ -107,6 +107,8 @@
   "groupSessions": "Sessions",
   "setConfirmQuit": "Confirm Before Quitting",
   "setConfirmQuitDetail": "Ask before a quit disconnects open sessions.",
+  "setAutoConnect": "Connect on Launch",
+  "setAutoConnectDetail": "Connect the host selected last when sshgo starts.",
   "quitTitle": "Quit sshgo?",
   "quitDetail": "{count, plural, one {# session is connected; quitting disconnects it.} other {# sessions are connected; quitting disconnects them.}}",
   "actionQuit": "Quit",

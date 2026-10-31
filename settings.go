@@ -59,6 +59,7 @@ type settingsValues struct {
 	closeBehavior     string
 	hideAtLogin       bool
 	confirmQuit       bool
+	autoConnect       bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -66,7 +67,7 @@ func valuesOf(s store.State) settingsValues {
 		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
-		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit,
+		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit, autoConnect: s.AutoConnect,
 	}
 }
 
@@ -285,6 +286,9 @@ func (a *App) generalPage(c *ui.Context, pal *palette) {
 	settingsGroup(c, pal, locales.GroupSessions(), "", func() {
 		settingRow(c, pal, locales.SetConfirmQuit(), locales.SetConfirmQuitDetail(), func() {
 			toggle(c.Key("confirm-quit"), &a.state.ConfirmQuit, pal)
+		})
+		settingRow(c, pal, locales.SetAutoConnect(), locales.SetAutoConnectDetail(), func() {
+			toggle(c.Key("auto-connect"), &a.state.AutoConnect, pal)
 		})
 	})
 }

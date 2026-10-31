@@ -40,6 +40,9 @@ func main() {
 		if hidden && a.tray == nil {
 			a.win.Show()
 		}
+		if a.state.AutoConnect {
+			a.connectLast()
+		}
 	})
 	mygo.App.OnSecondInstance(func([]string, string) { a.showWindow() })
 	mygo.App.OnActivate(func(hasVisible bool) {

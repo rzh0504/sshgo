@@ -461,6 +461,14 @@ func (a *App) quitNow() {
 	mygo.App.Quit()
 }
 
+// connectLast connects the host selected last when sshgo starts, as the
+// settings say.
+func (a *App) connectLast() {
+	if h, ok := a.selectedHost(); ok {
+		a.connect(h.ID)
+	}
+}
+
 func (a *App) connectError(h store.Host, err error) string {
 	switch {
 	case errors.Is(err, sshx.ErrAuth):
@@ -509,6 +517,7 @@ func (a *App) askHostKey(h store.Host, addr string, key ssh.PublicKey, known []s
 	defer a.askMu.Unlock()
 	answer := make(chan bool, 1)
 	a.update(func() {
+		a.showWindow()
 		a.hostKey = &hostKeyState{open: true, host: h, addr: addr, key: key, known: known, attempt: attempt, answer: answer}
 	})
 	return <-answer

@@ -86,6 +86,7 @@ type State struct {
 	CloseBehavior string `json:"closeBehavior,omitempty"`
 	HideAtLogin   bool   `json:"hideAtLogin,omitempty"` // start in the tray when the system starts sshgo
 	ConfirmQuit   bool   `json:"confirmQuit,omitempty"` // ask before a quit disconnects open sessions
+	AutoConnect   bool   `json:"autoConnect,omitempty"` // connect the host selected last on launch
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.

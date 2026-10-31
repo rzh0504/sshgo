@@ -17,7 +17,7 @@ func TestLoadMissingIsEmpty(t *testing.T) {
 	}
 	if s.Appearance != "system" || s.Theme != "mist" ||
 		s.FontSize != DefaultFontSize || s.Cursor != "block" || s.Language != "system" ||
-		s.CloseBehavior != "tray" || s.HideAtLogin || s.ConfirmQuit {
+		s.CloseBehavior != "tray" || s.HideAtLogin || s.ConfirmQuit || s.AutoConnect {
 		t.Fatalf("settings = %+v, want the defaults", s)
 	}
 }
@@ -44,6 +44,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		CloseBehavior: "quit",
 		HideAtLogin:   true,
 		ConfirmQuit:   true,
+		AutoConnect:   true,
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -59,7 +60,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink ||
 		got.Language != want.Language || got.Privacy != want.Privacy || got.NoVibrancy != want.NoVibrancy ||
 		got.CloseBehavior != want.CloseBehavior || got.HideAtLogin != want.HideAtLogin ||
-		got.ConfirmQuit != want.ConfirmQuit {
+		got.ConfirmQuit != want.ConfirmQuit || got.AutoConnect != want.AutoConnect {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if got.LightTheme != "" || got.DarkTheme != "" {
