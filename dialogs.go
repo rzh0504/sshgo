@@ -689,5 +689,6 @@ func (a *App) deleteGroup(g store.Group) {
 		}
 	}
 	delete(a.collapsed, g.ID)
+	delete(a.dashCollapsed, g.ID)
 	a.saveState()
 }

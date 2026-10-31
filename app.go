@@ -80,6 +80,8 @@ type App struct {
 	focusWanted string
 	collapsed   map[string]bool
 	dashScroll  ui.ScrollState
+	// dashCollapsed is the dashboard's groups, apart from the sidebar's.
+	dashCollapsed map[string]bool
 
 	tray          *mygo.Tray // the icon in the notification area, while it shows
 	quitting      bool       // a quit is on its way: let the windows close

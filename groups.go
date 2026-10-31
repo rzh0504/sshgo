@@ -66,6 +66,15 @@ func (a *App) toggleGroup(id string) {
 	a.collapsed[id] = !a.collapsed[id]
 }
 
+func (a *App) dashGroupCollapsed(id string) bool { return a.dashCollapsed[id] }
+
+func (a *App) toggleDashGroup(id string) {
+	if a.dashCollapsed == nil {
+		a.dashCollapsed = map[string]bool{}
+	}
+	a.dashCollapsed[id] = !a.dashCollapsed[id]
+}
+
 func (a *App) groupMenu(m *ui.Menu, g store.Group) {
 	if m.Item(locales.ActionNewHostInGroup()).Chosen() {
 		a.openEditorInGroup(g.ID)

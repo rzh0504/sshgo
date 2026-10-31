@@ -78,7 +78,7 @@ func (a *App) dashboardRecent(c *ui.Context, pal *palette, hosts []store.Host) {
 
 func (a *App) dashboardSection(c *ui.Context, pal *palette, s hostSection) {
 	ui.Column(c).Gap(10).Children(func() {
-		open := s.id == "" || !a.groupCollapsed(s.id)
+		open := s.id == "" || !a.dashGroupCollapsed(s.id)
 		if s.name != "" {
 			tip := locales.ActionAddHost()
 			if s.id != "" {
@@ -89,7 +89,7 @@ func (a *App) dashboardSection(c *ui.Context, pal *palette, s hostSection) {
 			if s.id != "" {
 				hdr.Cursor(ui.CursorPointer)
 				if hdr.Clicked() {
-					a.toggleGroup(s.id)
+					a.toggleDashGroup(s.id)
 				}
 			}
 			hdr.Children(func() {
