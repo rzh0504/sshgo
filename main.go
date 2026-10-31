@@ -21,6 +21,7 @@ func main() {
 	mygo.Theme.SetSource(mygo.ThemeSource(a.state.Appearance))
 	mygo.App.SetLocale(localeTag(a.state.Language))
 	mygo.App.WhenReady(func() {
+		hidden := a.state.HideAtLogin && a.closeToTray() && mygo.App.WasOpenedAtLogin()
 		a.win = mygo.NewWindow(framed(mygo.WindowOptions{
 			Title:     "sshgo",
 			Width:     1180,
@@ -28,6 +29,7 @@ func main() {
 			MinWidth:  680,
 			MinHeight: 520,
 			StateKey:  "main",
+			Hidden:    hidden,
 			Content:   ui.View(a.view),
 		}))
 		a.win.SetVibrancy(a.vibrancy())
@@ -35,6 +37,9 @@ func main() {
 		a.updateTitle()
 		mygo.App.SetMenu(a.buildMenu())
 		a.applyTray()
+		if hidden && a.tray == nil {
+			a.win.Show()
+		}
 	})
 	mygo.App.OnSecondInstance(func([]string, string) { a.showWindow() })
 	mygo.App.OnActivate(func(hasVisible bool) {

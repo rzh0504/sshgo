@@ -1020,6 +1020,66 @@ func (msgs Messages) CloseTray() string {
 	return Catalog.Format(msgs.locale, "closeTray", nil)
 }
 
+// GroupStartup says "Startup"
+// in the language the app shows.
+func GroupStartup() string { return In(i18n.Locale()).GroupStartup() }
+
+// GroupStartup says "Startup"
+// in the language of msgs.
+func (msgs Messages) GroupStartup() string {
+	return Catalog.Format(msgs.locale, "groupStartup", nil)
+}
+
+// SetOpenAtLogin says "Open at Login"
+// in the language the app shows.
+func SetOpenAtLogin() string { return In(i18n.Locale()).SetOpenAtLogin() }
+
+// SetOpenAtLogin says "Open at Login"
+// in the language of msgs.
+func (msgs Messages) SetOpenAtLogin() string {
+	return Catalog.Format(msgs.locale, "setOpenAtLogin", nil)
+}
+
+// SetOpenAtLoginDetail says "Start sshgo when you sign in."
+// in the language the app shows.
+func SetOpenAtLoginDetail() string { return In(i18n.Locale()).SetOpenAtLoginDetail() }
+
+// SetOpenAtLoginDetail says "Start sshgo when you sign in."
+// in the language of msgs.
+func (msgs Messages) SetOpenAtLoginDetail() string {
+	return Catalog.Format(msgs.locale, "setOpenAtLoginDetail", nil)
+}
+
+// SetHideAtLogin says "Start in Tray"
+// in the language the app shows.
+func SetHideAtLogin() string { return In(i18n.Locale()).SetHideAtLogin() }
+
+// SetHideAtLogin says "Start in Tray"
+// in the language of msgs.
+func (msgs Messages) SetHideAtLogin() string {
+	return Catalog.Format(msgs.locale, "setHideAtLogin", nil)
+}
+
+// SetHideAtLoginDetail says "Open in the tray instead of showing the window."
+// in the language the app shows.
+func SetHideAtLoginDetail() string { return In(i18n.Locale()).SetHideAtLoginDetail() }
+
+// SetHideAtLoginDetail says "Open in the tray instead of showing the window."
+// in the language of msgs.
+func (msgs Messages) SetHideAtLoginDetail() string {
+	return Catalog.Format(msgs.locale, "setHideAtLoginDetail", nil)
+}
+
+// GroupWindow says "Window"
+// in the language the app shows.
+func GroupWindow() string { return In(i18n.Locale()).GroupWindow() }
+
+// GroupWindow says "Window"
+// in the language of msgs.
+func (msgs Messages) GroupWindow() string {
+	return Catalog.Format(msgs.locale, "groupWindow", nil)
+}
+
 // SetAppearance says "Theme"
 // in the language the app shows.
 func SetAppearance() string { return In(i18n.Locale()).SetAppearance() }

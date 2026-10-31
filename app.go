@@ -89,7 +89,8 @@ type App struct {
 	applied settingsValues
 	// fontPick is the font the settings show: the system font's label, or
 	// the family's name.
-	fontPick string
+	fontPick    string
+	openAtLogin bool // the login item, as last read from the system
 
 	askMu sync.Mutex // one host key question at a time
 }

@@ -84,6 +84,7 @@ type State struct {
 	// CloseBehavior is what the main window's close button does: "quit"
 	// ends sshgo, "tray" leaves it running in the notification area.
 	CloseBehavior string `json:"closeBehavior,omitempty"`
+	HideAtLogin   bool   `json:"hideAtLogin,omitempty"` // start in the tray when the system starts sshgo
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.

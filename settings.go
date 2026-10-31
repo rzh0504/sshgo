@@ -57,6 +57,7 @@ type settingsValues struct {
 	privacy           bool
 	noVibrancy        bool
 	closeBehavior     string
+	hideAtLogin       bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -64,6 +65,7 @@ func valuesOf(s store.State) settingsValues {
 		appearance: s.Appearance, theme: s.Theme, fontFamily: s.FontFamily,
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
+		hideAtLogin: s.HideAtLogin,
 	}
 }
 
@@ -79,6 +81,7 @@ func (a *App) openSettings() {
 		a.setWin.Focus()
 		return
 	}
+	a.openAtLogin = mygo.App.OpenAtLogin()
 	a.fontPick = fontLabel(a.state.FontFamily)
 	a.setWin = mygo.NewWindow(framed(mygo.WindowOptions{
 		Title:     locales.SettingsTitle(),
@@ -254,7 +257,24 @@ func segmented(c *ui.Context, key string, value *string, ids, labels []string) {
 // --- General ---
 
 func (a *App) generalPage(c *ui.Context, pal *palette) {
-	settingsGroup(c, pal, "", "", func() {
+	settingsGroup(c, pal, locales.GroupStartup(), "", func() {
+		settingRow(c, pal, locales.SetOpenAtLogin(), locales.SetOpenAtLoginDetail(), func() {
+			on := a.openAtLogin
+			if toggle(c.Key("open-at-login"), &on, pal).Changed() {
+				if err := mygo.App.SetOpenAtLogin(on); err != nil {
+					a.toast = err.Error()
+				} else {
+					a.openAtLogin = on
+				}
+			}
+		})
+		if a.openAtLogin && a.closeToTray() {
+			settingRow(c, pal, locales.SetHideAtLogin(), locales.SetHideAtLoginDetail(), func() {
+				toggle(c.Key("hide-at-login"), &a.state.HideAtLogin, pal)
+			})
+		}
+	})
+	settingsGroup(c, pal, locales.GroupWindow(), "", func() {
 		settingRow(c, pal, locales.SetCloseBehavior(), locales.SetCloseBehaviorDetail(), func() {
 			segmented(c, "close-behavior", &a.state.CloseBehavior,
 				[]string{"quit", "tray"},
