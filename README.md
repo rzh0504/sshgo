@@ -10,7 +10,7 @@ An SSH client with native UI for macOS, Windows and Linux. Hosts in a sidebar, t
 
 ## Features
 
-- Password or private-key sign-in; saved passwords and key passphrases go to the system keychain.
+- Password, private-key or SSH-agent sign-in; saved passwords and key passphrases go to the system keychain.
 - Hosts and groups; host keys are checked against `known_hosts`.
 - Terminals with eight pastel themes, light and dark, and a configurable font, size and cursor.
 - Optional tray: close to the tray, open at login, connect the last host on launch.

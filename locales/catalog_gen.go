@@ -820,6 +820,26 @@ func (msgs Messages) AuthKey() string {
 	return Catalog.Format(msgs.locale, "authKey", nil)
 }
 
+// AuthAgent says "SSH Agent"
+// in the language the app shows.
+func AuthAgent() string { return In(i18n.Locale()).AuthAgent() }
+
+// AuthAgent says "SSH Agent"
+// in the language of msgs.
+func (msgs Messages) AuthAgent() string {
+	return Catalog.Format(msgs.locale, "authAgent", nil)
+}
+
+// AgentHint says "Uses the keys loaded in the running SSH agent."
+// in the language the app shows.
+func AgentHint() string { return In(i18n.Locale()).AgentHint() }
+
+// AgentHint says "Uses the keys loaded in the running SSH agent."
+// in the language of msgs.
+func (msgs Messages) AgentHint() string {
+	return Catalog.Format(msgs.locale, "agentHint", nil)
+}
+
 // FieldPrivateKey says "Private key"
 // in the language the app shows.
 func FieldPrivateKey() string { return In(i18n.Locale()).FieldPrivateKey() }
@@ -1018,6 +1038,46 @@ func ErrorAuthKey() string { return In(i18n.Locale()).ErrorAuthKey() }
 // in the language of msgs.
 func (msgs Messages) ErrorAuthKey() string {
 	return Catalog.Format(msgs.locale, "errorAuthKey", nil)
+}
+
+// ErrorAuthAgent says "Authentication failed. Check the keys loaded in the SSH agent."
+// in the language the app shows.
+func ErrorAuthAgent() string { return In(i18n.Locale()).ErrorAuthAgent() }
+
+// ErrorAuthAgent says "Authentication failed. Check the keys loaded in the SSH agent."
+// in the language of msgs.
+func (msgs Messages) ErrorAuthAgent() string {
+	return Catalog.Format(msgs.locale, "errorAuthAgent", nil)
+}
+
+// ErrorAgent says "Could not reach the SSH agent: {error}"
+// in the language the app shows.
+func ErrorAgent(error string) string { return In(i18n.Locale()).ErrorAgent(error) }
+
+// ErrorAgent says "Could not reach the SSH agent: {error}"
+// in the language of msgs.
+func (msgs Messages) ErrorAgent(error string) string {
+	return Catalog.Format(msgs.locale, "errorAgent", map[string]any{"error": error})
+}
+
+// ErrorAgentUnavailable says "No SSH agent is running. Start one and load a key with ssh-add."
+// in the language the app shows.
+func ErrorAgentUnavailable() string { return In(i18n.Locale()).ErrorAgentUnavailable() }
+
+// ErrorAgentUnavailable says "No SSH agent is running. Start one and load a key with ssh-add."
+// in the language of msgs.
+func (msgs Messages) ErrorAgentUnavailable() string {
+	return Catalog.Format(msgs.locale, "errorAgentUnavailable", nil)
+}
+
+// ErrorAgentNoKeys says "The SSH agent has no keys. Add one with ssh-add."
+// in the language the app shows.
+func ErrorAgentNoKeys() string { return In(i18n.Locale()).ErrorAgentNoKeys() }
+
+// ErrorAgentNoKeys says "The SSH agent has no keys. Add one with ssh-add."
+// in the language of msgs.
+func (msgs Messages) ErrorAgentNoKeys() string {
+	return Catalog.Format(msgs.locale, "errorAgentNoKeys", nil)
 }
 
 // ErrorKeyRequired says "Choose a private key file."

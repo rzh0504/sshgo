@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 type testServer struct {
@@ -186,6 +187,39 @@ func TestConnectWithKey(t *testing.T) {
 		Address:         srv.addr,
 		User:            "me",
 		Signer:          signer,
+		HostKeyCallback: func(string, net.Addr, ssh.PublicKey) error { return nil },
+		Timeout:         5 * time.Second,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sess.Close()
+}
+
+func TestConnectWithAgent(t *testing.T) {
+	_, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signer, err := ssh.NewSignerFromKey(priv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := startServerWithKey(t, "", signer.PublicKey())
+
+	keyring := agent.NewKeyring()
+	if err := keyring.Add(agent.AddedKey{PrivateKey: priv}); err != nil {
+		t.Fatal(err)
+	}
+	server, client := net.Pipe()
+	go agent.ServeAgent(keyring, server)
+	defer server.Close()
+	defer client.Close()
+
+	sess, err := Connect(context.Background(), Config{
+		Address:         srv.addr,
+		User:            "me",
+		Agent:           agent.NewClient(client),
 		HostKeyCallback: func(string, net.Addr, ssh.PublicKey) error { return nil },
 		Timeout:         5 * time.Second,
 	})

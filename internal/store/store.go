@@ -24,6 +24,7 @@ type Group struct {
 const (
 	AuthPassword = "password"
 	AuthKey      = "key"
+	AuthAgent    = "agent"
 )
 
 // Host is a machine sshgo reaches over SSH.
@@ -45,6 +46,9 @@ type Host struct {
 
 // UsesKey reports whether the host signs in with a private key.
 func (h Host) UsesKey() bool { return h.Auth == AuthKey }
+
+// UsesAgent reports whether the host signs in with the user's SSH agent.
+func (h Host) UsesAgent() bool { return h.Auth == AuthAgent }
 
 // Address is the host's address for a terminal or a tooltip, as
 // "user@host:port".
@@ -276,6 +280,10 @@ func loadFrom(path string) (State, error) {
 				h.SavePassphrase = false
 			}
 			h.SavePassword = false
+		case AuthAgent:
+			h.KeyPath = ""
+			h.SavePassword = false
+			h.SavePassphrase = false
 		default:
 			h.Auth = AuthPassword
 			h.KeyPath = ""

@@ -19,6 +19,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	kh "sshgo/internal/knownhosts"
+	"sshgo/internal/sshagent"
 	"sshgo/internal/sshkey"
 	"sshgo/internal/sshx"
 	"sshgo/internal/store"
@@ -61,11 +62,12 @@ type hostRuntime struct {
 	attempt    *connectAttempt
 }
 
-// connectAuth is how a connection signs in: with a password or a private
-// key.
+// connectAuth is how a connection signs in: with a password, a private
+// key or the user's SSH agent.
 type connectAuth struct {
 	password string
 	signer   ssh.Signer
+	agent    *sshagent.Agent
 }
 
 // App is the app's state. It lives on the main thread; goroutines change
@@ -298,11 +300,38 @@ func (a *App) connect(id string) {
 		a.selectHost(id)
 		return
 	}
-	if h.UsesKey() {
+	switch {
+	case h.UsesAgent():
+		a.connectAgent(h)
+	case h.UsesKey():
 		a.connectKey(h, rt)
+	default:
+		a.connectPassword(h, rt)
+	}
+}
+
+func (a *App) connectAgent(h store.Host) {
+	ag, err := sshagent.Dial()
+	if err != nil {
+		if errors.Is(err, sshagent.ErrUnavailable) {
+			a.failConnect(h, locales.ErrorAgentUnavailable())
+		} else {
+			a.failConnect(h, locales.ErrorAgent(err.Error()))
+		}
 		return
 	}
-	a.connectPassword(h, rt)
+	signers, err := ag.Signers()
+	if err != nil {
+		ag.Close()
+		a.failConnect(h, locales.ErrorAgent(err.Error()))
+		return
+	}
+	if len(signers) == 0 {
+		ag.Close()
+		a.failConnect(h, locales.ErrorAgentNoKeys())
+		return
+	}
+	a.beginConnect(h, connectAuth{agent: ag})
 }
 
 func (a *App) connectPassword(h store.Host, rt *hostRuntime) {
@@ -378,8 +407,12 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 			User:            h.User,
 			Password:        auth.password,
 			Signer:          auth.signer,
+			Agent:           auth.agent,
 			HostKeyCallback: a.hostKeyCallback(h, attempt),
 		})
+		if auth.agent != nil {
+			auth.agent.Close()
+		}
 		if err != nil {
 			a.update(func() {
 				if rt.gen != gen {
@@ -537,7 +570,10 @@ func (a *App) connectLast() {
 func (a *App) connectError(h store.Host, err error) string {
 	switch {
 	case errors.Is(err, sshx.ErrAuth):
-		if h.UsesKey() {
+		switch {
+		case h.UsesAgent():
+			return locales.ErrorAuthAgent()
+		case h.UsesKey():
 			return locales.ErrorAuthKey()
 		}
 		return locales.ErrorAuth()

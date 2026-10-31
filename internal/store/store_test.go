@@ -221,7 +221,8 @@ func TestLoadNormalizesAuthentication(t *testing.T) {
 		`{"id":"a","host":"a"},` +
 		`{"id":"b","host":"b","auth":"key","keyPath":" ~/.ssh/id_ed25519 ","savePassword":true,"savePassphrase":true},` +
 		`{"id":"c","host":"c","auth":"key","savePassphrase":true},` +
-		`{"id":"d","host":"d","auth":"agent","keyPath":"~/.ssh/other","savePassphrase":true}]}`
+		`{"id":"d","host":"d","auth":"kerberos","keyPath":"~/.ssh/other","savePassphrase":true},` +
+		`{"id":"e","host":"e","auth":"agent","keyPath":"~/.ssh/other","savePassword":true,"savePassphrase":true}]}`
 	if err := os.WriteFile(path, []byte(state), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +230,7 @@ func TestLoadNormalizesAuthentication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, b, c, d := s.Hosts[0], s.Hosts[1], s.Hosts[2], s.Hosts[3]
+	a, b, c, d, e := s.Hosts[0], s.Hosts[1], s.Hosts[2], s.Hosts[3], s.Hosts[4]
 	if a.Auth != AuthPassword || a.KeyPath != "" || a.SavePassphrase {
 		t.Fatalf("password host = %+v, want the password defaults", a)
 	}
@@ -241,6 +242,9 @@ func TestLoadNormalizesAuthentication(t *testing.T) {
 	}
 	if d.Auth != AuthPassword || d.KeyPath != "" || d.SavePassphrase {
 		t.Fatalf("unknown auth host = %+v, want the password defaults", d)
+	}
+	if e.Auth != AuthAgent || e.KeyPath != "" || e.SavePassword || e.SavePassphrase {
+		t.Fatalf("agent host = %+v, want the agent defaults", e)
 	}
 }
 

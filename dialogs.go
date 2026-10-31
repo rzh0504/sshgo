@@ -333,8 +333,8 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.FieldAuth()).FontSize(12).FontWeight(550).TextColor(pal.textMuted)
 			segmented(c, "auth-"+ed.id, &ed.auth,
-				[]string{store.AuthPassword, store.AuthKey},
-				[]string{locales.AuthPassword(), locales.AuthKey()})
+				[]string{store.AuthPassword, store.AuthKey, store.AuthAgent},
+				[]string{locales.AuthPassword(), locales.AuthKey(), locales.AuthAgent()})
 		})
 		if ed.auth == store.AuthKey {
 			ui.Row(c).Gap(8).AlignItems(ui.End).Children(func() {
@@ -352,6 +352,8 @@ func (a *App) editorView(c *ui.Context, pal *palette) {
 				inKeyPass = formField(c, "key-pass", locales.FieldPassphrase(), locales.PlaceholderKeyPassphrase(), &ed.passphrase, pal, true)
 			})
 			ui.Checkbox(c, &ed.saveKeyPass, locales.PassphraseSaveLabel())
+		} else if ed.auth == store.AuthAgent {
+			ui.Text(c, locales.AgentHint()).FontSize(12).TextColor(pal.textMuted).LineHeight(1.4)
 		} else {
 			ui.Column(c).Gap(5).Children(func() {
 				placeholder := ""
@@ -429,11 +431,13 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 	}
 	password := ed.password
 	auth := ed.auth
-	if auth != store.AuthKey {
+	if auth != store.AuthKey && auth != store.AuthAgent {
 		auth = store.AuthPassword
 	}
 	keyPath := strings.TrimSpace(ed.keyPath)
-	if auth == store.AuthKey && keyPath == "" {
+	if auth != store.AuthKey {
+		keyPath = ""
+	} else if keyPath == "" {
 		return locales.ErrorKeyRequired()
 	}
 	if auth == store.AuthKey {
@@ -459,11 +463,14 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		h.Group = group
 		h.OS = ed.os
 		h.Auth = auth
-		if auth == store.AuthKey {
+		switch auth {
+		case store.AuthKey:
 			h.KeyPath = keyPath
 			h.SavePassphrase = ed.saveKeyPass && (ed.passphrase == "" || a.savePassphrase(h, ed.passphrase))
-		} else if ed.save && password != "" {
-			h.SavePassword = a.savePassword(h, password)
+		case store.AuthPassword:
+			if ed.save && password != "" {
+				h.SavePassword = a.savePassword(h, password)
+			}
 		}
 		a.state.Hosts = append(a.state.Hosts, h)
 		a.selected = h.ID
@@ -481,7 +488,8 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		h.Group = group
 		h.OS = ed.os
 		h.Auth = auth
-		if auth == store.AuthKey {
+		switch auth {
+		case store.AuthKey:
 			h.KeyPath = keyPath
 			h.SavePassphrase = ed.saveKeyPass
 			h.SavePassword = false
@@ -501,7 +509,13 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 			case keyChanged || !h.SavePassphrase:
 				_ = mygo.Secrets.Delete(passphraseKey(h))
 			}
-		} else {
+		case store.AuthAgent:
+			h.KeyPath = ""
+			h.SavePassphrase = false
+			h.SavePassword = false
+			_ = mygo.Secrets.Delete(passphraseKey(h))
+			_ = mygo.Secrets.Delete(passwordKey(h))
+		default:
 			h.KeyPath = ""
 			h.SavePassphrase = false
 			_ = mygo.Secrets.Delete(passphraseKey(h))

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 var (
@@ -34,6 +35,9 @@ type Config struct {
 	// Signer is the private key to sign in with. It is tried before the
 	// password.
 	Signer ssh.Signer
+	// Agent is the SSH agent whose keys sign in. Its keys are tried after
+	// Signer, and before the password.
+	Agent agent.Agent
 	// HostKeyCallback checks the host's key, as ssh.HostKeyCallback does.
 	HostKeyCallback ssh.HostKeyCallback
 	// Timeout bounds the connection and the sign-in; 20 seconds when zero.
@@ -138,6 +142,9 @@ func authMethods(cfg Config) []ssh.AuthMethod {
 	var methods []ssh.AuthMethod
 	if cfg.Signer != nil {
 		methods = append(methods, ssh.PublicKeys(cfg.Signer))
+	}
+	if cfg.Agent != nil {
+		methods = append(methods, ssh.PublicKeysCallback(cfg.Agent.Signers))
 	}
 	if cfg.Password != "" {
 		methods = append(methods,
