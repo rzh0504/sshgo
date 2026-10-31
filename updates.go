@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"sync"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
@@ -14,6 +15,15 @@ import (
 //
 //go:embed assets/icons/icon.png
 var appIcon []byte
+
+// appIconImage is the app icon, decoded once, as the About page shows it.
+var appIconImage = sync.OnceValue(func() ui.ImageSource {
+	img, err := ui.DecodeImage(appIcon)
+	if err != nil {
+		return nil
+	}
+	return img
+})
 
 // updatePrefs are the updater's, as last read: the settings page reads
 // these, not the updater, which needs the running app.
@@ -29,8 +39,8 @@ func (a *App) refreshUpdates() {
 	}
 }
 
-// updatesGroup is Settings › General's last group: the version, checking
-// now, and checking in the background.
+// updatesGroup is Settings › About's group on updates: the version,
+// checking now, and checking in the background.
 func (a *App) updatesGroup(c *ui.Context, pal *palette) {
 	version := mygo.App.Version()
 	if version == "" {

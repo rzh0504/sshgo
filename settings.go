@@ -1,7 +1,6 @@
 package main
 
 import (
-	"path/filepath"
 	"slices"
 	"strconv"
 	"sync"
@@ -302,7 +301,6 @@ func (a *App) generalPage(c *ui.Context, pal *palette) {
 			toggle(c.Key("auto-connect"), &a.state.AutoConnect, pal)
 		})
 	})
-	a.updatesGroup(c, pal)
 }
 
 // --- Appearance ---
@@ -511,26 +509,24 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 
 // --- About ---
 
+// repoURL is sshgo's source repository.
+const repoURL = "https://github.com/rzh0504/sshgo"
+
 func (a *App) aboutPage(c *ui.Context, pal *palette) {
-	version := mygo.App.Version()
-	if version == "" {
-		version = "dev"
-	}
-	ui.Column(c).Gap(12).AlignItems(ui.Center).Padding(24, 0).Children(func() {
-		ui.Box(c).Size(52, 52).Radius(14).Center().Background(pal.chip).TextColor(pal.textMuted).Children(func() {
-			ui.Icon(c, terminalIcon).Size(26, 26)
-		})
+	ui.Column(c).Gap(10).AlignItems(ui.Center).Padding(24, 0).Children(func() {
+		ui.Image(c, appIconImage()).Size(64, 64).Label("sshgo")
 		ui.Text(c, "sshgo").FontSize(19).FontWeight(650).TextColor(pal.text)
-		ui.Text(c, locales.AboutVersion(version)).FontSize(12.5).TextColor(pal.textMuted)
+	})
+	a.updatesGroup(c, pal)
+	settingsGroup(c, pal, locales.AboutSource(), "", func() {
+		settingRow(c, pal, locales.AboutRepository(), "", func() {
+			ui.Link(c, "github.com/rzh0504/sshgo", repoURL).FontSize(12.5)
+		})
 	})
 	dir, err := store.Dir()
 	if err != nil {
 		dir = ""
 	}
-	settingsGroup(c, pal, "", "", func() {
-		pathRow(c, pal, locales.AboutConfig(), filepath.Join(dir, "state.json"))
-		pathRow(c, pal, locales.AboutKnownHosts(), filepath.Join(dir, "known_hosts"))
-	})
 	if dir != "" {
 		ui.Row(c).Justify(ui.Center).Children(func() {
 			if button(c, "open-settings-dir", locales.AboutOpenFolder(), "", false, pal) {
@@ -538,17 +534,19 @@ func (a *App) aboutPage(c *ui.Context, pal *palette) {
 			}
 		})
 	}
-	ui.Text(c, locales.AboutIcons()).FontSize(11.5).TextColor(pal.textFaint).
-		TextAlign(ui.Center).LineHeight(1.4).Selectable()
+	settingsGroup(c, pal, locales.AboutCredits(), "", func() {
+		creditRow(c, pal, "kero", locales.AboutCreditKero(), "github.com/egoist/kero")
+		creditRow(c, pal, "MyGo", locales.AboutCreditMygo(), "github.com/egoist/mygo")
+		creditRow(c, pal, "Ghostty", locales.AboutCreditGhostty(), "github.com/ghostty-org/ghostty")
+		creditRow(c, pal, "Dashboard Icons", locales.AboutCreditIcons(), "github.com/homarr-labs/dashboard-icons")
+	})
 }
 
-func pathRow(c *ui.Context, pal *palette, label, path string) {
-	if groupRows++; groupRows > 1 {
-		ui.Box(c).Height(1).Shrink(0).Background(pal.text.Alpha(0.07))
-	}
-	ui.Column(c).Padding(11, 0).Gap(3).Children(func() {
-		ui.Text(c, label).FontSize(13.5).TextColor(pal.text)
-		ui.Text(c, path).Font("monospace").FontSize(11.5).TextColor(pal.textMuted).Selectable().LineHeight(1.35)
+// creditRow is a project in the About page's credits: its part in sshgo,
+// and where its source is.
+func creditRow(c *ui.Context, pal *palette, name, part, repo string) {
+	settingRow(c, pal, name, part, func() {
+		ui.Link(c, repo, "https://"+repo).FontSize(12.5)
 	})
 }
 

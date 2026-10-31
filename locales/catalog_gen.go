@@ -1500,44 +1500,74 @@ func (msgs Messages) LanguageSystem() string {
 	return Catalog.Format(msgs.locale, "languageSystem", nil)
 }
 
-// AboutVersion says "Version {version}"
+// AboutSource says "Source"
 // in the language the app shows.
-func AboutVersion(version string) string { return In(i18n.Locale()).AboutVersion(version) }
+func AboutSource() string { return In(i18n.Locale()).AboutSource() }
 
-// AboutVersion says "Version {version}"
+// AboutSource says "Source"
 // in the language of msgs.
-func (msgs Messages) AboutVersion(version string) string {
-	return Catalog.Format(msgs.locale, "aboutVersion", map[string]any{"version": version})
+func (msgs Messages) AboutSource() string {
+	return Catalog.Format(msgs.locale, "aboutSource", nil)
 }
 
-// AboutConfig says "Hosts and settings"
+// AboutRepository says "Repository"
 // in the language the app shows.
-func AboutConfig() string { return In(i18n.Locale()).AboutConfig() }
+func AboutRepository() string { return In(i18n.Locale()).AboutRepository() }
 
-// AboutConfig says "Hosts and settings"
+// AboutRepository says "Repository"
 // in the language of msgs.
-func (msgs Messages) AboutConfig() string {
-	return Catalog.Format(msgs.locale, "aboutConfig", nil)
+func (msgs Messages) AboutRepository() string {
+	return Catalog.Format(msgs.locale, "aboutRepository", nil)
 }
 
-// AboutKnownHosts says "Trusted host keys"
+// AboutCredits says "Credits"
 // in the language the app shows.
-func AboutKnownHosts() string { return In(i18n.Locale()).AboutKnownHosts() }
+func AboutCredits() string { return In(i18n.Locale()).AboutCredits() }
 
-// AboutKnownHosts says "Trusted host keys"
+// AboutCredits says "Credits"
 // in the language of msgs.
-func (msgs Messages) AboutKnownHosts() string {
-	return Catalog.Format(msgs.locale, "aboutKnownHosts", nil)
+func (msgs Messages) AboutCredits() string {
+	return Catalog.Format(msgs.locale, "aboutCredits", nil)
 }
 
-// AboutIcons says "System icons from Dashboard Icons (Apache 2.0)."
+// AboutCreditKero says "UI inspiration · MIT"
 // in the language the app shows.
-func AboutIcons() string { return In(i18n.Locale()).AboutIcons() }
+func AboutCreditKero() string { return In(i18n.Locale()).AboutCreditKero() }
 
-// AboutIcons says "System icons from Dashboard Icons (Apache 2.0)."
+// AboutCreditKero says "UI inspiration · MIT"
 // in the language of msgs.
-func (msgs Messages) AboutIcons() string {
-	return Catalog.Format(msgs.locale, "aboutIcons", nil)
+func (msgs Messages) AboutCreditKero() string {
+	return Catalog.Format(msgs.locale, "aboutCreditKero", nil)
+}
+
+// AboutCreditMygo says "Native UI framework · MIT"
+// in the language the app shows.
+func AboutCreditMygo() string { return In(i18n.Locale()).AboutCreditMygo() }
+
+// AboutCreditMygo says "Native UI framework · MIT"
+// in the language of msgs.
+func (msgs Messages) AboutCreditMygo() string {
+	return Catalog.Format(msgs.locale, "aboutCreditMygo", nil)
+}
+
+// AboutCreditGhostty says "Terminal engine · MIT"
+// in the language the app shows.
+func AboutCreditGhostty() string { return In(i18n.Locale()).AboutCreditGhostty() }
+
+// AboutCreditGhostty says "Terminal engine · MIT"
+// in the language of msgs.
+func (msgs Messages) AboutCreditGhostty() string {
+	return Catalog.Format(msgs.locale, "aboutCreditGhostty", nil)
+}
+
+// AboutCreditIcons says "System icons · Apache 2.0"
+// in the language the app shows.
+func AboutCreditIcons() string { return In(i18n.Locale()).AboutCreditIcons() }
+
+// AboutCreditIcons says "System icons · Apache 2.0"
+// in the language of msgs.
+func (msgs Messages) AboutCreditIcons() string {
+	return Catalog.Format(msgs.locale, "aboutCreditIcons", nil)
 }
 
 // AboutOpenFolder says "Open Settings Folder"
