@@ -474,8 +474,12 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 		}
 		a.state.Hosts = append(a.state.Hosts, h)
 		a.selected = h.ID
-		if auth == store.AuthKey && ed.passphrase != "" {
+		switch {
+		case auth == store.AuthKey && ed.passphrase != "":
 			a.runtime(h.ID).passphrase = ed.passphrase
+		case auth == store.AuthPassword && password != "":
+			// Save and Connect connects with what was just typed, saved or not.
+			a.runtime(h.ID).password = password
 		}
 	} else {
 		idx := a.state.Index(ed.id)
@@ -537,8 +541,12 @@ func (a *App) commitEditor(ed *editorState, connect bool) string {
 				rt.passphrase = ""
 			}
 		}
-		if auth == store.AuthKey && ed.passphrase != "" {
+		switch {
+		case auth == store.AuthKey && ed.passphrase != "":
 			a.runtime(h.ID).passphrase = ed.passphrase
+		case auth == store.AuthPassword && password != "":
+			// The password just typed replaces the one cached in this run.
+			a.runtime(h.ID).password = password
 		}
 		a.state.Hosts[idx] = h
 		a.selected = h.ID
