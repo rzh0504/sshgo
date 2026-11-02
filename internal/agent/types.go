@@ -114,15 +114,6 @@ func CloneChat(c *Chat) *Chat {
 	return &cp
 }
 
-// CloneChats copies a list of conversations.
-func CloneChats(chats []*Chat) []*Chat {
-	out := make([]*Chat, len(chats))
-	for i, c := range chats {
-		out[i] = CloneChat(c)
-	}
-	return out
-}
-
 // CloneMessage copies one message.
 func CloneMessage(m *Message) *Message {
 	if m == nil {

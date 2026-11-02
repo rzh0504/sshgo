@@ -64,38 +64,111 @@ func (s *agentState) chatLocked(id string) *agent.Chat {
 	return nil
 }
 
-// loadAgent reads the conversations saved last time.
+// loadAgent reads the conversations saved last time, and the current
+// one's messages.
 func (a *App) loadAgent() {
-	file, err := store.LoadChats()
+	idx, err := store.LoadChatIndex()
 	if err != nil {
 		a.toast = err.Error()
 		return
 	}
 	a.agent.mu.Lock()
-	a.agent.chats = file.Chats
-	for _, c := range a.agent.chats {
-		c.Messages = agent.Sanitize(c.Messages)
-		if c.Title == "" {
-			c.Title = agent.TitleOf(c.Messages)
-		}
+	a.agent.chats = make([]*agent.Chat, 0, len(idx.Chats))
+	for _, meta := range idx.Chats {
+		a.agent.chats = append(a.agent.chats, &agent.Chat{
+			ID: meta.ID, Title: meta.Title, CreatedAt: meta.CreatedAt, UpdatedAt: meta.UpdatedAt,
+		})
 	}
-	a.agent.current = file.Current
+	a.agent.current = idx.Current
 	if a.agent.chatLocked(a.agent.current) == nil {
 		a.agent.current = ""
 	}
+	current := a.agent.current
 	a.agent.mu.Unlock()
+	if current == "" {
+		return
+	}
+	if err := a.loadAgentChat(current); err != nil {
+		a.toast = err.Error()
+		a.agent.mu.Lock()
+		a.agent.current = ""
+		a.agent.mu.Unlock()
+		a.saveAgentIndex()
+	}
 }
 
-func (a *App) saveAgentChats() {
+// loadAgentChat reads one conversation's messages.
+func (a *App) loadAgentChat(id string) error {
+	loaded, err := store.LoadChat(id)
+	if err != nil {
+		return err
+	}
+	loaded.Messages = agent.Sanitize(loaded.Messages)
+	if loaded.Title == "" {
+		loaded.Title = agent.TitleOf(loaded.Messages)
+	}
 	a.agent.mu.Lock()
-	file := store.ChatFile{Current: a.agent.current, Chats: agent.CloneChats(a.agent.chats)}
+	if chat := a.agent.chatLocked(id); chat != nil {
+		chat.Messages = loaded.Messages
+		chat.Title = loaded.Title
+		chat.CreatedAt = loaded.CreatedAt
+		chat.UpdatedAt = loaded.UpdatedAt
+	}
+	a.agent.mu.Unlock()
+	return nil
+}
+
+func (s *agentState) indexLocked() store.ChatIndex {
+	idx := store.ChatIndex{Current: s.current}
+	for _, c := range s.chats {
+		idx.Chats = append(idx.Chats, store.ChatMeta{
+			ID: c.ID, Title: c.Title, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt,
+		})
+	}
+	return idx
+}
+
+// saveAgentIndex writes the list of conversations, without reading or
+// writing any conversation's messages.
+func (a *App) saveAgentIndex() {
+	a.agent.mu.Lock()
+	idx := a.agent.indexLocked()
 	a.agent.mu.Unlock()
 	a.agent.saveMu.Lock()
-	err := file.Save()
+	err := idx.Save()
 	a.agent.saveMu.Unlock()
 	if err != nil {
-		a.update(func() { a.toast = err.Error() })
+		a.agentSaveFailed(err)
 	}
+}
+
+// saveAgentChat writes one conversation and the list.
+func (a *App) saveAgentChat(chatID string) {
+	a.agent.mu.Lock()
+	var chat *agent.Chat
+	for _, c := range a.agent.chats {
+		if c.ID == chatID && c.Messages != nil {
+			chat = agent.CloneChat(c)
+			break
+		}
+	}
+	idx := a.agent.indexLocked()
+	a.agent.mu.Unlock()
+	a.agent.saveMu.Lock()
+	defer a.agent.saveMu.Unlock()
+	if chat != nil {
+		if err := store.SaveChat(chat); err != nil {
+			a.agentSaveFailed(err)
+			return
+		}
+	}
+	if err := idx.Save(); err != nil {
+		a.agentSaveFailed(err)
+	}
+}
+
+func (a *App) agentSaveFailed(err error) {
+	a.update(func() { a.toast = err.Error() })
 }
 
 // repaint asks for a frame; the engine calls it from its goroutine.
@@ -134,12 +207,33 @@ func (a *App) newAgentChat() {
 	a.agent.mu.Unlock()
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
-	a.saveAgentChats()
+	a.saveAgentIndex()
 	a.repaint()
 	a.updateTitle()
 }
 
 func (a *App) selectAgentChat(id string) {
+	a.agent.mu.Lock()
+	if a.agent.busy {
+		a.agent.mu.Unlock()
+		return
+	}
+	chat := a.agent.chatLocked(id)
+	if chat == nil {
+		a.agent.mu.Unlock()
+		return
+	}
+	needsLoad := chat.Messages == nil
+	a.agent.mu.Unlock()
+	if needsLoad {
+		if err := a.loadAgentChat(id); err != nil {
+			a.agent.mu.Lock()
+			a.agent.err = err.Error()
+			a.agent.mu.Unlock()
+			a.repaint()
+			return
+		}
+	}
 	a.agent.mu.Lock()
 	if a.agent.busy || a.agent.chatLocked(id) == nil {
 		a.agent.mu.Unlock()
@@ -150,7 +244,7 @@ func (a *App) selectAgentChat(id string) {
 	a.agent.mu.Unlock()
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
-	a.saveAgentChats()
+	a.saveAgentIndex()
 	a.repaint()
 	a.updateTitle()
 }
@@ -173,7 +267,10 @@ func (a *App) deleteAgentChat(id string) {
 	}
 	a.agent.err = ""
 	a.agent.mu.Unlock()
-	a.saveAgentChats()
+	if err := store.DeleteChat(id); err != nil {
+		a.agentSaveFailed(err)
+	}
+	a.saveAgentIndex()
 	a.repaint()
 	a.updateTitle()
 }
@@ -243,7 +340,7 @@ func (a *App) sendAgent(text string) bool {
 	a.agent.mu.Unlock()
 
 	a.agent.draft.Set("")
-	a.saveAgentChats()
+	a.saveAgentChat(chatID)
 	a.repaint()
 	a.updateTitle()
 
@@ -284,7 +381,6 @@ func (a *App) sendAgent(text string) bool {
 			a.agent.err = err.Error()
 		}
 		a.agent.mu.Unlock()
-		a.saveAgentChats()
 		a.repaint()
 	}()
 	return true
@@ -310,7 +406,7 @@ func (a *App) applyAgentMessages(chatID string, msgs []*agent.Message) {
 		}
 	}
 	a.agent.mu.Unlock()
-	a.saveAgentChats()
+	a.saveAgentChat(chatID)
 	a.repaint()
 }
 

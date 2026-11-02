@@ -342,37 +342,59 @@ func TestAddressAndEndpoint(t *testing.T) {
 	}
 }
 
-func TestChatsRoundTrip(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "chats.json")
-	want := ChatFile{
-		Current: "c1",
-		Chats: []*agent.Chat{{
-			ID: "c1", Title: "check disk", CreatedAt: 100, UpdatedAt: 200,
-			Messages: []*agent.Message{
-				{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100},
-				{ID: "m2", Role: "assistant", Content: "Checking.", CreatedAt: 200, ToolCalls: []*agent.ToolCall{
-					{ID: "call1", Name: "run_shell_command", Arguments: `{"command":"df -h"}`, Status: agent.CallDone,
-						Result: &agent.ToolResult{Stdout: "ok", ExitCode: 0}},
-				}},
-			},
-		}},
-	}
-	if err := want.saveTo(path); err != nil {
-		t.Fatal(err)
-	}
-	got, err := loadChatsFrom(path)
+func TestChatStoreRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	indexPath := filepath.Join(dir, "index.json")
+	chatPath, err := chatPathIn(dir, "c1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Current != want.Current || len(got.Chats) != 1 {
-		t.Fatalf("chats = %+v", got)
+	chat := &agent.Chat{
+		ID: "c1", Title: "check disk", CreatedAt: 100, UpdatedAt: 200,
+		Messages: []*agent.Message{
+			{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100},
+			{ID: "m2", Role: "assistant", Content: "Checking.", CreatedAt: 200, ToolCalls: []*agent.ToolCall{
+				{ID: "call1", Name: "run_shell_command", Arguments: `{"command":"df -h"}`, Status: agent.CallDone,
+					Result: &agent.ToolResult{Stdout: "ok", ExitCode: 0}},
+			}},
+		},
 	}
-	chat := got.Chats[0]
-	if chat.ID != "c1" || chat.Title != "check disk" || len(chat.Messages) != 2 {
-		t.Fatalf("chat = %+v", chat)
+	if err := saveChatTo(chatPath, chat); err != nil {
+		t.Fatal(err)
 	}
-	call := chat.Messages[1].ToolCalls[0]
+	want := ChatIndex{
+		Current: "c1",
+		Chats:   []ChatMeta{{ID: "c1", Title: "check disk", CreatedAt: 100, UpdatedAt: 200}},
+	}
+	if err := want.saveTo(indexPath); err != nil {
+		t.Fatal(err)
+	}
+
+	gotIdx, err := loadChatIndexFrom(indexPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotIdx.Current != "c1" || len(gotIdx.Chats) != 1 || gotIdx.Chats[0].UpdatedAt != 200 {
+		t.Fatalf("index = %+v", gotIdx)
+	}
+	got, err := loadChatFrom(chatPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ID != "c1" || got.Title != "check disk" || len(got.Messages) != 2 {
+		t.Fatalf("chat = %+v", got)
+	}
+	call := got.Messages[1].ToolCalls[0]
 	if call.ID != "call1" || call.Status != agent.CallDone || call.Result == nil || call.Result.Stdout != "ok" {
 		t.Fatalf("call = %+v", call)
+	}
+}
+
+func TestChatPathRejectsUnsafeID(t *testing.T) {
+	dir := t.TempDir()
+	for _, id := range []string{"", "..", "../x", "a/b", `a\b`, "a.json"} {
+		if _, err := chatPathIn(dir, id); err == nil {
+			t.Errorf("chatPathIn accepted %q", id)
+		}
 	}
 }

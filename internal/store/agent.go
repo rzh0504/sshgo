@@ -3,72 +3,207 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"sshgo/internal/agent"
 )
 
-// ChatFile is the Agent's conversations as they are saved.
-type ChatFile struct {
-	Current string        `json:"current,omitempty"`
-	Chats   []*agent.Chat `json:"chats,omitempty"`
+const (
+	chatsDirName  = "chats"
+	chatIndexName = "index.json"
+)
+
+// ChatMeta is what the history list needs of a conversation, without
+// reading its messages.
+type ChatMeta struct {
+	ID        string `json:"id"`
+	Title     string `json:"title,omitempty"`
+	CreatedAt int64  `json:"createdAt,omitempty"`
+	UpdatedAt int64  `json:"updatedAt,omitempty"`
 }
 
-// ChatsPath is the file the Agent's conversations are saved in.
-func ChatsPath() (string, error) {
-	dir, err := Dir()
+// ChatIndex is the Agent's conversations, and the one in view.
+type ChatIndex struct {
+	Current string     `json:"current,omitempty"`
+	Chats   []ChatMeta `json:"chats,omitempty"`
+}
+
+// LoadChatIndex reads the list of conversations.
+func LoadChatIndex() (ChatIndex, error) {
+	path, err := chatIndexPath()
 	if err != nil {
-		return "", err
+		return ChatIndex{}, err
 	}
-	return filepath.Join(dir, "chats.json"), nil
-}
-
-// LoadChats reads the Agent's conversations, and gives an empty set when
-// the file is not there yet.
-func LoadChats() (ChatFile, error) {
-	path, err := ChatsPath()
-	if err != nil {
-		return ChatFile{}, err
-	}
-	return loadChatsFrom(path)
-}
-
-func loadChatsFrom(path string) (ChatFile, error) {
-	b, err := os.ReadFile(path)
+	idx, err := loadChatIndexFrom(path)
 	if errors.Is(err, os.ErrNotExist) {
-		return ChatFile{}, nil
+		return ChatIndex{}, nil
 	}
 	if err != nil {
-		return ChatFile{}, err
+		return ChatIndex{}, err
 	}
-	var f ChatFile
-	if err := json.Unmarshal(b, &f); err != nil {
-		return ChatFile{}, err
-	}
-	return f, nil
+	return idx, nil
 }
 
-// Save writes the conversations.
-func (f ChatFile) Save() error {
-	path, err := ChatsPath()
+func loadChatIndexFrom(path string) (ChatIndex, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return ChatIndex{}, err
+	}
+	var idx ChatIndex
+	if err := json.Unmarshal(b, &idx); err != nil {
+		return ChatIndex{}, err
+	}
+	return idx, nil
+}
+
+// Save writes the list of conversations.
+func (idx ChatIndex) Save() error {
+	path, err := chatIndexPath()
 	if err != nil {
 		return err
 	}
-	return f.saveTo(path)
+	return idx.saveTo(path)
 }
 
-func (f ChatFile) saveTo(path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return err
+func (idx ChatIndex) saveTo(path string) error {
+	if idx.Chats == nil {
+		idx.Chats = []ChatMeta{}
 	}
-	if f.Chats == nil {
-		f.Chats = []*agent.Chat{}
-	}
-	b, err := json.MarshalIndent(f, "", "  ")
+	b, err := json.MarshalIndent(idx, "", "  ")
 	if err != nil {
 		return err
 	}
 	b = append(b, '\n')
-	return os.WriteFile(path, b, 0o600)
+	return writeFileAtomic(path, b)
+}
+
+// LoadChat reads one conversation.
+func LoadChat(id string) (*agent.Chat, error) {
+	path, err := chatPath(id)
+	if err != nil {
+		return nil, err
+	}
+	return loadChatFrom(path)
+}
+
+func loadChatFrom(path string) (*agent.Chat, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var c agent.Chat
+	if err := json.Unmarshal(b, &c); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+// SaveChat writes one conversation.
+func SaveChat(c *agent.Chat) error {
+	if c == nil {
+		return errors.New("store: no chat")
+	}
+	path, err := chatPath(c.ID)
+	if err != nil {
+		return err
+	}
+	return saveChatTo(path, c)
+}
+
+func saveChatTo(path string, c *agent.Chat) error {
+	b, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return err
+	}
+	b = append(b, '\n')
+	return writeFileAtomic(path, b)
+}
+
+// DeleteChat removes one conversation's file.
+func DeleteChat(id string) error {
+	path, err := chatPath(id)
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
+func chatsDir() (string, error) {
+	dir, err := Dir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, chatsDirName), nil
+}
+
+func chatIndexPath() (string, error) {
+	dir, err := chatsDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, chatIndexName), nil
+}
+
+func chatPath(id string) (string, error) {
+	dir, err := chatsDir()
+	if err != nil {
+		return "", err
+	}
+	return chatPathIn(dir, id)
+}
+
+func chatPathIn(dir, id string) (string, error) {
+	if !validChatID(id) {
+		return "", fmt.Errorf("store: invalid chat id %q", id)
+	}
+	return filepath.Join(dir, id+".json"), nil
+}
+
+func validChatID(id string) bool {
+	if id == "" || len(id) > 128 {
+		return false
+	}
+	for _, r := range id {
+		if !(r == '-' || r == '_' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9') {
+			return false
+		}
+	}
+	return true
+}
+
+func writeFileAtomic(path string, b []byte) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(dir, ".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmp := f.Name()
+	fail := func(err error) error {
+		f.Close()
+		os.Remove(tmp)
+		return err
+	}
+	if _, err := f.Write(b); err != nil {
+		return fail(err)
+	}
+	if err := f.Sync(); err != nil {
+		return fail(err)
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return nil
 }
