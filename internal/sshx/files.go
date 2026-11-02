@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -18,6 +19,21 @@ import (
 type FileData struct {
 	Data      []byte
 	Size      int64
+	Truncated bool
+}
+
+// DirEntry is one entry of a directory.
+type DirEntry struct {
+	Name     string
+	IsDir    bool
+	Size     int64
+	Mode     string
+	Modified time.Time
+}
+
+// DirListing is a directory read, cut to the caller's limit.
+type DirListing struct {
+	Entries   []DirEntry
 	Truncated bool
 }
 
@@ -150,6 +166,75 @@ func writeFile(client *sftp.Client, filePath string, data []byte) error {
 		}
 	}
 	return nil
+}
+
+// ListDir reads at most max entries of a directory, directories first.
+func (s *Session) ListDir(ctx context.Context, dirPath string, max int) (DirListing, error) {
+	if max <= 0 {
+		max = 500
+	}
+	if s.client == nil {
+		return DirListing{}, errors.New("sshx: session closed")
+	}
+	if err := ctx.Err(); err != nil {
+		return DirListing{}, err
+	}
+	client, err := sftp.NewClient(s.client)
+	if err != nil {
+		return DirListing{}, err
+	}
+	type result struct {
+		listing DirListing
+		err     error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		listing, err := listDir(client, dirPath, max)
+		ch <- result{listing: listing, err: err}
+	}()
+	select {
+	case <-ctx.Done():
+		client.Close()
+		return DirListing{}, ctx.Err()
+	case r := <-ch:
+		client.Close()
+		return r.listing, r.err
+	}
+}
+
+func listDir(client *sftp.Client, dirPath string, max int) (DirListing, error) {
+	info, err := client.Stat(dirPath)
+	if err != nil {
+		return DirListing{}, fileError(dirPath, err)
+	}
+	if !info.IsDir() {
+		return DirListing{}, fmt.Errorf("%s is not a directory", dirPath)
+	}
+	entries, err := client.ReadDir(dirPath)
+	if err != nil {
+		return DirListing{}, fileError(dirPath, err)
+	}
+	sort.SliceStable(entries, func(i, j int) bool {
+		if entries[i].IsDir() != entries[j].IsDir() {
+			return entries[i].IsDir()
+		}
+		return entries[i].Name() < entries[j].Name()
+	})
+	truncated := len(entries) > max
+	if truncated {
+		entries = entries[:max]
+	}
+	out := DirListing{Entries: make([]DirEntry, 0, len(entries)), Truncated: truncated}
+	for _, entry := range entries {
+		out.Entries = append(out.Entries, DirEntry{
+			Name:     entry.Name(),
+			IsDir:    entry.IsDir(),
+			Size:     entry.Size(),
+			Mode:     entry.Mode().String(),
+			Modified: entry.ModTime(),
+		})
+	}
+	return out, nil
 }
 
 func fileError(filePath string, err error) error {
