@@ -24,6 +24,7 @@ type agentSnap struct {
 	target      string
 	provider    string
 	model       string
+	reasoning   string
 	messages    []*agent.Message
 	busy        bool
 	err         string
@@ -40,6 +41,7 @@ func (a *App) agentSnapshot() agentSnap {
 		target:      a.agent.target,
 		provider:    a.agent.provider,
 		model:       a.agent.model,
+		reasoning:   a.agent.reasoning,
 		busy:        a.agent.busy,
 		err:         a.agent.err,
 		streamingID: a.agent.streamingID,
@@ -199,8 +201,15 @@ func (a *App) agentMessage(c *ui.Context, pal *palette, m *agent.Message, snap a
 	if m.Role == "user" {
 		ui.Row(c).Children(func() {
 			ui.Spacer(c)
-			ui.Text(c, m.Content).Selectable().FontSize(13.5).LineHeight(1.45).TextColor(pal.text).
-				Padding(9, 13).Radius(12).Background(pal.chip).MaxWidth(560)
+			ui.Column(c).Padding(9, 13).Radius(12).Background(pal.chip).MaxWidth(560).Gap(6).
+				Children(func() {
+					if m.Content != "" {
+						ui.Text(c, m.Content).Selectable().FontSize(13.5).LineHeight(1.45).TextColor(pal.text)
+					}
+					if len(m.Attachments) > 0 {
+						a.agentMessageAttachments(c, pal, m.Attachments)
+					}
+				})
 		})
 		return
 	}
@@ -362,6 +371,7 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 				ui.Text(c, label).FontSize(12).TextColor(pal.textMuted)
 			})
 		}
+		a.agentPendingAttachments(c, pal)
 		box := ui.Column(c).FillWidth().Shrink(0).MinWidth(0).Radius(10).Clip()
 		var in ui.Element
 		box.Children(func() {
@@ -382,6 +392,7 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 				a.agentAttachButton(c, pal)
 				ui.Spacer(c)
 				a.agentModelPicker(c, pal, snap)
+				a.agentReasoningPicker(c, pal, snap)
 				a.agentSendButton(c, pal, snap)
 			})
 		})
@@ -399,9 +410,19 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 
 func (a *App) agentAttachButton(c *ui.Context, pal *palette) {
 	b := ui.ButtonBase(c.Key("agent-attach")).Size(26, 26).Radius(7).Center().
-		Label(locales.AgentAttach()).Tooltip(locales.AgentAttachSoon()).Disabled(true)
-	b.Background(pal.text.Alpha(0.05)).TextColor(pal.textFaint)
-	b.Children(func() { ui.Icon(c, plusIcon).Size(12, 12) })
+		Label(locales.AgentAttach()).Tooltip(locales.AgentAttach())
+	bg := pal.text.Alpha(0.06)
+	switch {
+	case b.Pressed():
+		bg = pal.text.Alpha(0.12)
+	case b.Hovered():
+		bg = pal.rowHover
+	}
+	b.Background(bg).TextColor(pal.textMuted)
+	b.Children(func() { ui.Icon(c, attachIcon).Size(14, 14) })
+	if b.Clicked() {
+		go a.attachAgentFiles()
+	}
 }
 
 // agentHostPicker is the host the conversation runs on, in the composer's
@@ -446,12 +467,13 @@ func (a *App) agentHostPicker(c *ui.Context, pal *palette, snap agentSnap) {
 		}
 	})
 	if snap.busy {
-		a.agent.hostMenuOpen = false
+		a.closeAgentMenus()
 		return
 	}
 	if b.Clicked() {
-		a.agent.modelMenuOpen = false
-		a.agent.hostMenuOpen = !a.agent.hostMenuOpen
+		open := !a.agent.hostMenuOpen
+		a.closeAgentMenus()
+		a.agent.hostMenuOpen = open
 	}
 	ui.PopoverBase(c, b, &a.agent.hostMenuOpen, func(panel ui.Element) {
 		a.agentHostMenu(c, pal, panel, snap)
@@ -534,7 +556,7 @@ func (a *App) agentSendButton(c *ui.Context, pal *palette, snap agentSnap) {
 		}
 		return
 	}
-	active := strings.TrimSpace(a.agent.draft.String()) != "" &&
+	active := (strings.TrimSpace(a.agent.draft.String()) != "" || len(a.agent.attachments) > 0) &&
 		a.agentHostConnected(snap.target) && a.agentModelReady(snap.provider, snap.model)
 	bg, fg := pal.text.Alpha(0.08), pal.textFaint
 	if active {
@@ -598,8 +620,9 @@ func (a *App) agentModelPicker(c *ui.Context, pal *palette, snap agentSnap) {
 		return
 	}
 	if b.Clicked() {
-		a.agent.hostMenuOpen = false
-		a.agent.modelMenuOpen = !a.agent.modelMenuOpen
+		open := !a.agent.modelMenuOpen
+		a.closeAgentMenus()
+		a.agent.modelMenuOpen = open
 	}
 	ui.PopoverBase(c, b, &a.agent.modelMenuOpen, func(panel ui.Element) {
 		panel.AttachTo(b, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(6, 0, 0, 0)

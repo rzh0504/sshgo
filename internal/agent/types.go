@@ -27,19 +27,42 @@ type Chat struct {
 	HostID     string     `json:"hostId,omitempty"`
 	ProviderID string     `json:"providerId,omitempty"`
 	Model      string     `json:"model,omitempty"`
+	Reasoning  string     `json:"reasoning,omitempty"`
 	CreatedAt  int64      `json:"createdAt"`
 	UpdatedAt  int64      `json:"updatedAt"`
 	Messages   []*Message `json:"messages"`
 }
 
+// Kinds of attachment a message may carry.
+const (
+	AttachmentText  = "text"
+	AttachmentImage = "image"
+)
+
+// Attachment is a file the user gave the conversation as context: text
+// inline, or an image kept in the app's attachment store.
+type Attachment struct {
+	ID      string `json:"id,omitempty"`
+	Kind    string `json:"kind,omitempty"`
+	Name    string `json:"name"`
+	MIME    string `json:"mime,omitempty"`
+	Size    int64  `json:"size,omitempty"`
+	Content string `json:"content,omitempty"`
+	// Data and Path are the image's data URL and file for the request and
+	// the preview; they are read from the store, never saved with the chat.
+	Data string `json:"-"`
+	Path string `json:"-"`
+}
+
 // Message is one turn of a conversation.
 type Message struct {
-	ID         string      `json:"id"`
-	Role       string      `json:"role"` // user, assistant or tool
-	Content    string      `json:"content"`
-	ToolCalls  []*ToolCall `json:"toolCalls,omitempty"`
-	ToolCallID string      `json:"toolCallId,omitempty"`
-	CreatedAt  int64       `json:"createdAt"`
+	ID          string       `json:"id"`
+	Role        string       `json:"role"` // user, assistant or tool
+	Content     string       `json:"content"`
+	Attachments []Attachment `json:"attachments,omitempty"`
+	ToolCalls   []*ToolCall  `json:"toolCalls,omitempty"`
+	ToolCallID  string       `json:"toolCallId,omitempty"`
+	CreatedAt   int64        `json:"createdAt"`
 }
 
 // ToolCall is a call a model made, and what became of it.
@@ -124,6 +147,9 @@ func CloneMessage(m *Message) *Message {
 		return nil
 	}
 	cp := *m
+	if m.Attachments != nil {
+		cp.Attachments = append([]Attachment(nil), m.Attachments...)
+	}
 	if m.ToolCalls != nil {
 		cp.ToolCalls = make([]*ToolCall, len(m.ToolCalls))
 		for i, c := range m.ToolCalls {

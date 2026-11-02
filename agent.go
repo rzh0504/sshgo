@@ -38,19 +38,23 @@ type agentState struct {
 	cancel      context.CancelFunc
 	saveMu      sync.Mutex
 
-	open          bool // the Agent is what the main card shows
-	showHistory   bool
-	target        string // the connected host this conversation runs on
-	provider      string // the provider this conversation uses
-	model         string // the model this conversation uses
-	modelMenuOpen bool
-	hostMenuOpen  bool
-	focusComposer bool
-	composer      ui.Handle
-	draft         ui.TextBuffer
-	list          ui.ListState
-	md            markdown.Options
-	expanded      map[string]bool
+	open              bool // the Agent is what the main card shows
+	showHistory       bool
+	target            string // the connected host this conversation runs on
+	provider          string // the provider this conversation uses
+	model             string // the model this conversation uses
+	reasoning         string // how hard the model should think
+	modelMenuOpen     bool
+	hostMenuOpen      bool
+	reasoningMenuOpen bool
+	focusComposer     bool
+	composer          ui.Handle
+	draft             ui.TextBuffer
+	attachments       []agent.Attachment
+	previews          map[string]ui.ImageSource
+	list              ui.ListState
+	md                markdown.Options
+	expanded          map[string]bool
 }
 
 type agentDeleteState struct {
@@ -116,6 +120,7 @@ func (a *App) loadAgentChat(id string) error {
 		return err
 	}
 	loaded.Messages = agent.Sanitize(loaded.Messages)
+	a.hydrateAgentAttachments(loaded.Messages)
 	if loaded.Title == "" {
 		loaded.Title = agent.TitleOf(loaded.Messages)
 	}
@@ -199,6 +204,7 @@ func (a *App) agentOpen() bool { return a.agent != nil && a.agent.open }
 func (a *App) closeAgentMenus() {
 	a.agent.modelMenuOpen = false
 	a.agent.hostMenuOpen = false
+	a.agent.reasoningMenuOpen = false
 }
 
 // toggleAgent shows the Agent in the main card, or the shell again.
@@ -229,6 +235,7 @@ func (a *App) newAgentChat() {
 	a.closeAgentMenus()
 	a.agent.target = a.agentDefaultHost()
 	a.syncAgentModel(nil)
+	a.syncAgentReasoning(nil)
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
@@ -278,6 +285,7 @@ func (a *App) selectAgentChat(id string) {
 	a.agent.err = ""
 	a.agent.mu.Unlock()
 	a.syncAgentModel(chat)
+	a.syncAgentReasoning(chat)
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
@@ -290,6 +298,24 @@ func (a *App) deleteAgentChat(id string) {
 	if a.agent.busy {
 		a.agent.mu.Unlock()
 		return
+	}
+	var imageIDs []string
+	for _, c := range a.agent.chats {
+		if c.ID == id {
+			if c.Messages == nil {
+				if loaded, err := store.LoadChat(id); err == nil {
+					c.Messages = loaded.Messages
+				}
+			}
+			for _, m := range c.Messages {
+				for _, attachment := range m.Attachments {
+					if attachment.Kind == agent.AttachmentImage && attachment.ID != "" {
+						imageIDs = append(imageIDs, attachment.ID)
+					}
+				}
+			}
+			break
+		}
 	}
 	out := a.agent.chats[:0]
 	for _, c := range a.agent.chats {
@@ -308,9 +334,14 @@ func (a *App) deleteAgentChat(id string) {
 		a.agent.target = a.agentDefaultHost()
 		a.closeAgentMenus()
 		a.syncAgentModel(nil)
+		a.syncAgentReasoning(nil)
 	}
 	if err := store.DeleteChat(id); err != nil {
 		a.agentSaveFailed(err)
+	}
+	for _, attachmentID := range imageIDs {
+		_ = store.DeleteAttachment(attachmentID)
+		delete(a.agent.previews, attachmentID)
 	}
 	a.saveAgentIndex()
 	a.repaint()
@@ -364,7 +395,8 @@ func (a *App) pickAgentHost(id string) {
 // is none. It reports whether the turn started.
 func (a *App) sendAgent(text string) bool {
 	text = strings.TrimSpace(text)
-	if text == "" {
+	attachments := append([]agent.Attachment(nil), a.agent.attachments...)
+	if text == "" && len(attachments) == 0 {
 		return false
 	}
 	a.agent.mu.Lock()
@@ -402,13 +434,17 @@ func (a *App) sendAgent(text string) bool {
 	chat.HostID = host.ID
 	chat.ProviderID = provider.ID
 	chat.Model = model
+	reasoning := normalizeReasoning(a.agent.reasoning)
+	chat.Reasoning = reasoning
 	a.agent.provider, a.agent.model = provider.ID, model
+	a.agent.reasoning = reasoning
 	now := time.Now().UnixMilli()
 	chat.Messages = append(chat.Messages, &agent.Message{
-		ID:        agent.NewID("msg"),
-		Role:      "user",
-		Content:   text,
-		CreatedAt: now,
+		ID:          agent.NewID("msg"),
+		Role:        "user",
+		Content:     text,
+		Attachments: attachments,
+		CreatedAt:   now,
 	})
 	chat.UpdatedAt = now
 	if chat.Title == "" {
@@ -424,15 +460,17 @@ func (a *App) sendAgent(text string) bool {
 	a.agent.mu.Unlock()
 
 	a.agent.draft.Set("")
+	a.agent.attachments = nil
 	a.saveAgentChat(chatID)
 	a.repaint()
 	a.updateTitle()
 
 	engine := &agent.Engine{
 		Client: &llm.Client{
-			BaseURL: provider.BaseURL,
-			APIKey:  a.savedSecret(agentProviderSecret(provider.ID)),
-			Model:   model,
+			BaseURL:   provider.BaseURL,
+			APIKey:    a.savedSecret(agentProviderSecret(provider.ID)),
+			Model:     model,
+			Reasoning: reasoning,
 		},
 		Host:   host,
 		Policy: agent.Policy{AutoRunSafe: a.state.AgentAutoRunSafe},

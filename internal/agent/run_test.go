@@ -103,7 +103,7 @@ func TestRunRunsSafeReadOnlyAutomatically(t *testing.T) {
 	if len(requests[1].Messages) != 4 {
 		t.Fatalf("second request messages = %+v", requests[1].Messages)
 	}
-	if requests[1].Messages[3].Role != "tool" || !strings.Contains(requests[1].Messages[3].Content, "Stdout:") {
+	if requests[1].Messages[3].Role != "tool" || !strings.Contains(fmt.Sprint(requests[1].Messages[3].Content), "Stdout:") {
 		t.Fatalf("tool answer = %+v", requests[1].Messages[3])
 	}
 	if len(requests[0].Tools) != 1 || requests[0].Tools[0].Function.Name != "run_shell_command" {

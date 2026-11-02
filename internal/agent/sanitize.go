@@ -63,6 +63,9 @@ func TitleOf(msgs []*Message) string {
 			continue
 		}
 		title := strings.Join(strings.Fields(m.Content), " ")
+		if title == "" && len(m.Attachments) > 0 {
+			title = m.Attachments[0].Name
+		}
 		if title == "" {
 			continue
 		}

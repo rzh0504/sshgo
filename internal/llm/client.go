@@ -21,18 +21,33 @@ var ErrNotConfigured = errors.New("llm: not configured")
 
 // Client is one OpenAI-compatible endpoint and the account on it.
 type Client struct {
-	BaseURL string
-	APIKey  string
-	Model   string
-	HTTP    *http.Client
+	BaseURL   string
+	APIKey    string
+	Model     string
+	Reasoning string
+	HTTP      *http.Client
 }
 
 // Message is one message of a conversation, in the shape the API takes.
+// Content is a string, or []ContentPart for a message with images.
 type Message struct {
-	Role       string     `json:"role"`
-	Content    string     `json:"content"`
-	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string     `json:"tool_call_id,omitempty"`
+	Role       string        `json:"role"`
+	Content    any           `json:"content"`
+	ToolCalls  []ToolCall    `json:"tool_calls,omitempty"`
+	ToolCallID string        `json:"tool_call_id,omitempty"`
+}
+
+// ContentPart is one part of a multimodal message.
+type ContentPart struct {
+	Type     string    `json:"type"`
+	Text     string    `json:"text,omitempty"`
+	ImageURL *ImageURL `json:"image_url,omitempty"`
+}
+
+// ImageURL is an image in a multimodal message, as a data URL or an http
+// address.
+type ImageURL struct {
+	URL string `json:"url"`
 }
 
 // ToolCall is a call a model made: its name, and the arguments as JSON.
@@ -83,10 +98,11 @@ func (c *Client) Chat(ctx context.Context, messages []Message, tools []Tool, onD
 		return Reply{}, err
 	}
 	body, err := json.Marshal(chatRequest{
-		Model:    model,
-		Messages: messages,
-		Tools:    tools,
-		Stream:   true,
+		Model:           model,
+		Messages:        messages,
+		Tools:           tools,
+		Stream:          true,
+		ReasoningEffort: reasoningEffort(c.Reasoning),
 	})
 	if err != nil {
 		return Reply{}, err
@@ -323,10 +339,19 @@ func readError(r io.Reader) string {
 }
 
 type chatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Tools    []Tool    `json:"tools,omitempty"`
-	Stream   bool      `json:"stream"`
+	Model           string    `json:"model"`
+	Messages        []Message `json:"messages"`
+	Tools           []Tool    `json:"tools,omitempty"`
+	Stream          bool      `json:"stream"`
+	ReasoningEffort string    `json:"reasoning_effort,omitempty"`
+}
+
+func reasoningEffort(value string) string {
+	switch value {
+	case "low", "medium", "high":
+		return value
+	}
+	return ""
 }
 
 type streamChunk struct {

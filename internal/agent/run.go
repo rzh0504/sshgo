@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"sshgo/internal/llm"
@@ -225,7 +226,37 @@ func apiMessages(msgs []*Message, system string) []llm.Message {
 	for _, m := range msgs {
 		switch m.Role {
 		case "user":
-			out = append(out, llm.Message{Role: "user", Content: m.Content})
+			text := m.Content
+			var b strings.Builder
+			b.WriteString(text)
+			var images []llm.ContentPart
+			for _, attachment := range m.Attachments {
+				if attachment.Kind == AttachmentImage {
+					if attachment.Data != "" {
+						images = append(images, llm.ContentPart{
+							Type:     "image_url",
+							ImageURL: &llm.ImageURL{URL: attachment.Data},
+						})
+					}
+					continue
+				}
+				if b.Len() > 0 {
+					b.WriteString("\n\n")
+				}
+				fmt.Fprintf(&b, "<attachment name=%q bytes=%d>\n%s\n</attachment>",
+					attachment.Name, attachment.Size, attachment.Content)
+			}
+			text = b.String()
+			if len(images) == 0 {
+				out = append(out, llm.Message{Role: "user", Content: text})
+				break
+			}
+			parts := []llm.ContentPart{}
+			if text != "" {
+				parts = append(parts, llm.ContentPart{Type: "text", Text: text})
+			}
+			parts = append(parts, images...)
+			out = append(out, llm.Message{Role: "user", Content: parts})
 		case "assistant":
 			msg := llm.Message{Role: "assistant", Content: m.Content}
 			for _, call := range m.ToolCalls {

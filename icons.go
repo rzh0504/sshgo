@@ -44,6 +44,8 @@ var (
 	sendIcon         = icon(`<path d="M8 13V3.2M4.5 6.7L8 3.2l3.5 3.5"/>`)
 	stopIcon         = icon(`<rect x="4.4" y="4.4" width="7.2" height="7.2" rx="1.5"/>`)
 	checkIcon        = icon(`<path d="M3.3 8.2l3 3 6.4-6.6"/>`)
+	bulbIcon         = icon(`<path d="M8 1.9a4.2 4.2 0 0 0-2.5 7.6c.4.3.6.8.6 1.3v.5h3.8v-.5c0-.5.2-1 .6-1.3A4.2 4.2 0 0 0 8 1.9z"/><path d="M6.4 13.1h3.2M6.9 14.7h2.2"/>`)
+	attachIcon       = icon(`<path d="M9.7 3.1L4.1 8.7a3 3 0 0 0 4.2 4.2l5.6-5.6a2 2 0 0 0-2.8-2.8L5.5 10.1a1 1 0 0 0 1.4 1.4l4.9-4.9"/>`)
 )
 
 var (

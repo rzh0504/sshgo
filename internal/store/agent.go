@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"sshgo/internal/agent"
 )
@@ -207,4 +208,76 @@ func writeFileAtomic(path string, b []byte) error {
 		return err
 	}
 	return nil
+}
+
+const attachmentsDirName = "attachments"
+
+// SaveAttachment keeps an image the Agent was given and returns the id its
+// conversation refers to.
+func SaveAttachment(data []byte, ext string) (string, error) {
+	switch ext {
+	case ".png", ".jpg", ".webp", ".gif":
+	default:
+		return "", fmt.Errorf("store: invalid attachment extension %q", ext)
+	}
+	id := agent.NewID("att") + ext
+	path, err := attachmentPath(id)
+	if err != nil {
+		return "", err
+	}
+	if err := writeFileAtomic(path, data); err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+// LoadAttachment reads an image kept for the Agent.
+func LoadAttachment(id string) ([]byte, error) {
+	path, err := attachmentPath(id)
+	if err != nil {
+		return nil, err
+	}
+	return os.ReadFile(path)
+}
+
+// AttachmentPath is where an image kept for the Agent is.
+func AttachmentPath(id string) (string, error) { return attachmentPath(id) }
+
+// DeleteAttachment removes an image kept for the Agent.
+func DeleteAttachment(id string) error {
+	path, err := attachmentPath(id)
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
+func attachmentPath(id string) (string, error) {
+	dir, err := Dir()
+	if err != nil {
+		return "", err
+	}
+	return attachmentPathIn(dir, id)
+}
+
+func attachmentPathIn(dir, id string) (string, error) {
+	if !validAttachmentID(id) {
+		return "", fmt.Errorf("store: invalid attachment id %q", id)
+	}
+	return filepath.Join(dir, attachmentsDirName, id), nil
+}
+
+func validAttachmentID(id string) bool {
+	if id == "" || len(id) > 128 || strings.HasPrefix(id, ".") || strings.Contains(id, "..") {
+		return false
+	}
+	for _, r := range id {
+		if !(r == '-' || r == '_' || r == '.' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9') {
+			return false
+		}
+	}
+	return true
 }

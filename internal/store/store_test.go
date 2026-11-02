@@ -58,8 +58,9 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		AgentProviders: []AgentProvider{
 			{ID: "p1", Name: "OpenAI", BaseURL: "https://api.openai.com/v1", Models: []string{"gpt-4o", "gpt-4o-mini"}},
 		},
-		AgentDefaultProvider: "p1",
-		AgentDefaultModel:    "gpt-4o-mini",
+		AgentDefaultProvider:  "p1",
+		AgentDefaultModel:     "gpt-4o-mini",
+		AgentDefaultReasoning: "high",
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -80,7 +81,8 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		got.AgentAutoRunSafe != want.AgentAutoRunSafe ||
 		len(got.AgentProviders) != 1 || got.AgentProviders[0].ID != "p1" ||
 		!slices.Equal(got.AgentProviders[0].Models, []string{"gpt-4o", "gpt-4o-mini"}) ||
-		got.AgentDefaultProvider != "p1" || got.AgentDefaultModel != "gpt-4o-mini" {
+		got.AgentDefaultProvider != "p1" || got.AgentDefaultModel != "gpt-4o-mini" ||
+		got.AgentDefaultReasoning != "high" {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if got.LightTheme != "" || got.DarkTheme != "" {
@@ -358,10 +360,12 @@ func TestChatStoreRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	chat := &agent.Chat{
-		ID: "c1", Title: "check disk", HostID: "h1", ProviderID: "p1", Model: "gpt-4o",
+		ID: "c1", Title: "check disk", HostID: "h1", ProviderID: "p1", Model: "gpt-4o", Reasoning: "high",
 		CreatedAt: 100, UpdatedAt: 200,
 		Messages: []*agent.Message{
-			{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100},
+			{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100, Attachments: []agent.Attachment{
+				{Name: "boot.log", Size: 4, Content: "oops"},
+			}},
 			{ID: "m2", Role: "assistant", Content: "Checking.", CreatedAt: 200, ToolCalls: []*agent.ToolCall{
 				{ID: "call1", Name: "run_shell_command", Arguments: `{"command":"df -h"}`, Status: agent.CallDone,
 					Result: &agent.ToolResult{Stdout: "ok", ExitCode: 0}},
@@ -391,7 +395,9 @@ func TestChatStoreRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got.ID != "c1" || got.Title != "check disk" || got.HostID != "h1" ||
-		got.ProviderID != "p1" || got.Model != "gpt-4o" || len(got.Messages) != 2 {
+		got.ProviderID != "p1" || got.Model != "gpt-4o" || got.Reasoning != "high" ||
+		len(got.Messages) != 2 || len(got.Messages[0].Attachments) != 1 ||
+		got.Messages[0].Attachments[0].Content != "oops" {
 		t.Fatalf("chat = %+v", got)
 	}
 	call := got.Messages[1].ToolCalls[0]
@@ -405,6 +411,26 @@ func TestChatPathRejectsUnsafeID(t *testing.T) {
 	for _, id := range []string{"", "..", "../x", "a/b", `a\b`, "a.json"} {
 		if _, err := chatPathIn(dir, id); err == nil {
 			t.Errorf("chatPathIn accepted %q", id)
+		}
+	}
+}
+
+func TestAttachmentFiles(t *testing.T) {
+	dir := t.TempDir()
+	path, err := attachmentPathIn(dir, "att-1.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFileAtomic(path, []byte("image")); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(path)
+	if err != nil || string(b) != "image" {
+		t.Fatalf("read = %q, %v", b, err)
+	}
+	for _, id := range []string{"../x", ".hidden", "a..b", "a/b"} {
+		if _, err := attachmentPathIn(dir, id); err == nil {
+			t.Fatalf("attachmentPathIn accepted %q", id)
 		}
 	}
 }

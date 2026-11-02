@@ -40,9 +40,10 @@ func TestChatStreamsTextAndToolCalls(t *testing.T) {
 
 	var deltas []string
 	client := &Client{
-		BaseURL: srv.URL + "/v1",
-		APIKey:  "secret",
-		Model:   "test-model",
+		BaseURL:   srv.URL + "/v1",
+		APIKey:    "secret",
+		Model:     "test-model",
+		Reasoning: "high",
 	}
 	reply, err := client.Chat(context.Background(), []Message{
 		{Role: "user", Content: "list files"},
@@ -55,7 +56,7 @@ func TestChatStreamsTextAndToolCalls(t *testing.T) {
 	if gotPath != "/v1/chat/completions" {
 		t.Fatalf("path = %q, want /v1/chat/completions", gotPath)
 	}
-	if gotBody.Model != "test-model" || !gotBody.Stream || len(gotBody.Messages) != 1 {
+	if gotBody.Model != "test-model" || !gotBody.Stream || len(gotBody.Messages) != 1 || gotBody.ReasoningEffort != "high" {
 		t.Fatalf("request = %+v", gotBody)
 	}
 	if reply.Content != "Hello" {

@@ -3,6 +3,8 @@ package agent
 import (
 	"strings"
 	"testing"
+
+	"sshgo/internal/llm"
 )
 
 func TestParseShellArgsLenient(t *testing.T) {
@@ -90,5 +92,55 @@ func TestTitleOf(t *testing.T) {
 	}
 	if len([]rune(title)) > 49 {
 		t.Fatalf("title is %d runes", len([]rune(title)))
+	}
+}
+
+func TestAPIMessagesIncludeAttachments(t *testing.T) {
+	msgs := []*Message{
+		{Role: "user", Content: "check", Attachments: []Attachment{
+			{Name: "boot.log", Size: 4, Content: "oops"},
+		}},
+	}
+	api := apiMessages(msgs, "system")
+	if len(api) != 2 || api[1].Role != "user" {
+		t.Fatalf("messages = %+v", api)
+	}
+	content, ok := api[1].Content.(string)
+	if !ok || !strings.Contains(content, "check") ||
+		!strings.Contains(content, `<attachment name="boot.log" bytes=4>`) ||
+		!strings.Contains(content, "oops") {
+		t.Fatalf("content = %q", content)
+	}
+}
+
+func TestTitleOfAttachment(t *testing.T) {
+	title := TitleOf([]*Message{{Role: "user", Attachments: []Attachment{{Name: "boot.log"}}}})
+	if title != "boot.log" {
+		t.Fatalf("title = %q, want boot.log", title)
+	}
+}
+
+func TestCloneMessageCopiesAttachments(t *testing.T) {
+	m := &Message{Attachments: []Attachment{{Name: "a"}}}
+	clone := CloneMessage(m)
+	clone.Attachments[0].Name = "b"
+	if m.Attachments[0].Name != "a" {
+		t.Fatal("clone shares the attachments")
+	}
+}
+
+func TestAPIMessagesIncludeImages(t *testing.T) {
+	msgs := []*Message{{Role: "user", Attachments: []Attachment{{
+		Kind: AttachmentImage, Name: "shot.png", MIME: "image/png",
+		Data: "data:image/png;base64,AAA=",
+	}}}}
+	api := apiMessages(msgs, "system")
+	parts, ok := api[1].Content.([]llm.ContentPart)
+	if !ok || len(parts) != 1 {
+		t.Fatalf("content = %#v", api[1].Content)
+	}
+	if parts[0].Type != "image_url" || parts[0].ImageURL == nil ||
+		parts[0].ImageURL.URL != "data:image/png;base64,AAA=" {
+		t.Fatalf("part = %+v", parts[0])
 	}
 }

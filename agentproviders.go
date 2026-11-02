@@ -50,7 +50,9 @@ func (a *App) loadAgentProviders() {
 		}
 	}
 	a.ensureAgentDefaults()
-	a.syncAgentModel(a.currentAgentChat())
+	chat := a.currentAgentChat()
+	a.syncAgentModel(chat)
+	a.syncAgentReasoning(chat)
 }
 
 func providerName(base string) string {

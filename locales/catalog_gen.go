@@ -2352,16 +2352,6 @@ func (msgs Messages) AgentAttach() string {
 	return Catalog.Format(msgs.locale, "agentAttach", nil)
 }
 
-// AgentAttachSoon says "Attachments are coming soon."
-// in the language the app shows.
-func AgentAttachSoon() string { return In(i18n.Locale()).AgentAttachSoon() }
-
-// AgentAttachSoon says "Attachments are coming soon."
-// in the language of msgs.
-func (msgs Messages) AgentAttachSoon() string {
-	return Catalog.Format(msgs.locale, "agentAttachSoon", nil)
-}
-
 // AgentSelectModel says "Select model"
 // in the language the app shows.
 func AgentSelectModel() string { return In(i18n.Locale()).AgentSelectModel() }
@@ -2654,4 +2644,142 @@ func AgentConnectedHosts() string { return In(i18n.Locale()).AgentConnectedHosts
 // in the language of msgs.
 func (msgs Messages) AgentConnectedHosts() string {
 	return Catalog.Format(msgs.locale, "agentConnectedHosts", nil)
+}
+
+// AgentThinking says "Thinking"
+// in the language the app shows.
+func AgentThinking() string { return In(i18n.Locale()).AgentThinking() }
+
+// AgentThinking says "Thinking"
+// in the language of msgs.
+func (msgs Messages) AgentThinking() string {
+	return Catalog.Format(msgs.locale, "agentThinking", nil)
+}
+
+// AgentThinkDefault says "Default"
+// in the language the app shows.
+func AgentThinkDefault() string { return In(i18n.Locale()).AgentThinkDefault() }
+
+// AgentThinkDefault says "Default"
+// in the language of msgs.
+func (msgs Messages) AgentThinkDefault() string {
+	return Catalog.Format(msgs.locale, "agentThinkDefault", nil)
+}
+
+// AgentThinkLow says "Low"
+// in the language the app shows.
+func AgentThinkLow() string { return In(i18n.Locale()).AgentThinkLow() }
+
+// AgentThinkLow says "Low"
+// in the language of msgs.
+func (msgs Messages) AgentThinkLow() string {
+	return Catalog.Format(msgs.locale, "agentThinkLow", nil)
+}
+
+// AgentThinkMedium says "Medium"
+// in the language the app shows.
+func AgentThinkMedium() string { return In(i18n.Locale()).AgentThinkMedium() }
+
+// AgentThinkMedium says "Medium"
+// in the language of msgs.
+func (msgs Messages) AgentThinkMedium() string {
+	return Catalog.Format(msgs.locale, "agentThinkMedium", nil)
+}
+
+// AgentThinkHigh says "High"
+// in the language the app shows.
+func AgentThinkHigh() string { return In(i18n.Locale()).AgentThinkHigh() }
+
+// AgentThinkHigh says "High"
+// in the language of msgs.
+func (msgs Messages) AgentThinkHigh() string {
+	return Catalog.Format(msgs.locale, "agentThinkHigh", nil)
+}
+
+// AgentAttachmentReadFailed says "Could not read {name}."
+// in the language the app shows.
+func AgentAttachmentReadFailed(name string) string {
+	return In(i18n.Locale()).AgentAttachmentReadFailed(name)
+}
+
+// AgentAttachmentReadFailed says "Could not read {name}."
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentReadFailed(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentReadFailed", map[string]any{"name": name})
+}
+
+// AgentAttachmentTooLarge says "File is too large (max 64 KB): {name}"
+// in the language the app shows.
+func AgentAttachmentTooLarge(name string) string {
+	return In(i18n.Locale()).AgentAttachmentTooLarge(name)
+}
+
+// AgentAttachmentTooLarge says "File is too large (max 64 KB): {name}"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentTooLarge(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentTooLarge", map[string]any{"name": name})
+}
+
+// AgentAttachmentTotal says "Text attachments can total at most 128 KB."
+// in the language the app shows.
+func AgentAttachmentTotal() string { return In(i18n.Locale()).AgentAttachmentTotal() }
+
+// AgentAttachmentTotal says "Text attachments can total at most 128 KB."
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentTotal() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentTotal", nil)
+}
+
+// AgentAttachmentRemove says "Remove attachment"
+// in the language the app shows.
+func AgentAttachmentRemove() string { return In(i18n.Locale()).AgentAttachmentRemove() }
+
+// AgentAttachmentRemove says "Remove attachment"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentRemove() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentRemove", nil)
+}
+
+// AgentAttachmentImageTooLarge says "Image is too large (max 5 MB): {name}"
+// in the language the app shows.
+func AgentAttachmentImageTooLarge(name string) string {
+	return In(i18n.Locale()).AgentAttachmentImageTooLarge(name)
+}
+
+// AgentAttachmentImageTooLarge says "Image is too large (max 5 MB): {name}"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentImageTooLarge(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentImageTooLarge", map[string]any{"name": name})
+}
+
+// AgentAttachmentImagesTotal says "Images can total at most 10 MB."
+// in the language the app shows.
+func AgentAttachmentImagesTotal() string { return In(i18n.Locale()).AgentAttachmentImagesTotal() }
+
+// AgentAttachmentImagesTotal says "Images can total at most 10 MB."
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentImagesTotal() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentImagesTotal", nil)
+}
+
+// AgentAttachmentUnsupported says "Only text files and PNG/JPEG/WebP/GIF images are supported: {name}"
+// in the language the app shows.
+func AgentAttachmentUnsupported(name string) string {
+	return In(i18n.Locale()).AgentAttachmentUnsupported(name)
+}
+
+// AgentAttachmentUnsupported says "Only text files and PNG/JPEG/WebP/GIF images are supported: {name}"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentUnsupported(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentUnsupported", map[string]any{"name": name})
+}
+
+// AgentAttachmentOpen says "Open image"
+// in the language the app shows.
+func AgentAttachmentOpen() string { return In(i18n.Locale()).AgentAttachmentOpen() }
+
+// AgentAttachmentOpen says "Open image"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentOpen() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentOpen", nil)
 }

@@ -127,9 +127,10 @@ type State struct {
 
 	// AgentProviders are the endpoints the Agent may use, and the model
 	// picked last; the old single endpoint above is read once into one.
-	AgentProviders       []AgentProvider `json:"agentProviders,omitempty"`
-	AgentDefaultProvider string          `json:"agentDefaultProvider,omitempty"`
-	AgentDefaultModel    string          `json:"agentDefaultModel,omitempty"`
+	AgentProviders        []AgentProvider `json:"agentProviders,omitempty"`
+	AgentDefaultProvider  string          `json:"agentDefaultProvider,omitempty"`
+	AgentDefaultModel     string          `json:"agentDefaultModel,omitempty"`
+	AgentDefaultReasoning string          `json:"agentDefaultReasoning,omitempty"`
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.
