@@ -121,11 +121,21 @@ type State struct {
 
 	// The Agent's provider and behavior. Its API key is kept in the
 	// system's credential store, never here.
-	AgentBaseURL     string `json:"agentBaseURL,omitempty"`
-	AgentModel       string `json:"agentModel,omitempty"`
-	AgentAutoRunSafe bool   `json:"agentAutoRunSafe,omitempty"`
+	AgentBaseURL string `json:"agentBaseURL,omitempty"`
+	AgentModel   string `json:"agentModel,omitempty"`
+	// AgentAutoRunSafe lets a read-only shell command run without asking.
+	AgentAutoRunSafe bool `json:"agentAutoRunSafe,omitempty"`
+	// AgentAutoRunReadTools lets tools that only read run without asking.
+	AgentAutoRunReadTools bool `json:"agentAutoRunReadTools,omitempty"`
 	// AgentNoStream waits for each reply to be complete before showing it.
 	AgentNoStream bool `json:"agentNoStream,omitempty"`
+
+	// AgentNoTools and the per-tool flags are negative so that a stored
+	// state without them keeps the tools on.
+	AgentNoTools         bool `json:"agentNoTools,omitempty"`
+	AgentNoToolShell     bool `json:"agentNoToolShell,omitempty"`
+	AgentNoToolReadFile  bool `json:"agentNoToolReadFile,omitempty"`
+	AgentNoToolWriteFile bool `json:"agentNoToolWriteFile,omitempty"`
 
 	// AgentProviders are the endpoints the Agent may use, and the model
 	// picked last; the old single endpoint above is read once into one.

@@ -24,6 +24,10 @@ type Hooks struct {
 	Review func(context.Context, Proposal) (Decision, error)
 	// Exec runs command on a connected host.
 	Exec func(ctx context.Context, hostID, command string) (ToolResult, error)
+	// ReadFile reads at most max bytes of path from a connected host.
+	ReadFile func(ctx context.Context, hostID, path string, max int64) (FileData, error)
+	// WriteFile replaces path on a connected host.
+	WriteFile func(ctx context.Context, hostID, path string, data []byte) error
 }
 
 // Engine runs one conversation with the model.
@@ -33,6 +37,9 @@ type Engine struct {
 	Host   Host
 	Policy Policy
 	Hooks  Hooks
+	// Tools is what the model may call. Nil means BuiltinTools; an empty
+	// slice means none.
+	Tools []Tool
 	// MaxRounds bounds how many tool rounds one prompt may take.
 	MaxRounds int
 }
@@ -46,7 +53,8 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 	}
 	msgs := Sanitize(messages)
 	e.emit(msgs)
-	system := SystemPrompt(e.Host)
+	byName, definitions := e.toolSet()
+	system := SystemPromptTools(e.Host, definitionNames(definitions))
 	rounds := e.MaxRounds
 	if rounds <= 0 {
 		rounds = 6
@@ -62,7 +70,7 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 		}
 		msgs = append(msgs, assistant)
 		e.emit(msgs)
-		reply, err := e.Client.Chat(ctx, apiMessages(msgs[:len(msgs)-1], system), []llm.Tool{ShellTool()}, func(text string) {
+		reply, err := e.Client.Chat(ctx, apiMessages(msgs[:len(msgs)-1], system), definitions, func(text string) {
 			assistant.Content = text
 			if e.Hooks.Delta != nil {
 				e.Hooks.Delta(assistant.ID, text)
@@ -94,7 +102,7 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 				return err
 			}
 			var err error
-			msgs, err = e.runCall(ctx, msgs, call)
+			msgs, err = e.runCall(ctx, msgs, call, byName)
 			if err != nil {
 				e.stopRemaining(msgs, assistant.ToolCalls[i+1:], err)
 				return err
@@ -104,34 +112,62 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 	return ErrRoundLimit
 }
 
-func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall) ([]*Message, error) {
-	if call.Name != "run_shell_command" {
-		return e.finishCall(msgs, call, ToolResult{Error: fmt.Sprintf("Unknown tool %q.", call.Name)}), nil
+// toolSet is what this conversation offers, by name and as the API takes it.
+func (e *Engine) toolSet() (map[string]Tool, []llm.Tool) {
+	tools := e.Tools
+	if tools == nil {
+		tools = BuiltinTools()
 	}
-	args, err := ParseShellArgs(call.Arguments)
+	byName := make(map[string]Tool, len(tools))
+	definitions := make([]llm.Tool, 0, len(tools))
+	for _, tool := range tools {
+		name := toolName(tool)
+		if name == "" || tool.Prepare == nil {
+			continue
+		}
+		byName[name] = tool
+		definitions = append(definitions, tool.Definition)
+	}
+	return byName, definitions
+}
+
+func definitionNames(definitions []llm.Tool) []string {
+	names := make([]string, 0, len(definitions))
+	for _, definition := range definitions {
+		names = append(names, definition.Function.Name)
+	}
+	return names
+}
+
+func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall, tools map[string]Tool) ([]*Message, error) {
+	tool, ok := tools[call.Name]
+	if !ok {
+		return e.finishCall(msgs, call, ToolResult{Error: fmt.Sprintf("Unknown tool %q.", call.Name)}, formatFailure), nil
+	}
+	prep, err := tool.Prepare(call.Arguments)
 	if err != nil {
-		return e.finishCall(msgs, call, ToolResult{Error: "The arguments are not valid JSON: " + err.Error()}), nil
+		return e.finishCall(msgs, call, ToolResult{Error: "The arguments are not valid: " + err.Error()}, formatFailure), nil
 	}
 	host := e.Host
 	if host.ID == "" {
-		return e.finishCall(msgs, call, ToolResult{Error: "This conversation has no host. Ask the user to choose a connected host in the composer."}), nil
+		return e.finishCall(msgs, call, ToolResult{Error: "This conversation has no host. Ask the user to choose a connected host in the composer."}, formatFailure), nil
 	}
 	call.HostID = host.ID
-	risk := Classify(args.Command)
-	if args.Destructive {
-		risk = RiskDestructive
-	}
 	proposal := Proposal{
 		CallID:      call.ID,
 		Host:        host,
-		Command:     args.Command,
-		Description: args.Description,
-		Risk:        risk,
-		Auto:        e.Policy.Allows(args, risk),
+		Tool:        call.Name,
+		Summary:     prep.Summary,
+		Description: prep.Description,
+		Command:     prep.Command,
+		Path:        prep.Path,
+		Content:     prep.Content,
+		Risk:        prep.Risk,
+		Auto:        e.Policy.Allows(prep),
 	}
 	if !proposal.Auto {
 		if e.Hooks.Review == nil {
-			return e.finishCall(msgs, call, ToolResult{Error: "No one could approve this command."}), nil
+			return e.finishCall(msgs, call, ToolResult{Error: "No one could approve this action."}, formatFailure), nil
 		}
 		decision, err := e.Hooks.Review(ctx, proposal)
 		if err != nil {
@@ -143,21 +179,20 @@ func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall) (
 		if decision != DecisionRun {
 			call.Status = CallDenied
 			e.emit(msgs)
-			msgs = e.appendTool(msgs, call, "The user declined to run this command. Do not run it; ask what to do instead.")
+			msgs = e.appendTool(msgs, call, "The user declined to run this action. Do not run it; ask what to do instead.")
 			return msgs, nil
 		}
 	}
 	call.Status = CallRunning
 	e.emit(msgs)
-	if e.Hooks.Exec == nil {
-		return e.finishCall(msgs, call, ToolResult{Error: "This app cannot run commands."}), nil
+	if prep.Run == nil {
+		return e.finishCall(msgs, call, ToolResult{Error: "This tool is not available."}, prep.Format), nil
 	}
-	res, err := e.Hooks.Exec(ctx, host.ID, args.Command)
+	res, err := prep.Run(ctx, e.envFor(host))
 	if err != nil && res.Error == "" {
 		res.Error = err.Error()
 	}
 	res.HostID = host.ID
-	res.Stdout, res.Stderr, res.Truncated = LimitOutput(res.Stdout, res.Stderr, MaxOutput)
 	call.Result = &res
 	if res.Error != "" || res.ExitCode != 0 {
 		call.Status = CallError
@@ -165,18 +200,51 @@ func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall) (
 		call.Status = CallDone
 	}
 	e.emit(msgs)
-	msgs = e.appendTool(msgs, call, FormatResult(host, res))
+	format := prep.Format
+	if format == nil {
+		format = formatFailure
+	}
+	msgs = e.appendTool(msgs, call, format(host, res))
 	if ctx.Err() != nil {
 		return msgs, ctx.Err()
 	}
 	return msgs, nil
 }
 
-func (e *Engine) finishCall(msgs []*Message, call *ToolCall, res ToolResult) []*Message {
+func (e *Engine) finishCall(msgs []*Message, call *ToolCall, res ToolResult, format func(Host, ToolResult) string) []*Message {
 	call.Result = &res
 	call.Status = CallError
 	e.emit(msgs)
-	return e.appendTool(msgs, call, FormatResult(Host{ID: res.HostID}, res))
+	if format == nil {
+		format = formatFailure
+	}
+	return e.appendTool(msgs, call, format(Host{ID: res.HostID}, res))
+}
+
+// envFor is how a tool reaches the host, and what it says when the app
+// cannot do that at all.
+func (e *Engine) envFor(host Host) Env {
+	return Env{
+		Host: host,
+		Shell: func(ctx context.Context, command string) (ToolResult, error) {
+			if e.Hooks.Exec == nil {
+				return ToolResult{Error: "This app cannot run commands."}, nil
+			}
+			return e.Hooks.Exec(ctx, host.ID, command)
+		},
+		ReadFile: func(ctx context.Context, path string, max int64) (FileData, error) {
+			if e.Hooks.ReadFile == nil {
+				return FileData{}, errors.New("this app cannot read files")
+			}
+			return e.Hooks.ReadFile(ctx, host.ID, path, max)
+		},
+		WriteFile: func(ctx context.Context, path string, data []byte) error {
+			if e.Hooks.WriteFile == nil {
+				return errors.New("this app cannot write files")
+			}
+			return e.Hooks.WriteFile(ctx, host.ID, path, data)
+		},
+	}
 }
 
 // stopRemaining answers the calls a stopped turn never ran, so the

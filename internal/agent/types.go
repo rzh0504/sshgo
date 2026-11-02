@@ -75,11 +75,16 @@ type ToolCall struct {
 	Result    *ToolResult `json:"result,omitempty"`
 }
 
-// ToolResult is what running a command left.
+// ToolResult is what running a tool left. The shell fields are empty for
+// the file tools; Path, Content and Bytes are empty for a command.
 type ToolResult struct {
 	HostID     string `json:"hostId,omitempty"`
+	Summary    string `json:"summary,omitempty"`
 	Stdout     string `json:"stdout,omitempty"`
 	Stderr     string `json:"stderr,omitempty"`
+	Path       string `json:"path,omitempty"`
+	Content    string `json:"content,omitempty"`
+	Bytes      int64  `json:"bytes,omitempty"`
 	ExitCode   int    `json:"exitCode"`
 	DurationMS int64  `json:"durationMs,omitempty"`
 	Truncated  bool   `json:"truncated,omitempty"`
@@ -94,12 +99,16 @@ type Host struct {
 	OS      string
 }
 
-// Proposal is a command the model wants to run, as the user reviews it.
+// Proposal is a tool call the model wants to make, as the user reviews it.
 type Proposal struct {
 	CallID      string
 	Host        Host
-	Command     string
+	Tool        string
+	Summary     string
 	Description string
+	Command     string // shell
+	Path        string // file tools
+	Content     string // write_file
 	Risk        Risk
 	Auto        bool // the policy lets it run without asking
 }

@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	agentSecretKey = "agent-api-key"
-	agentTimeout   = 5 * time.Minute
+	agentSecretKey   = "agent-api-key"
+	agentTimeout     = 5 * time.Minute
+	agentFileTimeout = 30 * time.Second
 )
 
 // agentState is the Agent's conversations and where it stands. The mu
@@ -517,7 +518,8 @@ func (a *App) startAgentTurn(text string, attachments []agent.Attachment) bool {
 			Reasoning: reasoning,
 		},
 		Host:   host,
-		Policy: agent.Policy{AutoRunSafe: a.state.AgentAutoRunSafe},
+		Tools:  a.agentTools(),
+		Policy: a.agentPolicy(),
 		Hooks: agent.Hooks{
 			Messages: func(messages []*agent.Message) {
 				a.applyAgentMessages(chatID, messages)
@@ -530,6 +532,12 @@ func (a *App) startAgentTurn(text string, attachments []agent.Attachment) bool {
 			},
 			Exec: func(ctx context.Context, hostID, command string) (agent.ToolResult, error) {
 				return a.execAgentCommand(ctx, hostID, command)
+			},
+			ReadFile: func(ctx context.Context, hostID, path string, max int64) (agent.FileData, error) {
+				return a.readAgentFile(ctx, hostID, path, max)
+			},
+			WriteFile: func(ctx context.Context, hostID, path string, data []byte) error {
+				return a.writeAgentFile(ctx, hostID, path, data)
 			},
 		},
 	}
@@ -655,10 +663,10 @@ func (a *App) stopAgent() {
 	a.repaint()
 }
 
-// execAgentCommand runs command on a host that is connected now.
-func (a *App) execAgentCommand(ctx context.Context, hostID, command string) (agent.ToolResult, error) {
+// agentSession is the connected session a tool call runs on.
+func (a *App) agentSession(ctx context.Context, hostID string) (*sshx.Session, error) {
 	if a.win == nil {
-		return agent.ToolResult{}, errors.New("sshgo is closing")
+		return nil, errors.New("sshgo is closing")
 	}
 	type picked struct {
 		sess *sshx.Session
@@ -673,14 +681,19 @@ func (a *App) execAgentCommand(ctx context.Context, hostID, command string) (age
 		}
 		ch <- picked{sess: rt.ssh}
 	})
-	var p picked
 	select {
-	case p = <-ch:
+	case p := <-ch:
+		return p.sess, p.err
 	case <-ctx.Done():
-		return agent.ToolResult{}, ctx.Err()
+		return nil, ctx.Err()
 	}
-	if p.err != nil {
-		return agent.ToolResult{Error: p.err.Error()}, nil
+}
+
+// execAgentCommand runs command on a host that is connected now.
+func (a *App) execAgentCommand(ctx context.Context, hostID, command string) (agent.ToolResult, error) {
+	sess, err := a.agentSession(ctx, hostID)
+	if err != nil {
+		return agent.ToolResult{Error: err.Error()}, nil
 	}
 	start := time.Now()
 	runCtx, cancel := context.WithTimeout(ctx, agentTimeout)
@@ -688,7 +701,7 @@ func (a *App) execAgentCommand(ctx context.Context, hostID, command string) (age
 	if err := runCtx.Err(); err != nil {
 		return agent.ToolResult{Error: "The command was stopped."}, nil
 	}
-	res, err := p.sess.Exec(runCtx, command)
+	res, err := sess.Exec(runCtx, command)
 	out := agent.ToolResult{
 		Stdout:     res.Stdout,
 		Stderr:     res.Stderr,
@@ -704,6 +717,67 @@ func (a *App) execAgentCommand(ctx context.Context, hostID, command string) (age
 		out.Error = err.Error()
 	}
 	return out, nil
+}
+
+func (a *App) readAgentFile(ctx context.Context, hostID, path string, max int64) (agent.FileData, error) {
+	sess, err := a.agentSession(ctx, hostID)
+	if err != nil {
+		return agent.FileData{}, err
+	}
+	runCtx, cancel := context.WithTimeout(ctx, agentFileTimeout)
+	defer cancel()
+	file, err := sess.ReadFile(runCtx, path, max)
+	if err != nil {
+		return agent.FileData{}, err
+	}
+	return agent.FileData{Data: file.Data, Size: file.Size, Truncated: file.Truncated}, nil
+}
+
+func (a *App) writeAgentFile(ctx context.Context, hostID, path string, data []byte) error {
+	sess, err := a.agentSession(ctx, hostID)
+	if err != nil {
+		return err
+	}
+	runCtx, cancel := context.WithTimeout(ctx, agentFileTimeout)
+	defer cancel()
+	return sess.WriteFile(runCtx, path, data)
+}
+
+// agentToolEnabled says whether the Agent may use one tool now.
+func (a *App) agentToolEnabled(name string) bool {
+	if a.state.AgentNoTools {
+		return false
+	}
+	switch name {
+	case "run_shell_command":
+		return !a.state.AgentNoToolShell
+	case "read_file":
+		return !a.state.AgentNoToolReadFile
+	case "write_file":
+		return !a.state.AgentNoToolWriteFile
+	}
+	return false
+}
+
+// agentTools are the tools this app lets the Agent use now.
+func (a *App) agentTools() []agent.Tool {
+	return agent.Tools(agent.ToolOptions{
+		Shell:     a.agentToolEnabled("run_shell_command"),
+		ReadFile:  a.agentToolEnabled("read_file"),
+		WriteFile: a.agentToolEnabled("write_file"),
+	})
+}
+
+// agentPolicy is when a tool may run without asking: read-only tools by
+// their own nature, read-only shell commands by their shape.
+func (a *App) agentPolicy() agent.Policy {
+	if a.state.AgentNoTools {
+		return agent.Policy{}
+	}
+	return agent.Policy{
+		ReadTools:    a.state.AgentAutoRunReadTools,
+		ReadCommands: a.state.AgentAutoRunSafe && a.agentToolEnabled("run_shell_command"),
+	}
 }
 
 // agentHosts are the hosts the Agent may work on, connected or not.

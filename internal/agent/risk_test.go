@@ -64,17 +64,36 @@ func TestClassify(t *testing.T) {
 }
 
 func TestPolicyAllows(t *testing.T) {
-	safe := ShellArgs{SafeToRun: true}
-	if !(Policy{AutoRunSafe: true}).Allows(safe, RiskReadOnly) {
+	tool := Prepared{Auto: AutoReadTool, Risk: RiskReadOnly}
+	command := Prepared{Auto: AutoReadCommand, ModelSafe: true, Risk: RiskReadOnly}
+	if !(Policy{ReadTools: true}).Allows(tool) {
+		t.Fatal("a read-only tool should run unattended when allowed")
+	}
+	if !(Policy{ReadCommands: true}).Allows(command) {
 		t.Fatal("a safe read-only command should run unattended when allowed")
 	}
-	if (Policy{}).Allows(safe, RiskReadOnly) {
-		t.Fatal("the policy ran a command while off")
+	if (Policy{ReadCommands: true}).Allows(tool) {
+		t.Fatal("a read-only tool used the command setting")
 	}
-	if (Policy{AutoRunSafe: true}).Allows(safe, RiskCaution) {
-		t.Fatal("a caution command ran unattended")
+	if (Policy{ReadTools: true}).Allows(command) {
+		t.Fatal("a read-only command used the tool setting")
 	}
-	if (Policy{AutoRunSafe: true}).Allows(ShellArgs{}, RiskReadOnly) {
+	if (Policy{}).Allows(tool) {
+		t.Fatal("the policy ran an action while off")
+	}
+	caution := tool
+	caution.Risk = RiskCaution
+	if (Policy{ReadTools: true}).Allows(caution) {
+		t.Fatal("a caution action ran unattended")
+	}
+	unsafe := command
+	unsafe.ModelSafe = false
+	if (Policy{ReadCommands: true}).Allows(unsafe) {
 		t.Fatal("a command the model did not mark safe ran unattended")
+	}
+	write := tool
+	write.Auto = AutoNone
+	if (Policy{ReadTools: true}).Allows(write) {
+		t.Fatal("an action that always asks ran unattended")
 	}
 }

@@ -51,11 +51,7 @@ func runeLen(s string) int { return len([]rune(s)) }
 // FormatResult is what the model reads of a command it ran.
 func FormatResult(host Host, res ToolResult) string {
 	var b strings.Builder
-	if host.Name != "" || host.Address != "" {
-		fmt.Fprintf(&b, "Host: %s (%s), id %s\n", host.Name, host.Address, host.ID)
-	} else if host.ID != "" {
-		fmt.Fprintf(&b, "Host id: %s\n", host.ID)
-	}
+	writeHostHeader(&b, host)
 	if res.Error != "" {
 		fmt.Fprintf(&b, "Error: %s\n", res.Error)
 	}
@@ -82,6 +78,25 @@ func FormatResult(host Host, res ToolResult) string {
 	}
 	if res.Truncated {
 		b.WriteString("The output was truncated in the middle.\n")
+	}
+	return b.String()
+}
+
+// writeHostHeader names the host a result came from, when there is one.
+func writeHostHeader(b *strings.Builder, host Host) {
+	if host.Name != "" || host.Address != "" {
+		fmt.Fprintf(b, "Host: %s (%s), id %s\n", host.Name, host.Address, host.ID)
+	} else if host.ID != "" {
+		fmt.Fprintf(b, "Host id: %s\n", host.ID)
+	}
+}
+
+// formatFailure is what the model reads when a call never reached a tool.
+func formatFailure(host Host, res ToolResult) string {
+	var b strings.Builder
+	writeHostHeader(&b, host)
+	if res.Error != "" {
+		fmt.Fprintf(&b, "Error: %s\n", res.Error)
 	}
 	return b.String()
 }

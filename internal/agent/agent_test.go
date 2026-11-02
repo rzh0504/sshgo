@@ -32,6 +32,16 @@ func TestSystemPromptNamesTheHost(t *testing.T) {
 	}
 }
 
+func TestSystemPromptWithoutTools(t *testing.T) {
+	prompt := SystemPromptTools(Host{ID: "h1", Name: "web"}, nil)
+	if !strings.Contains(prompt, "no tools") {
+		t.Fatalf("prompt does not say there are no tools: %s", prompt)
+	}
+	if strings.Contains(prompt, "run_shell_command") || strings.Contains(prompt, "read_file") {
+		t.Fatalf("prompt still names tools: %s", prompt)
+	}
+}
+
 func TestLimitOutput(t *testing.T) {
 	out, errOut, truncated := LimitOutput(strings.Repeat("a", 100), strings.Repeat("b", 100), 80)
 	if !truncated {

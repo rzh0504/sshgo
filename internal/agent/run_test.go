@@ -27,6 +27,11 @@ const diskCallArguments = `{"command":"df -h","description":"disk usage","safe_t
 // carrying a tool result with a final answer.
 func scriptedAgentServer(t *testing.T, requests *[]recordedRequest) *httptest.Server {
 	t.Helper()
+	return scriptedToolServer(t, requests, "run_shell_command", diskCallArguments)
+}
+
+func scriptedToolServer(t *testing.T, requests *[]recordedRequest, tool, arguments string) *httptest.Server {
+	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body recordedRequest
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -43,10 +48,26 @@ func scriptedAgentServer(t *testing.T, requests *[]recordedRequest) *httptest.Se
 		w.Header().Set("Content-Type", "text/event-stream")
 		if !answered {
 			fmt.Fprintf(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Checking.\"}}]}\n\n")
-			fmt.Fprintf(w, "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"run_shell_command\",\"arguments\":%q}}]},\"finish_reason\":\"tool_calls\"}]}\n\n", diskCallArguments)
+			fmt.Fprintf(w, "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":%q,\"arguments\":%q}}]},\"finish_reason\":\"tool_calls\"}]}\n\n", tool, arguments)
 		} else {
 			fmt.Fprintf(w, "data: {\"choices\":[{\"delta\":{\"content\":\"All good.\"}}]}\n\n")
 		}
+		io.WriteString(w, "data: [DONE]\n\n")
+	}))
+}
+
+// finalAnswerServer answers every request with text, recording what it saw.
+func finalAnswerServer(t *testing.T, requests *[]recordedRequest) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body recordedRequest
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Error(err)
+			return
+		}
+		*requests = append(*requests, body)
+		w.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprintf(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Hello.\"}}]}\n\n")
 		io.WriteString(w, "data: [DONE]\n\n")
 	}))
 }
@@ -74,7 +95,7 @@ func TestRunRunsSafeReadOnlyAutomatically(t *testing.T) {
 		execs    []string
 		reviews  []Proposal
 	)
-	engine := testEngine(srv.URL, Policy{AutoRunSafe: true}, Hooks{
+	engine := testEngine(srv.URL, Policy{ReadCommands: true}, Hooks{
 		Messages: func(msgs []*Message) { snapshot = msgs },
 		Exec: func(_ context.Context, hostID, command string) (ToolResult, error) {
 			execs = append(execs, hostID+" "+command)
@@ -106,8 +127,14 @@ func TestRunRunsSafeReadOnlyAutomatically(t *testing.T) {
 	if requests[1].Messages[3].Role != "tool" || !strings.Contains(fmt.Sprint(requests[1].Messages[3].Content), "Stdout:") {
 		t.Fatalf("tool answer = %+v", requests[1].Messages[3])
 	}
-	if len(requests[0].Tools) != 1 || requests[0].Tools[0].Function.Name != "run_shell_command" {
-		t.Fatalf("tools = %+v", requests[0].Tools)
+	names := map[string]bool{}
+	for _, tool := range requests[0].Tools {
+		names[tool.Function.Name] = true
+	}
+	for _, want := range []string{"run_shell_command", "read_file", "write_file"} {
+		if !names[want] {
+			t.Fatalf("tools = %+v, missing %s", requests[0].Tools, want)
+		}
 	}
 
 	if len(snapshot) != 4 {
@@ -122,6 +149,28 @@ func TestRunRunsSafeReadOnlyAutomatically(t *testing.T) {
 	}
 	if snapshot[3].Content != "All good." {
 		t.Fatalf("final answer = %q", snapshot[3].Content)
+	}
+}
+
+func TestRunWithoutTools(t *testing.T) {
+	var requests []recordedRequest
+	srv := finalAnswerServer(t, &requests)
+	defer srv.Close()
+
+	engine := testEngine(srv.URL, Policy{}, Hooks{})
+	engine.Tools = []Tool{}
+	if err := engine.Run(context.Background(), userMessage("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if len(requests) != 1 {
+		t.Fatalf("requests = %d, want 1", len(requests))
+	}
+	if len(requests[0].Tools) != 0 {
+		t.Fatalf("tools = %+v, want none", requests[0].Tools)
+	}
+	system, _ := requests[0].Messages[0].Content.(string)
+	if !strings.Contains(system, "no tools") {
+		t.Fatalf("system prompt = %q", system)
 	}
 }
 
