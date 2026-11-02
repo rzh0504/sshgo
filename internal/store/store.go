@@ -110,6 +110,12 @@ type State struct {
 	ConfirmQuit   bool   `json:"confirmQuit,omitempty"` // ask before a quit disconnects open sessions
 	AutoConnect   bool   `json:"autoConnect,omitempty"` // connect the host selected last on launch
 
+	// The Agent's provider and behavior. Its API key is kept in the
+	// system's credential store, never here.
+	AgentBaseURL     string `json:"agentBaseURL,omitempty"`
+	AgentModel       string `json:"agentModel,omitempty"`
+	AgentAutoRunSafe bool   `json:"agentAutoRunSafe,omitempty"`
+
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.
 	LightTheme string `json:"lightTheme,omitempty"`

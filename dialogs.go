@@ -199,6 +199,7 @@ func (a *App) dialogs(c *ui.Context, pal *palette) {
 	a.keyPassView(c, pal)
 	a.hostKeyView(c, pal)
 	a.confirmView(c, pal)
+	a.agentDeleteView(c, pal)
 }
 
 func dialogHead(c *ui.Context, pal *palette, title, detail string) {

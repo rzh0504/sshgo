@@ -24,6 +24,7 @@ var settingsPages = []settingsPage{
 	{id: "general", title: locales.PageGeneral, icon: gearIcon},
 	{id: "appearance", title: locales.PageAppearance, icon: paintbrushIcon},
 	{id: "terminal", title: locales.PageTerminal, icon: terminalIcon},
+	{id: "agent", title: locales.PageAgent, icon: sparklesIcon},
 	{id: "about", title: locales.PageAbout, icon: infoIcon},
 }
 
@@ -60,6 +61,9 @@ type settingsValues struct {
 	hideAtLogin       bool
 	confirmQuit       bool
 	autoConnect       bool
+	agentBaseURL      string
+	agentModel        string
+	agentAutoRunSafe  bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -68,6 +72,7 @@ func valuesOf(s store.State) settingsValues {
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
 		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit, autoConnect: s.AutoConnect,
+		agentBaseURL: s.AgentBaseURL, agentModel: s.AgentModel, agentAutoRunSafe: s.AgentAutoRunSafe,
 	}
 }
 
@@ -103,6 +108,9 @@ func (a *App) openSettings() {
 	}))
 	a.setWin.SetVibrancy(a.vibrancy())
 	a.setWin.OnClosed(func() {
+		if a.agentKeyDirty {
+			a.saveAgentKey(false)
+		}
 		offUpdates()
 		a.setWin = nil
 	})
@@ -144,6 +152,8 @@ func (a *App) settingsView(c *ui.Context) {
 							a.appearancePage(c, pal)
 						case "terminal":
 							a.terminalPage(c, pal)
+						case "agent":
+							a.agentPage(c, pal)
 						case "about":
 							a.aboutPage(c, pal)
 						}
@@ -512,6 +522,53 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 			}
 		})
 	})
+}
+
+// --- Agent ---
+
+func (a *App) agentPage(c *ui.Context, pal *palette) {
+	a.loadAgentKey()
+	settingsGroup(c, pal, locales.AgentProviderGroup(), locales.AgentProviderNote(), func() {
+		settingRow(c, pal, locales.SetAgentEndpoint(), locales.SetAgentEndpointDetail(), func() {
+			in := ui.TextInputBase(c.Key("agent-base-url"), &a.state.AgentBaseURL).
+				Width(280).Height(30).Padding(0, 10).Radius(8).FontSize(13).
+				TextColor(pal.text).Placeholder(locales.SetAgentEndpointPlaceholder()).
+				Label(locales.SetAgentEndpoint())
+			fieldFace(in, pal)
+			focusEdge(in, in.Focused(), pal)
+		})
+		settingRow(c, pal, locales.SetAgentModel(), locales.SetAgentModelDetail(), func() {
+			in := ui.TextInputBase(c.Key("agent-model"), &a.state.AgentModel).
+				Width(280).Height(30).Padding(0, 10).Radius(8).FontSize(13).
+				TextColor(pal.text).Placeholder(locales.SetAgentModelPlaceholder()).
+				Label(locales.SetAgentModel())
+			fieldFace(in, pal)
+			focusEdge(in, in.Focused(), pal)
+		})
+		settingRow(c, pal, locales.SetAgentKey(), locales.SetAgentKeyDetail(), func() {
+			in := ui.TextInputBase(c.Key("agent-api-key"), &a.agentKeyEdit).
+				Width(220).Height(30).Padding(0, 10).Radius(8).FontSize(13).
+				TextColor(pal.text).Password().Placeholder(locales.SetAgentKeyPlaceholder()).
+				Label(locales.SetAgentKey())
+			fieldFace(in, pal)
+			focusEdge(in, in.Focused(), pal)
+			if in.Changed() {
+				a.agentKeyDirty = true
+			}
+			if in.Submitted() {
+				a.saveAgentKey(true)
+			}
+			if button(c, "agent-key-save", locales.ActionSave(), "", false, pal) {
+				a.saveAgentKey(true)
+			}
+		})
+	})
+	settingsGroup(c, pal, locales.AgentBehaviorGroup(), locales.AgentBehaviorNote(), func() {
+		settingRow(c, pal, locales.SetAgentAutoRun(), locales.SetAgentAutoRunDetail(), func() {
+			toggle(c.Key("agent-auto-run"), &a.state.AgentAutoRunSafe, pal)
+		})
+	})
+	settingsGroup(c, pal, locales.AgentHostsGroup(), locales.AgentHostsNote(), nil)
 }
 
 // --- Language ---

@@ -92,6 +92,8 @@ func serveConn(conn net.Conn, cfg *ssh.ServerConfig, changes chan<- [2]int) {
 		}
 		go func() {
 			defer channel.Close()
+			closed := make(chan struct{})
+			defer close(closed)
 			for req := range requests {
 				switch req.Type {
 				case "pty-req", "shell":
@@ -99,6 +101,9 @@ func serveConn(conn net.Conn, cfg *ssh.ServerConfig, changes chan<- [2]int) {
 					if req.Type == "shell" {
 						go io.Copy(channel, channel)
 					}
+				case "exec":
+					req.Reply(true, nil)
+					go serveExec(channel, execCommand(req.Payload), closed)
 				case "window-change":
 					if len(req.Payload) >= 8 {
 						changes <- [2]int{
@@ -123,6 +128,35 @@ func (s *testServer) config(password string) Config {
 		HostKeyCallback: func(string, net.Addr, ssh.PublicKey) error { return nil },
 		Timeout:         5 * time.Second,
 	}
+}
+
+func execCommand(payload []byte) string {
+	if len(payload) < 4 {
+		return ""
+	}
+	n := int(binary.BigEndian.Uint32(payload[:4]))
+	if n < 0 || 4+n > len(payload) {
+		n = len(payload) - 4
+	}
+	return string(payload[4 : 4+n])
+}
+
+func serveExec(ch ssh.Channel, cmd string, closed <-chan struct{}) {
+	code := uint32(0)
+	switch cmd {
+	case "echo hello":
+		io.WriteString(ch, "hello\n")
+	case "mixed":
+		io.WriteString(ch, "out\n")
+		io.WriteString(ch.Stderr(), "err\n")
+	case "fail":
+		code = 3
+	case "hang":
+		<-closed
+		return
+	}
+	ch.SendRequest("exit-status", false, ssh.Marshal(struct{ Status uint32 }{code}))
+	ch.Close()
 }
 
 func TestConnectEchoAndResize(t *testing.T) {
@@ -285,5 +319,54 @@ func TestConnectToClosedPort(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("Connect to a closed port returned no error")
+	}
+}
+
+func TestExec(t *testing.T) {
+	srv := startServer(t, "secret")
+	sess, err := Connect(context.Background(), srv.config("secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sess.Close()
+
+	res, err := sess.Exec(context.Background(), "echo hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Stdout != "hello\n" || res.Stderr != "" || res.ExitCode != 0 {
+		t.Fatalf("echo = %+v, want hello\\n and exit 0", res)
+	}
+
+	res, err = sess.Exec(context.Background(), "mixed")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Stdout != "out\n" || res.Stderr != "err\n" {
+		t.Fatalf("mixed = %+v, want out\\n and err\\n", res)
+	}
+
+	res, err = sess.Exec(context.Background(), "fail")
+	if err != nil {
+		t.Fatalf("a nonzero exit is a result: %v", err)
+	}
+	if res.ExitCode != 3 {
+		t.Fatalf("fail exit = %d, want 3", res.ExitCode)
+	}
+}
+
+func TestExecCancel(t *testing.T) {
+	srv := startServer(t, "secret")
+	sess, err := Connect(context.Background(), srv.config("secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sess.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	_, err = sess.Exec(ctx, "hang")
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Exec = %v, want DeadlineExceeded", err)
 	}
 }

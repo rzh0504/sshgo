@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"sshgo/internal/agent"
 )
 
 func TestLoadMissingIsEmpty(t *testing.T) {
@@ -49,6 +51,10 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		HideAtLogin:   true,
 		ConfirmQuit:   true,
 		AutoConnect:   true,
+
+		AgentBaseURL:     "https://api.example.com/v1",
+		AgentModel:       "test-model",
+		AgentAutoRunSafe: true,
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -64,7 +70,9 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		got.FontSize != want.FontSize || got.Cursor != want.Cursor || got.NoBlink != want.NoBlink ||
 		got.Language != want.Language || got.Privacy != want.Privacy || got.NoVibrancy != want.NoVibrancy ||
 		got.CloseBehavior != want.CloseBehavior || got.HideAtLogin != want.HideAtLogin ||
-		got.ConfirmQuit != want.ConfirmQuit || got.AutoConnect != want.AutoConnect {
+		got.ConfirmQuit != want.ConfirmQuit || got.AutoConnect != want.AutoConnect ||
+		got.AgentBaseURL != want.AgentBaseURL || got.AgentModel != want.AgentModel ||
+		got.AgentAutoRunSafe != want.AgentAutoRunSafe {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if got.LightTheme != "" || got.DarkTheme != "" {
@@ -331,5 +339,40 @@ func TestAddressAndEndpoint(t *testing.T) {
 		if got := c.host.Endpoint(); got != c.endpoint {
 			t.Errorf("Endpoint(%+v) = %q, want %q", c.host, got, c.endpoint)
 		}
+	}
+}
+
+func TestChatsRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "chats.json")
+	want := ChatFile{
+		Current: "c1",
+		Chats: []*agent.Chat{{
+			ID: "c1", Title: "check disk", CreatedAt: 100, UpdatedAt: 200,
+			Messages: []*agent.Message{
+				{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100},
+				{ID: "m2", Role: "assistant", Content: "Checking.", CreatedAt: 200, ToolCalls: []*agent.ToolCall{
+					{ID: "call1", Name: "run_shell_command", Arguments: `{"command":"df -h"}`, Status: agent.CallDone,
+						Result: &agent.ToolResult{Stdout: "ok", ExitCode: 0}},
+				}},
+			},
+		}},
+	}
+	if err := want.saveTo(path); err != nil {
+		t.Fatal(err)
+	}
+	got, err := loadChatsFrom(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Current != want.Current || len(got.Chats) != 1 {
+		t.Fatalf("chats = %+v", got)
+	}
+	chat := got.Chats[0]
+	if chat.ID != "c1" || chat.Title != "check disk" || len(chat.Messages) != 2 {
+		t.Fatalf("chat = %+v", chat)
+	}
+	call := chat.Messages[1].ToolCalls[0]
+	if call.ID != "call1" || call.Status != agent.CallDone || call.Result == nil || call.Result.Stdout != "ok" {
+		t.Fatalf("call = %+v", call)
 	}
 }

@@ -111,13 +111,22 @@ type App struct {
 	updates     updatePrefs
 
 	askMu sync.Mutex // one host key question at a time
+
+	agent          *agentState
+	agentDelete    *agentDeleteState
+	agentKeyEdit   string
+	agentKeyLoaded bool
+	agentKeyDirty  bool
 }
 
 func newApp() *App {
-	return &App{
+	a := &App{
 		runtimes: map[string]*hostRuntime{},
 		handles:  map[string]*ui.Handle{},
+		agent:    &agentState{},
 	}
+	a.agent.md.WrapCode = true
+	return a
 }
 
 func (a *App) load() {
@@ -140,6 +149,7 @@ func (a *App) load() {
 	a.state.Theme = knownTheme(a.state.Theme)
 	setLooks(a.state.Theme)
 	a.applied = valuesOf(a.state)
+	a.loadAgent()
 	if dir, err := store.Dir(); err == nil {
 		a.keys = kh.Store{Path: filepath.Join(dir, "known_hosts")}
 	}
@@ -181,6 +191,10 @@ func (a *App) selectedHost() (store.Host, bool) {
 }
 
 func (a *App) selectHost(id string) {
+	if a.agentOpen() {
+		a.agent.open = false
+		a.updateTitle()
+	}
 	if a.selected == id {
 		a.focusTerminal(id)
 		return
@@ -241,6 +255,14 @@ func (a *App) updateTitle() {
 	if a.win == nil {
 		return
 	}
+	if a.agentOpen() {
+		title := locales.AgentTitle() + " — sshgo"
+		if t := a.agentCurrentTitle(); t != "" {
+			title = t + " — " + locales.AgentTitle()
+		}
+		a.win.SetTitle(title)
+		return
+	}
 	if a.showsDashboard() {
 		a.win.SetTitle("sshgo")
 		return
@@ -258,6 +280,9 @@ func (a *App) updateTitle() {
 // showsDashboard reports whether the card holds the dashboard: no shell,
 // no connection on its way, and no failure to report.
 func (a *App) showsDashboard() bool {
+	if a.agentOpen() {
+		return false
+	}
 	h, ok := a.selectedHost()
 	if !ok {
 		return true
@@ -286,10 +311,14 @@ func (a *App) connectedCount() int {
 func (a *App) anyDialogOpen() bool {
 	return (a.editor != nil && a.editor.open) || (a.groupEdit != nil && a.groupEdit.open) ||
 		(a.password != nil && a.password.open) || (a.keyPass != nil && a.keyPass.open) ||
-		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open)
+		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open) ||
+		(a.agentDelete != nil && a.agentDelete.open)
 }
 
 func (a *App) connect(id string) {
+	if a.agentOpen() {
+		a.agent.open = false
+	}
 	h, ok := a.state.Host(id)
 	if !ok {
 		return
@@ -529,6 +558,7 @@ func (a *App) disconnect(id string) {
 }
 
 func (a *App) closeAll() {
+	a.stopAgent()
 	for id := range a.runtimes {
 		a.resetRuntime(id)
 	}

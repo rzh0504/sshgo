@@ -242,6 +242,11 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32)
 	if (row.Pressed() || row.Clicked()) && !selected {
 		a.selectHost(h.ID)
 	}
+	if row.Clicked() && a.agentOpen() {
+		a.agent.open = false
+		a.focusTerminal(h.ID)
+		a.updateTitle()
+	}
 	if row.DoubleClicked() {
 		a.connect(h.ID)
 	}
@@ -308,6 +313,7 @@ func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 
 func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) {
 	h, hasHost := a.selectedHost()
+	agentOpen := a.agentOpen()
 	dashboard := a.showsDashboard()
 	card := paned(ui.Column(c).Grow(1).MinHeight(0).Radius(14).Background(pal.card), pal).Clip()
 	card.Children(func() {
@@ -318,7 +324,15 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 					iconButton(c, "new-host-2", plusIcon, locales.ActionNewHost(), pal, func() { a.openEditor("") })
 				})
 			}
-			if hasHost && !dashboard {
+			if agentOpen {
+				ui.Icon(c, sparklesIcon).Size(15, 15).TextColor(pal.accent).Shrink(0)
+				ui.Text(c, locales.AgentTitle()).FontSize(14).FontWeight(600).TextColor(pal.text).
+					SingleLine().Margin(0, 0, 0, 8)
+				if title := a.agentCurrentTitle(); title != "" {
+					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
+						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)
+				}
+			} else if hasHost && !dashboard {
 				a.hostGlyph(c, pal, h, 16)
 				ui.Text(c, h.Name).FontSize(14).FontWeight(600).TextColor(pal.text).SingleLine().Ellipsis("…").
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
@@ -328,19 +342,29 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 					SingleLine().Margin(0, 0, 0, 8)
 			}
 			ui.Spacer(c)
-			if dashboard {
-				ui.Row(c).Gap(8).Shrink(0).Margin(0, 8, 0, 8).Children(func() {
-					if button(c, "dash-new-group", locales.ActionNewGroup(), "", false, pal) {
-						a.openGroupEditor("")
-					}
-					if button(c, "dash-new-host", locales.ActionNewHost(), "", true, pal) {
-						a.openEditor("")
-					}
+			if agentOpen {
+				iconButton(c, "agent-history", clockIcon, locales.AgentChats(), pal, func() {
+					a.agent.showHistory = !a.agent.showHistory
+					a.repaint()
 				})
-			} else if hasHost {
-				if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
-					iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
+				iconButton(c, "agent-new-chat", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
+				iconButton(c, "agent-close", closeIcon, locales.AgentClose(), pal, a.toggleAgent)
+			} else {
+				if dashboard {
+					ui.Row(c).Gap(8).Shrink(0).Margin(0, 8, 0, 8).Children(func() {
+						if button(c, "dash-new-group", locales.ActionNewGroup(), "", false, pal) {
+							a.openGroupEditor("")
+						}
+						if button(c, "dash-new-host", locales.ActionNewHost(), "", true, pal) {
+							a.openEditor("")
+						}
+					})
+				} else if hasHost {
+					if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
+						iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
+					}
 				}
+				iconButton(c, "agent-open", sparklesIcon, locales.AgentTitle(), pal, a.toggleAgent)
 			}
 			windowControls(c, pal, a.win)
 		})
@@ -349,6 +373,10 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 }
 
 func (a *App) cardBody(c *ui.Context, pal *palette) {
+	if a.agentOpen() {
+		a.agentView(c, pal)
+		return
+	}
 	if a.showsDashboard() {
 		a.dashboard(c, pal)
 		return
@@ -403,5 +431,8 @@ func (a *App) shortcuts(c *ui.Context) {
 	}
 	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyB) {
 		a.toggleSidebar()
+	}
+	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA) {
+		a.toggleAgent()
 	}
 }

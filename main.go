@@ -121,6 +121,9 @@ func (a *App) buildMenu() *mygo.Menu {
 			{ID: "sidebar", Label: a.sidebarMenuLabel(), Accelerator: "CmdOrCtrl+Shift+B", Click: func(*mygo.MenuItem, *mygo.Window) {
 				a.toggleSidebar()
 			}},
+			{Label: locales.MenuAgent(), Accelerator: "CmdOrCtrl+Shift+A", Click: func(*mygo.MenuItem, *mygo.Window) {
+				a.toggleAgent()
+			}},
 			mygo.Separator(),
 			{Role: mygo.RoleToggleFullScreen},
 		}},
