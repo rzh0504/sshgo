@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +42,8 @@ type agentState struct {
 	cancel      context.CancelFunc
 	queued      *agentQueuedSend
 	saveMu      sync.Mutex
+	memoryMu    sync.Mutex
+	secrets     map[string]string
 
 	open              bool // the Agent is what the main card shows
 	showHistory       bool
@@ -233,6 +238,7 @@ func (a *App) newAgentChat() {
 	}
 	a.agent.current = ""
 	a.agent.err = ""
+	a.agent.secrets = nil
 	a.agent.mu.Unlock()
 	a.closeAgentMenus()
 	a.agent.target = ""
@@ -329,6 +335,7 @@ func (a *App) deleteAgentChat(id string) {
 	wasCurrent := a.agent.current == id
 	if wasCurrent {
 		a.agent.current = ""
+		a.agent.secrets = nil
 	}
 	a.agent.err = ""
 	a.agent.mu.Unlock()
@@ -539,6 +546,24 @@ func (a *App) startAgentTurn(text string, attachments []agent.Attachment) bool {
 			WriteFile: func(ctx context.Context, hostID, path string, data []byte) error {
 				return a.writeAgentFile(ctx, hostID, path, data)
 			},
+			ListDir: func(ctx context.Context, hostID, path string, max int) (agent.DirListing, error) {
+				return a.listAgentDir(ctx, hostID, path, max)
+			},
+			Terminal: func(ctx context.Context, hostID string, max int) (string, error) {
+				return a.readAgentTerminal(ctx, hostID, max)
+			},
+			MemoryRead: func(ctx context.Context) (string, error) {
+				return a.readAgentMemory(ctx)
+			},
+			MemoryWrite: func(ctx context.Context, content string, appendTo bool) (int, error) {
+				return a.writeAgentMemory(ctx, content, appendTo)
+			},
+			WebFetch: func(ctx context.Context, request agent.WebRequest) (agent.WebData, error) {
+				return a.fetchAgentWeb(ctx, request)
+			},
+			Ask: func(ctx context.Context, request agent.AskRequest) (agent.AskResult, error) {
+				return a.askAgentUser(ctx, request)
+			},
 		},
 	}
 	go func() {
@@ -641,6 +666,14 @@ func (a *App) answerAgentCall(callID string, decision agent.Decision) {
 }
 
 func (a *App) stopAgent() {
+	if a.agentAsk != nil {
+		ask := a.agentAsk
+		a.agentAsk = nil
+		select {
+		case ask.answer <- agent.AskResult{Cancelled: true}:
+		default:
+		}
+	}
 	a.agent.mu.Lock()
 	cancel := a.agent.cancel
 	ch := a.agent.answer
@@ -743,20 +776,181 @@ func (a *App) writeAgentFile(ctx context.Context, hostID, path string, data []by
 	return sess.WriteFile(runCtx, path, data)
 }
 
+func (a *App) listAgentDir(ctx context.Context, hostID, path string, max int) (agent.DirListing, error) {
+	sess, err := a.agentSession(ctx, hostID)
+	if err != nil {
+		return agent.DirListing{}, err
+	}
+	runCtx, cancel := context.WithTimeout(ctx, agentFileTimeout)
+	defer cancel()
+	listing, err := sess.ListDir(runCtx, path, max)
+	if err != nil {
+		return agent.DirListing{}, err
+	}
+	out := agent.DirListing{
+		Entries:   make([]agent.DirEntry, 0, len(listing.Entries)),
+		Truncated: listing.Truncated,
+	}
+	for _, entry := range listing.Entries {
+		out.Entries = append(out.Entries, agent.DirEntry{
+			Name: entry.Name, IsDir: entry.IsDir, Size: entry.Size,
+			Mode: entry.Mode, Modified: entry.Modified,
+		})
+	}
+	return out, nil
+}
+
+func (a *App) fetchAgentWeb(ctx context.Context, request agent.WebRequest) (agent.WebData, error) {
+	runCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(runCtx, http.MethodGet, request.URL, nil)
+	if err != nil {
+		return agent.WebData{}, err
+	}
+	for name, value := range request.Headers {
+		req.Header.Set(name, a.resolveAgentSecrets(value))
+	}
+	req.Header.Set("User-Agent", "sshgo/0.1")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return agent.WebData{}, err
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(res.Body, agent.MaxWebBytes+1))
+	if err != nil {
+		return agent.WebData{}, err
+	}
+	truncated := len(body) > agent.MaxWebBytes
+	if truncated {
+		body = body[:agent.MaxWebBytes]
+	}
+	return agent.WebData{
+		Status:      res.StatusCode,
+		ContentType: res.Header.Get("Content-Type"),
+		Body:        strings.ToValidUTF8(string(body), "\uFFFD"),
+		Size:        int64(len(body)),
+		Truncated:   truncated,
+	}, nil
+}
+
+func (a *App) newAgentSecret(value string) string {
+	handle := agent.NewID("sec")
+	a.agent.mu.Lock()
+	if a.agent.secrets == nil {
+		a.agent.secrets = map[string]string{}
+	}
+	a.agent.secrets[handle] = value
+	a.agent.mu.Unlock()
+	return handle
+}
+
+func (a *App) resolveAgentSecrets(text string) string {
+	a.agent.mu.Lock()
+	defer a.agent.mu.Unlock()
+	if len(a.agent.secrets) == 0 {
+		return text
+	}
+	pairs := make([]string, 0, len(a.agent.secrets)*4)
+	for handle, value := range a.agent.secrets {
+		pairs = append(pairs, "{{"+handle+"}}", value, handle, value)
+	}
+	return strings.NewReplacer(pairs...).Replace(text)
+}
+
+func (a *App) readAgentMemory(ctx context.Context) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	a.agent.memoryMu.Lock()
+	defer a.agent.memoryMu.Unlock()
+	return store.LoadAgentMemory()
+}
+
+func (a *App) writeAgentMemory(ctx context.Context, content string, appendTo bool) (int, error) {
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+	a.agent.memoryMu.Lock()
+	defer a.agent.memoryMu.Unlock()
+	next := content
+	if appendTo {
+		old, err := store.LoadAgentMemory()
+		if err != nil {
+			return 0, err
+		}
+		if old != "" && !strings.HasSuffix(old, "\n") {
+			old += "\n"
+		}
+		next = old + content
+		if next != "" && !strings.HasSuffix(next, "\n") {
+			next += "\n"
+		}
+	}
+	if len(next) > agent.MaxMemoryBytes {
+		return 0, fmt.Errorf("memory is limited to %d bytes", agent.MaxMemoryBytes)
+	}
+	if err := store.SaveAgentMemory(next); err != nil {
+		return 0, err
+	}
+	return len(content), nil
+}
+
+func (a *App) readAgentTerminal(ctx context.Context, hostID string, max int) (string, error) {
+	if a.win == nil {
+		return "", errors.New("sshgo is closing")
+	}
+	type picked struct {
+		text string
+		err  error
+	}
+	ch := make(chan picked, 1)
+	a.win.Update(func() {
+		rt := a.runtimes[hostID]
+		if rt == nil || rt.term == nil {
+			ch <- picked{err: errors.New("the terminal for this host is not open")}
+			return
+		}
+		ch <- picked{text: rt.term.Text()}
+	})
+	select {
+	case p := <-ch:
+		return p.text, p.err
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
+}
+
 // agentToolEnabled says whether the Agent may use one tool now.
 func (a *App) agentToolEnabled(name string) bool {
 	if a.state.AgentNoTools {
 		return false
 	}
-	switch name {
-	case "run_shell_command":
-		return !a.state.AgentNoToolShell
-	case "read_file":
-		return !a.state.AgentNoToolReadFile
-	case "write_file":
-		return !a.state.AgentNoToolWriteFile
+	return !slices.Contains(a.state.AgentDisabledTools, name)
+}
+
+// agentReadToolEnabled says whether any tool that only reads is on, which
+// is when the "read-only tools" switch can matter.
+func (a *App) agentReadToolEnabled() bool {
+	for _, name := range []string{"read_file", "list_dir", "terminal_screen", "memory"} {
+		if a.agentToolEnabled(name) {
+			return true
+		}
 	}
 	return false
+}
+
+// setAgentToolEnabled turns one tool on or off without touching the others.
+func (a *App) setAgentToolEnabled(name string, on bool) {
+	disabled := a.state.AgentDisabledTools[:0]
+	for _, tool := range a.state.AgentDisabledTools {
+		if tool != name {
+			disabled = append(disabled, tool)
+		}
+	}
+	if !on {
+		disabled = append(disabled, name)
+	}
+	a.state.AgentDisabledTools = disabled
 }
 
 // agentTools are the tools this app lets the Agent use now.
@@ -765,6 +959,11 @@ func (a *App) agentTools() []agent.Tool {
 		Shell:     a.agentToolEnabled("run_shell_command"),
 		ReadFile:  a.agentToolEnabled("read_file"),
 		WriteFile: a.agentToolEnabled("write_file"),
+		ListDir:   a.agentToolEnabled("list_dir"),
+		Terminal:  a.agentToolEnabled("terminal_screen"),
+		Memory:    a.agentToolEnabled("memory"),
+		WebFetch:  a.agentToolEnabled("web_fetch"),
+		AskUser:   a.agentToolEnabled("ask_user"),
 	})
 }
 

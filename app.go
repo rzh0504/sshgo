@@ -115,6 +115,7 @@ type App struct {
 	agent        *agentState
 	agentDelete  *agentDeleteState
 	agentConnect *agentConnectState
+	agentAsk     *agentAskState
 	providerEdit *providerEditState
 }
 

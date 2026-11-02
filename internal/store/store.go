@@ -130,12 +130,10 @@ type State struct {
 	// AgentNoStream waits for each reply to be complete before showing it.
 	AgentNoStream bool `json:"agentNoStream,omitempty"`
 
-	// AgentNoTools and the per-tool flags are negative so that a stored
-	// state without them keeps the tools on.
-	AgentNoTools         bool `json:"agentNoTools,omitempty"`
-	AgentNoToolShell     bool `json:"agentNoToolShell,omitempty"`
-	AgentNoToolReadFile  bool `json:"agentNoToolReadFile,omitempty"`
-	AgentNoToolWriteFile bool `json:"agentNoToolWriteFile,omitempty"`
+	// AgentNoTools turns every tool off. AgentDisabledTools names the ones
+	// turned off on their own; a tool not named is on.
+	AgentNoTools       bool     `json:"agentNoTools,omitempty"`
+	AgentDisabledTools []string `json:"agentDisabledTools,omitempty"`
 
 	// AgentProviders are the endpoints the Agent may use, and the model
 	// picked last; the old single endpoint above is read once into one.

@@ -28,6 +28,18 @@ type Hooks struct {
 	ReadFile func(ctx context.Context, hostID, path string, max int64) (FileData, error)
 	// WriteFile replaces path on a connected host.
 	WriteFile func(ctx context.Context, hostID, path string, data []byte) error
+	// ListDir reads at most max entries of a directory on a connected host.
+	ListDir func(ctx context.Context, hostID, path string, max int) (DirListing, error)
+	// Terminal reads at most max characters of the host's open terminal.
+	Terminal func(ctx context.Context, hostID string, max int) (string, error)
+	// MemoryRead reads the Agent's cross-chat notes.
+	MemoryRead func(ctx context.Context) (string, error)
+	// MemoryWrite replaces or appends to the notes.
+	MemoryWrite func(ctx context.Context, content string, appendTo bool) (int, error)
+	// WebFetch reads a page or API from this device.
+	WebFetch func(ctx context.Context, request WebRequest) (WebData, error)
+	// Ask shows a form and waits for the user's answers.
+	Ask func(ctx context.Context, request AskRequest) (AskResult, error)
 }
 
 // Engine runs one conversation with the model.
@@ -165,7 +177,7 @@ func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall, t
 		Risk:        prep.Risk,
 		Auto:        e.Policy.Allows(prep),
 	}
-	if !proposal.Auto {
+	if !prep.Direct && !proposal.Auto {
 		if e.Hooks.Review == nil {
 			return e.finishCall(msgs, call, ToolResult{Error: "No one could approve this action."}, formatFailure), nil
 		}
@@ -243,6 +255,42 @@ func (e *Engine) envFor(host Host) Env {
 				return errors.New("this app cannot write files")
 			}
 			return e.Hooks.WriteFile(ctx, host.ID, path, data)
+		},
+		ListDir: func(ctx context.Context, path string, max int) (DirListing, error) {
+			if e.Hooks.ListDir == nil {
+				return DirListing{}, errors.New("this app cannot list directories")
+			}
+			return e.Hooks.ListDir(ctx, host.ID, path, max)
+		},
+		Terminal: func(ctx context.Context, max int) (string, error) {
+			if e.Hooks.Terminal == nil {
+				return "", errors.New("this app cannot read the terminal")
+			}
+			return e.Hooks.Terminal(ctx, host.ID, max)
+		},
+		MemoryRead: func(ctx context.Context) (string, error) {
+			if e.Hooks.MemoryRead == nil {
+				return "", errors.New("this app has no memory")
+			}
+			return e.Hooks.MemoryRead(ctx)
+		},
+		MemoryWrite: func(ctx context.Context, content string, appendTo bool) (int, error) {
+			if e.Hooks.MemoryWrite == nil {
+				return 0, errors.New("this app has no memory")
+			}
+			return e.Hooks.MemoryWrite(ctx, content, appendTo)
+		},
+		WebFetch: func(ctx context.Context, request WebRequest) (WebData, error) {
+			if e.Hooks.WebFetch == nil {
+				return WebData{}, errors.New("this app cannot fetch web pages")
+			}
+			return e.Hooks.WebFetch(ctx, request)
+		},
+		Ask: func(ctx context.Context, request AskRequest) (AskResult, error) {
+			if e.Hooks.Ask == nil {
+				return AskResult{}, errors.New("this app cannot ask the user")
+			}
+			return e.Hooks.Ask(ctx, request)
 		},
 	}
 }

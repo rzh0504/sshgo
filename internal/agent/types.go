@@ -83,6 +83,7 @@ type ToolResult struct {
 	Stdout     string `json:"stdout,omitempty"`
 	Stderr     string `json:"stderr,omitempty"`
 	Path       string `json:"path,omitempty"`
+	URL        string `json:"url,omitempty"`
 	Content    string `json:"content,omitempty"`
 	Bytes      int64  `json:"bytes,omitempty"`
 	ExitCode   int    `json:"exitCode"`

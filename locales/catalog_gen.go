@@ -2182,6 +2182,66 @@ func (msgs Messages) AgentToolWriteFile() string {
 	return Catalog.Format(msgs.locale, "agentToolWriteFile", nil)
 }
 
+// AgentToolListDir says "List directory"
+// in the language the app shows.
+func AgentToolListDir() string { return In(i18n.Locale()).AgentToolListDir() }
+
+// AgentToolListDir says "List directory"
+// in the language of msgs.
+func (msgs Messages) AgentToolListDir() string {
+	return Catalog.Format(msgs.locale, "agentToolListDir", nil)
+}
+
+// AgentToolTerminal says "Terminal screen"
+// in the language the app shows.
+func AgentToolTerminal() string { return In(i18n.Locale()).AgentToolTerminal() }
+
+// AgentToolTerminal says "Terminal screen"
+// in the language of msgs.
+func (msgs Messages) AgentToolTerminal() string {
+	return Catalog.Format(msgs.locale, "agentToolTerminal", nil)
+}
+
+// AgentToolMemory says "Memory"
+// in the language the app shows.
+func AgentToolMemory() string { return In(i18n.Locale()).AgentToolMemory() }
+
+// AgentToolMemory says "Memory"
+// in the language of msgs.
+func (msgs Messages) AgentToolMemory() string {
+	return Catalog.Format(msgs.locale, "agentToolMemory", nil)
+}
+
+// AgentToolWeb says "Web fetch"
+// in the language the app shows.
+func AgentToolWeb() string { return In(i18n.Locale()).AgentToolWeb() }
+
+// AgentToolWeb says "Web fetch"
+// in the language of msgs.
+func (msgs Messages) AgentToolWeb() string {
+	return Catalog.Format(msgs.locale, "agentToolWeb", nil)
+}
+
+// AgentToolAsk says "Ask user"
+// in the language the app shows.
+func AgentToolAsk() string { return In(i18n.Locale()).AgentToolAsk() }
+
+// AgentToolAsk says "Ask user"
+// in the language of msgs.
+func (msgs Messages) AgentToolAsk() string {
+	return Catalog.Format(msgs.locale, "agentToolAsk", nil)
+}
+
+// AgentWebHeaders says "Headers"
+// in the language the app shows.
+func AgentWebHeaders() string { return In(i18n.Locale()).AgentWebHeaders() }
+
+// AgentWebHeaders says "Headers"
+// in the language of msgs.
+func (msgs Messages) AgentWebHeaders() string {
+	return Catalog.Format(msgs.locale, "agentWebHeaders", nil)
+}
+
 // AgentToolUnknown says "Tool call"
 // in the language the app shows.
 func AgentToolUnknown() string { return In(i18n.Locale()).AgentToolUnknown() }
@@ -2452,6 +2512,196 @@ func (msgs Messages) SetAgentToolWriteFileDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentToolWriteFileDetail", nil)
 }
 
+// SetAgentToolListDir says "List directories"
+// in the language the app shows.
+func SetAgentToolListDir() string { return In(i18n.Locale()).SetAgentToolListDir() }
+
+// SetAgentToolListDir says "List directories"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolListDir() string {
+	return Catalog.Format(msgs.locale, "setAgentToolListDir", nil)
+}
+
+// SetAgentToolListDirDetail says "Read directory entries over SFTP, up to 500 at a time."
+// in the language the app shows.
+func SetAgentToolListDirDetail() string { return In(i18n.Locale()).SetAgentToolListDirDetail() }
+
+// SetAgentToolListDirDetail says "Read directory entries over SFTP, up to 500 at a time."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolListDirDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolListDirDetail", nil)
+}
+
+// SetAgentToolTerminal says "Read the terminal"
+// in the language the app shows.
+func SetAgentToolTerminal() string { return In(i18n.Locale()).SetAgentToolTerminal() }
+
+// SetAgentToolTerminal says "Read the terminal"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolTerminal() string {
+	return Catalog.Format(msgs.locale, "setAgentToolTerminal", nil)
+}
+
+// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback."
+// in the language the app shows.
+func SetAgentToolTerminalDetail() string { return In(i18n.Locale()).SetAgentToolTerminalDetail() }
+
+// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolTerminalDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolTerminalDetail", nil)
+}
+
+// SetAgentToolMemory says "Memory"
+// in the language the app shows.
+func SetAgentToolMemory() string { return In(i18n.Locale()).SetAgentToolMemory() }
+
+// SetAgentToolMemory says "Memory"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolMemory() string {
+	return Catalog.Format(msgs.locale, "setAgentToolMemory", nil)
+}
+
+// SetAgentToolMemoryDetail says "Read and write notes that later conversations can use; writes always wait for your approval."
+// in the language the app shows.
+func SetAgentToolMemoryDetail() string { return In(i18n.Locale()).SetAgentToolMemoryDetail() }
+
+// SetAgentToolMemoryDetail says "Read and write notes that later conversations can use; writes always wait for your approval."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolMemoryDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolMemoryDetail", nil)
+}
+
+// SetAgentToolWeb says "Web fetch"
+// in the language the app shows.
+func SetAgentToolWeb() string { return In(i18n.Locale()).SetAgentToolWeb() }
+
+// SetAgentToolWeb says "Web fetch"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWeb() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWeb", nil)
+}
+
+// SetAgentToolWebDetail says "Fetch an http or https page or API; every call needs your approval."
+// in the language the app shows.
+func SetAgentToolWebDetail() string { return In(i18n.Locale()).SetAgentToolWebDetail() }
+
+// SetAgentToolWebDetail says "Fetch an http or https page or API; every call needs your approval."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWebDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWebDetail", nil)
+}
+
+// SetAgentToolAsk says "Ask you questions"
+// in the language the app shows.
+func SetAgentToolAsk() string { return In(i18n.Locale()).SetAgentToolAsk() }
+
+// SetAgentToolAsk says "Ask you questions"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolAsk() string {
+	return Catalog.Format(msgs.locale, "setAgentToolAsk", nil)
+}
+
+// SetAgentToolAskDetail says "Ask with choices, text or secret fields; every question waits for you."
+// in the language the app shows.
+func SetAgentToolAskDetail() string { return In(i18n.Locale()).SetAgentToolAskDetail() }
+
+// SetAgentToolAskDetail says "Ask with choices, text or secret fields; every question waits for you."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolAskDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolAskDetail", nil)
+}
+
+// AgentAskTitle says "The Agent asks"
+// in the language the app shows.
+func AgentAskTitle() string { return In(i18n.Locale()).AgentAskTitle() }
+
+// AgentAskTitle says "The Agent asks"
+// in the language of msgs.
+func (msgs Messages) AgentAskTitle() string {
+	return Catalog.Format(msgs.locale, "agentAskTitle", nil)
+}
+
+// AgentAskDetail says "Answer to continue this turn."
+// in the language the app shows.
+func AgentAskDetail() string { return In(i18n.Locale()).AgentAskDetail() }
+
+// AgentAskDetail says "Answer to continue this turn."
+// in the language of msgs.
+func (msgs Messages) AgentAskDetail() string {
+	return Catalog.Format(msgs.locale, "agentAskDetail", nil)
+}
+
+// AgentAskSubmit says "Submit"
+// in the language the app shows.
+func AgentAskSubmit() string { return In(i18n.Locale()).AgentAskSubmit() }
+
+// AgentAskSubmit says "Submit"
+// in the language of msgs.
+func (msgs Messages) AgentAskSubmit() string {
+	return Catalog.Format(msgs.locale, "agentAskSubmit", nil)
+}
+
+// AgentAskChooseOne says "Choose one"
+// in the language the app shows.
+func AgentAskChooseOne() string { return In(i18n.Locale()).AgentAskChooseOne() }
+
+// AgentAskChooseOne says "Choose one"
+// in the language of msgs.
+func (msgs Messages) AgentAskChooseOne() string {
+	return Catalog.Format(msgs.locale, "agentAskChooseOne", nil)
+}
+
+// AgentAskChooseMany says "Choose one or more"
+// in the language the app shows.
+func AgentAskChooseMany() string { return In(i18n.Locale()).AgentAskChooseMany() }
+
+// AgentAskChooseMany says "Choose one or more"
+// in the language of msgs.
+func (msgs Messages) AgentAskChooseMany() string {
+	return Catalog.Format(msgs.locale, "agentAskChooseMany", nil)
+}
+
+// AgentAskTextPlaceholder says "Type an answer"
+// in the language the app shows.
+func AgentAskTextPlaceholder() string { return In(i18n.Locale()).AgentAskTextPlaceholder() }
+
+// AgentAskTextPlaceholder says "Type an answer"
+// in the language of msgs.
+func (msgs Messages) AgentAskTextPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentAskTextPlaceholder", nil)
+}
+
+// AgentAskSecretPlaceholder says "Secret value"
+// in the language the app shows.
+func AgentAskSecretPlaceholder() string { return In(i18n.Locale()).AgentAskSecretPlaceholder() }
+
+// AgentAskSecretPlaceholder says "Secret value"
+// in the language of msgs.
+func (msgs Messages) AgentAskSecretPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentAskSecretPlaceholder", nil)
+}
+
+// AgentAskSecretHint says "This answer is not saved in the chat or sent to the model; tools get a handle."
+// in the language the app shows.
+func AgentAskSecretHint() string { return In(i18n.Locale()).AgentAskSecretHint() }
+
+// AgentAskSecretHint says "This answer is not saved in the chat or sent to the model; tools get a handle."
+// in the language of msgs.
+func (msgs Messages) AgentAskSecretHint() string {
+	return Catalog.Format(msgs.locale, "agentAskSecretHint", nil)
+}
+
+// AgentAskRequired says "Answer every question."
+// in the language the app shows.
+func AgentAskRequired() string { return In(i18n.Locale()).AgentAskRequired() }
+
+// AgentAskRequired says "Answer every question."
+// in the language of msgs.
+func (msgs Messages) AgentAskRequired() string {
+	return Catalog.Format(msgs.locale, "agentAskRequired", nil)
+}
+
 // AgentToolsOff says "The tools switch is off; the Agent will answer from the conversation alone."
 // in the language the app shows.
 func AgentToolsOff() string { return In(i18n.Locale()).AgentToolsOff() }
@@ -2482,11 +2732,11 @@ func (msgs Messages) AgentNoAskGroup() string {
 	return Catalog.Format(msgs.locale, "agentNoAskGroup", nil)
 }
 
-// AgentNoAskNote says "Writes always wait for approval; only read-only actions that may run without asking are listed here."
+// AgentNoAskNote says "Changes, external requests and questions always wait for you; only read-only actions that may run without asking are …"
 // in the language the app shows.
 func AgentNoAskNote() string { return In(i18n.Locale()).AgentNoAskNote() }
 
-// AgentNoAskNote says "Writes always wait for approval; only read-only actions that may run without asking are listed here."
+// AgentNoAskNote says "Changes, external requests and questions always wait for you; only read-only actions that may run without asking are …"
 // in the language of msgs.
 func (msgs Messages) AgentNoAskNote() string {
 	return Catalog.Format(msgs.locale, "agentNoAskNote", nil)

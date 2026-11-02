@@ -2,7 +2,9 @@ package main
 
 import (
 	"slices"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -67,9 +69,7 @@ type settingsValues struct {
 	agentAutoRunReadTools bool
 	agentNoStream         bool
 	agentNoTools          bool
-	agentNoToolShell      bool
-	agentNoToolReadFile   bool
-	agentNoToolWriteFile  bool
+	agentDisabledTools    string
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -81,9 +81,14 @@ func valuesOf(s store.State) settingsValues {
 		agentBaseURL: s.AgentBaseURL, agentModel: s.AgentModel, agentAutoRunSafe: s.AgentAutoRunSafe,
 		agentAutoRunReadTools: s.AgentAutoRunReadTools,
 		agentNoStream:         s.AgentNoStream, agentNoTools: s.AgentNoTools,
-		agentNoToolShell: s.AgentNoToolShell, agentNoToolReadFile: s.AgentNoToolReadFile,
-		agentNoToolWriteFile: s.AgentNoToolWriteFile,
+		agentDisabledTools: strings.Join(sortedNames(s.AgentDisabledTools), "\x00"),
 	}
+}
+
+func sortedNames(names []string) []string {
+	out := append([]string(nil), names...)
+	sort.Strings(out)
+	return out
 }
 
 func localeTag(language string) string {
@@ -555,6 +560,23 @@ func (a *App) agentPage(c *ui.Context, pal *palette) {
 	})
 }
 
+type agentToolSetting struct {
+	name   string
+	label  func() string
+	detail func() string
+}
+
+var builtinAgentTools = []agentToolSetting{
+	{"run_shell_command", locales.SetAgentToolShell, locales.SetAgentToolShellDetail},
+	{"read_file", locales.SetAgentToolReadFile, locales.SetAgentToolReadFileDetail},
+	{"write_file", locales.SetAgentToolWriteFile, locales.SetAgentToolWriteFileDetail},
+	{"list_dir", locales.SetAgentToolListDir, locales.SetAgentToolListDirDetail},
+	{"terminal_screen", locales.SetAgentToolTerminal, locales.SetAgentToolTerminalDetail},
+	{"memory", locales.SetAgentToolMemory, locales.SetAgentToolMemoryDetail},
+	{"web_fetch", locales.SetAgentToolWeb, locales.SetAgentToolWebDetail},
+	{"ask_user", locales.SetAgentToolAsk, locales.SetAgentToolAskDetail},
+}
+
 // agentToolSettings lists the built-in tools and the actions that may run
 // without asking, each with its own switch.
 func (a *App) agentToolSettings(c *ui.Context, pal *palette) {
@@ -562,31 +584,40 @@ func (a *App) agentToolSettings(c *ui.Context, pal *palette) {
 	switch {
 	case a.state.AgentNoTools:
 		note = locales.AgentToolsOff()
-	case a.state.AgentNoToolShell && a.state.AgentNoToolReadFile && a.state.AgentNoToolWriteFile:
-		note = locales.AgentToolsNone()
+	default:
+		enabled := false
+		for _, tool := range builtinAgentTools {
+			if !slices.Contains(a.state.AgentDisabledTools, tool.name) {
+				enabled = true
+				break
+			}
+		}
+		if !enabled {
+			note = locales.AgentToolsNone()
+		}
 	}
 	settingsGroup(c, pal, locales.AgentBuiltinGroup(), note, func() {
-		a.agentToolRow(c, pal, "agent-tool-shell", locales.SetAgentToolShell(), locales.SetAgentToolShellDetail(), &a.state.AgentNoToolShell)
-		a.agentToolRow(c, pal, "agent-tool-read", locales.SetAgentToolReadFile(), locales.SetAgentToolReadFileDetail(), &a.state.AgentNoToolReadFile)
-		a.agentToolRow(c, pal, "agent-tool-write", locales.SetAgentToolWriteFile(), locales.SetAgentToolWriteFileDetail(), &a.state.AgentNoToolWriteFile)
+		for _, tool := range builtinAgentTools {
+			a.agentToolRow(c, pal, tool)
+		}
 	})
 	settingsGroup(c, pal, locales.AgentNoAskGroup(), locales.AgentNoAskNote(), func() {
 		a.agentAutoRow(c, pal, "agent-auto-read-tools", locales.SetAgentAutoReadTools(), locales.SetAgentAutoReadToolsDetail(),
-			&a.state.AgentAutoRunReadTools, !a.agentToolEnabled("read_file"))
+			&a.state.AgentAutoRunReadTools, !a.agentReadToolEnabled())
 		a.agentAutoRow(c, pal, "agent-auto-shell", locales.SetAgentAutoRun(), locales.SetAgentAutoRunDetail(),
 			&a.state.AgentAutoRunSafe, !a.agentToolEnabled("run_shell_command"))
 	})
 }
 
-func (a *App) agentToolRow(c *ui.Context, pal *palette, key, label, detail string, off *bool) {
-	settingRow(c, pal, label, detail, func() {
-		on := !*off
-		sw := toggle(c.Key(key), &on, pal)
+func (a *App) agentToolRow(c *ui.Context, pal *palette, tool agentToolSetting) {
+	settingRow(c, pal, tool.label(), tool.detail(), func() {
+		on := !slices.Contains(a.state.AgentDisabledTools, tool.name)
+		sw := toggle(c.Key("agent-tool-"+tool.name), &on, pal)
 		if a.state.AgentNoTools {
 			sw.Disabled(true)
 		}
 		if sw.Changed() {
-			*off = !on
+			a.setAgentToolEnabled(tool.name, on)
 		}
 	})
 }
