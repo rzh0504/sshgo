@@ -259,5 +259,6 @@
   "agentProviderDetecting": "正在检测…",
   "agentProviderNoModelsFound": "接口没有返回模型。",
   "agentProviderModelPlaceholder": "模型名称",
-  "agentProviderAddModel": "添加"
+  "agentProviderAddModel": "添加",
+  "agentConnectedHosts": "已连接主机"
 }

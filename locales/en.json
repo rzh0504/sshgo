@@ -259,5 +259,6 @@
   "agentProviderDetecting": "Detecting…",
   "agentProviderNoModelsFound": "The endpoint returned no models.",
   "agentProviderModelPlaceholder": "Model name",
-  "agentProviderAddModel": "Add"
+  "agentProviderAddModel": "Add",
+  "agentConnectedHosts": "Connected hosts"
 }

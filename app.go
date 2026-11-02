@@ -192,6 +192,7 @@ func (a *App) selectedHost() (store.Host, bool) {
 func (a *App) selectHost(id string) {
 	if a.agentOpen() {
 		a.agent.open = false
+		a.closeAgentMenus()
 		a.updateTitle()
 	}
 	if a.selected == id {
@@ -317,6 +318,7 @@ func (a *App) anyDialogOpen() bool {
 func (a *App) connect(id string) {
 	if a.agentOpen() {
 		a.agent.open = false
+		a.closeAgentMenus()
 	}
 	h, ok := a.state.Host(id)
 	if !ok {

@@ -150,6 +150,7 @@ func (a *App) pickAgentModel(providerID, model string) {
 	if !a.agentModelReady(providerID, model) {
 		return
 	}
+	a.closeAgentMenus()
 	a.agent.mu.Lock()
 	if a.agent.busy {
 		a.agent.mu.Unlock()

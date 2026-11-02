@@ -12,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui/markdown"
 
 	"sshgo/internal/agent"
+	"sshgo/internal/store"
 	"sshgo/locales"
 )
 
@@ -445,23 +446,74 @@ func (a *App) agentHostPicker(c *ui.Context, pal *palette, snap agentSnap) {
 		}
 	})
 	if snap.busy {
+		a.agent.hostMenuOpen = false
 		return
 	}
-	b.Menu(func(m *ui.Menu) {
-		hosts := a.agentHosts()
-		if len(hosts) == 0 {
-			m.Item(locales.AgentNoConnectedHosts()).Disabled(true)
-			return
+	if b.Clicked() {
+		a.agent.modelMenuOpen = false
+		a.agent.hostMenuOpen = !a.agent.hostMenuOpen
+	}
+	ui.PopoverBase(c, b, &a.agent.hostMenuOpen, func(panel ui.Element) {
+		a.agentHostMenu(c, pal, panel, snap)
+	})
+}
+
+func (a *App) agentHostMenu(c *ui.Context, pal *palette, panel ui.Element, snap agentSnap) {
+	hosts := a.agentHosts()
+	if len(hosts) == 0 {
+		label := locales.AgentNoConnectedHosts()
+		w, _ := c.MeasureText(0, ui.Span{Text: label, Size: 12, Weight: 400})
+		width := min(max(w+36, 140), 260)
+		floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
+		panel.Children(func() {
+			ui.Text(c, label).FontSize(12).TextColor(pal.textMuted).Padding(8, 8)
+		})
+		return
+	}
+	h := 8 + 26 + len(hosts)*40
+	h = min(h, 300)
+	width := float32(0)
+	for _, host := range hosts {
+		if w, _ := c.MeasureText(0, ui.Span{Text: host.Name, Size: 12.5, Weight: 400}); w > width {
+			width = w
 		}
-		for _, h := range hosts {
-			item := h.Name + " — " + h.Address
-			if h.ID == snap.target {
-				item = "✓ " + item
-			}
-			if m.Item(item).Chosen() {
-				a.pickAgentHost(h.ID)
-			}
+		if w, _ := c.MeasureText(0, ui.Span{Text: host.Address, Size: 11, Weight: 400}); w > width {
+			width = w
 		}
+	}
+	width = min(max(width+51, 180), 300)
+	floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
+	panel.Children(func() {
+		ui.Scroll(c.Key("agent-host-menu")).Height(float32(h)).FillWidth().Children(func() {
+			ui.Column(c).Padding(4, 0).FillWidth().Children(func() {
+				ui.Row(c).Height(26).Padding(0, 8).AlignItems(ui.Center).FillWidth().Children(func() {
+					ui.Text(c, locales.AgentConnectedHosts()).FontSize(11).FontWeight(600).TextColor(pal.textMuted)
+				})
+				for _, host := range hosts {
+					selected := host.ID == snap.target
+					row := ui.Row(c.Key("agent-host-"+host.ID)).Height(40).Padding(6, 8).Gap(8).
+						Radius(6).AlignItems(ui.Center).FillWidth()
+					if row.Hovered() {
+						row.Background(pal.rowHover)
+					}
+					row.Children(func() {
+						if selected {
+							ui.Icon(c, checkIcon).Size(11, 11).TextColor(pal.accent).Shrink(0)
+						} else {
+							ui.Box(c).Size(11, 11).Shrink(0)
+						}
+						ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+							ui.Text(c, host.Name).FontSize(12.5).TextColor(pal.text).SingleLine().Ellipsis("…")
+							ui.Text(c, host.Address).FontSize(11).TextColor(pal.textFaint).SingleLine().Ellipsis("…")
+						})
+					})
+					if row.Clicked() {
+						a.agent.hostMenuOpen = false
+						a.pickAgentHost(host.ID)
+					}
+				}
+			})
+		})
 	})
 }
 
@@ -542,35 +594,107 @@ func (a *App) agentModelPicker(c *ui.Context, pal *palette, snap agentSnap) {
 		}
 	})
 	if snap.busy {
+		a.closeAgentMenus()
 		return
 	}
-	b.Menu(func(m *ui.Menu) {
-		grouped := 0
-		for _, p := range a.state.AgentProviders {
-			if len(p.Models) == 0 {
-				continue
-			}
-			if grouped > 0 {
-				m.Separator()
-			}
-			m.Item(p.Name).Disabled(true)
-			for _, model := range p.Models {
-				item := model
-				if p.ID == snap.provider && model == snap.model {
-					item = "✓ " + model
-				}
-				if m.Item(item).Chosen() {
-					a.pickAgentModel(p.ID, model)
-				}
-			}
-			grouped++
+	if b.Clicked() {
+		a.agent.hostMenuOpen = false
+		a.agent.modelMenuOpen = !a.agent.modelMenuOpen
+	}
+	ui.PopoverBase(c, b, &a.agent.modelMenuOpen, func(panel ui.Element) {
+		panel.AttachTo(b, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(6, 0, 0, 0)
+		a.agentModelMenu(c, pal, panel, snap)
+	})
+}
+
+func (a *App) agentModelMenu(c *ui.Context, pal *palette, panel ui.Element, snap agentSnap) {
+	groups := make([]store.AgentProvider, 0, len(a.state.AgentProviders))
+	for _, p := range a.state.AgentProviders {
+		if len(p.Models) > 0 {
+			groups = append(groups, p)
 		}
-		if grouped == 0 {
-			m.Item(locales.AgentNoModels()).Disabled(true)
-			if m.Item(locales.AgentOpenSettings()).Chosen() {
-				a.openAgentSettings()
+	}
+	if len(groups) == 0 {
+		noModels := locales.AgentNoModels()
+		openSettings := locales.AgentOpenSettings()
+		w1, _ := c.MeasureText(0, ui.Span{Text: noModels, Size: 12, Weight: 400})
+		w2, _ := c.MeasureText(0, ui.Span{Text: openSettings, Size: 12.5, Weight: 400})
+		width := min(max(max(w1+32, w2+51), 160), 260)
+		floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
+		panel.Children(func() {
+			ui.Column(c).Padding(4, 0).FillWidth().Children(func() {
+				ui.Text(c, noModels).FontSize(12).TextColor(pal.textMuted).Padding(8, 8)
+				row := ui.Row(c.Key("agent-model-settings")).Height(30).Padding(0, 8).Gap(7).
+					Radius(6).AlignItems(ui.Center).FillWidth()
+				if row.Hovered() {
+					row.Background(pal.rowHover)
+				}
+				row.Children(func() {
+					ui.Icon(c, gearIcon).Size(12, 12).TextColor(pal.accent)
+					ui.Text(c, openSettings).FontSize(12.5).TextColor(pal.accent)
+				})
+				if row.Clicked() {
+					a.closeAgentMenus()
+					a.openAgentSettings()
+				}
+			})
+		})
+		return
+	}
+	h := 8
+	width := float32(0)
+	for i, p := range groups {
+		if i > 0 {
+			h += 9
+		}
+		h += 26 + len(p.Models)*30
+		if w, _ := c.MeasureText(0, ui.Span{Text: p.Name, Size: 11, Weight: 600}); w > width {
+			width = w
+		}
+		for _, model := range p.Models {
+			if w, _ := c.MeasureText(0, ui.Span{Text: model, Size: 12.5, Weight: 400}); w > width {
+				width = w
 			}
 		}
+	}
+	h = min(h, 320)
+	width = min(max(width+50, 160), 320)
+	floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
+	panel.Children(func() {
+		ui.Scroll(c.Key("agent-model-menu")).Height(float32(h)).FillWidth().Children(func() {
+			ui.Column(c).Padding(4, 0).FillWidth().Children(func() {
+				for gi, p := range groups {
+					if gi > 0 {
+						ui.Box(c).Height(1).Shrink(0).FillWidth().Background(pal.divider).Margin(4, 8, 4, 8)
+					}
+					ui.Row(c).Height(26).Padding(0, 8).AlignItems(ui.Center).FillWidth().Children(func() {
+						ui.Text(c, p.Name).FontSize(11).FontWeight(600).TextColor(pal.textMuted).
+							SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
+					})
+					for _, model := range p.Models {
+						selected := p.ID == snap.provider && model == snap.model
+						row := ui.Row(c.Key("agent-model-"+p.ID+"-"+model)).Height(30).Padding(0, 8).
+							Gap(7).Radius(6).AlignItems(ui.Center).FillWidth()
+						if row.Hovered() {
+							row.Background(pal.rowHover)
+						}
+						row.Children(func() {
+							if selected {
+								ui.Icon(c, checkIcon).Size(11, 11).TextColor(pal.accent).Shrink(0)
+							} else {
+								ui.Box(c).Size(11, 11).Shrink(0)
+							}
+							ui.Text(c, model).FontSize(12.5).TextColor(pal.text).SingleLine().
+								Ellipsis("…").Shrink(1).MinWidth(0)
+						})
+						if row.Clicked() {
+							a.closeAgentMenus()
+							a.pickAgentModel(p.ID, model)
+						}
+					}
+				}
+			})
+		})
 	})
 }
 

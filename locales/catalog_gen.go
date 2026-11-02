@@ -2645,3 +2645,13 @@ func AgentProviderAddModel() string { return In(i18n.Locale()).AgentProviderAddM
 func (msgs Messages) AgentProviderAddModel() string {
 	return Catalog.Format(msgs.locale, "agentProviderAddModel", nil)
 }
+
+// AgentConnectedHosts says "Connected hosts"
+// in the language the app shows.
+func AgentConnectedHosts() string { return In(i18n.Locale()).AgentConnectedHosts() }
+
+// AgentConnectedHosts says "Connected hosts"
+// in the language of msgs.
+func (msgs Messages) AgentConnectedHosts() string {
+	return Catalog.Format(msgs.locale, "agentConnectedHosts", nil)
+}

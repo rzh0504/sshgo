@@ -43,6 +43,8 @@ type agentState struct {
 	target        string // the connected host this conversation runs on
 	provider      string // the provider this conversation uses
 	model         string // the model this conversation uses
+	modelMenuOpen bool
+	hostMenuOpen  bool
 	focusComposer bool
 	composer      ui.Handle
 	draft         ui.TextBuffer
@@ -194,6 +196,11 @@ func (a *App) repaint() {
 // agentOpen reports whether the main card shows the Agent.
 func (a *App) agentOpen() bool { return a.agent != nil && a.agent.open }
 
+func (a *App) closeAgentMenus() {
+	a.agent.modelMenuOpen = false
+	a.agent.hostMenuOpen = false
+}
+
 // toggleAgent shows the Agent in the main card, or the shell again.
 func (a *App) toggleAgent() {
 	a.agent.open = !a.agent.open
@@ -201,6 +208,7 @@ func (a *App) toggleAgent() {
 		a.agent.showHistory = false
 		a.agent.focusComposer = true
 	} else {
+		a.closeAgentMenus()
 		a.focusWanted = a.selected
 		a.focusTerminal(a.selected)
 	}
@@ -218,6 +226,7 @@ func (a *App) newAgentChat() {
 	a.agent.current = ""
 	a.agent.err = ""
 	a.agent.mu.Unlock()
+	a.closeAgentMenus()
 	a.agent.target = a.agentDefaultHost()
 	a.syncAgentModel(nil)
 	a.agent.showHistory = false
@@ -260,6 +269,7 @@ func (a *App) selectAgentChat(id string) {
 		return
 	}
 	a.agent.current = id
+	a.closeAgentMenus()
 	if chat.HostID != "" {
 		a.agent.target = chat.HostID
 	} else {
@@ -296,6 +306,7 @@ func (a *App) deleteAgentChat(id string) {
 	a.agent.mu.Unlock()
 	if wasCurrent {
 		a.agent.target = a.agentDefaultHost()
+		a.closeAgentMenus()
 		a.syncAgentModel(nil)
 	}
 	if err := store.DeleteChat(id); err != nil {
@@ -361,6 +372,7 @@ func (a *App) sendAgent(text string) bool {
 		a.agent.mu.Unlock()
 		return false
 	}
+	a.closeAgentMenus()
 	if !a.agentConfigured() {
 		a.agent.err = locales.AgentNotConfigured()
 		a.agent.mu.Unlock()
