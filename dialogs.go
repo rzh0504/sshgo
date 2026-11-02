@@ -201,6 +201,7 @@ func (a *App) dialogs(c *ui.Context, pal *palette) {
 	a.confirmView(c, pal)
 	a.agentDeleteView(c, pal)
 	a.agentConnectView(c, pal)
+	a.agentAskView(c, pal)
 }
 
 func dialogHead(c *ui.Context, pal *palette, title, detail string) {

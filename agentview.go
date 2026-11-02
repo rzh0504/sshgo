@@ -292,6 +292,34 @@ func (a *App) agentCallCard(c *ui.Context, pal *palette, call *agent.ToolCall, s
 				ui.Text(c, locales.AgentFileContent()).FontSize(11.5).TextColor(pal.textMuted)
 				a.agentTextBlock(c, pal, call.ID+"-content", content, 12)
 			}
+		case "list_dir":
+			if path != "" {
+				agentCodeBlock(c, pal, path, 12.5)
+			} else if command != "" {
+				agentCodeBlock(c, pal, command, 12.5)
+			}
+		case "memory":
+			if command != "" {
+				agentCodeBlock(c, pal, command, 12.5)
+			}
+			if content != "" {
+				ui.Text(c, locales.AgentFileContent()).FontSize(11.5).TextColor(pal.textMuted)
+				a.agentTextBlock(c, pal, call.ID+"-content", content, 12)
+			}
+		case "web_fetch":
+			if command != "" {
+				agentCodeBlock(c, pal, command, 12.5)
+			}
+			if content != "" {
+				ui.Text(c, locales.AgentWebHeaders()).FontSize(11.5).TextColor(pal.textMuted)
+				a.agentTextBlock(c, pal, call.ID+"-headers", content, 12)
+			}
+		case "ask_user":
+			if content != "" {
+				a.agentTextBlock(c, pal, call.ID+"-questions", content, 12)
+			}
+		case "terminal_screen":
+			// The tool has no arguments; its result is the screen.
 		default:
 			if raw := strings.TrimSpace(call.Arguments); raw != "" {
 				agentCodeBlock(c, pal, raw, 12.5)
@@ -434,16 +462,40 @@ func agentToolCallPreview(name, raw string) (command, path, content, description
 	case "write_file":
 		args, _ := agent.ParseWriteFileArgs(raw)
 		return "", args.Path, args.Content, args.Description
+	case "list_dir":
+		args, _ := agent.ParseListDirArgs(raw)
+		return "", args.Path, "", args.Description
+	case "memory":
+		args, _ := agent.ParseMemoryArgs(raw)
+		return args.Action, "", args.Content, args.Description
+	case "web_fetch":
+		args, _ := agent.ParseWebArgs(raw)
+		return args.URL, "", agent.WebHeadersText(args.Headers), args.Description
+	case "ask_user":
+		args, _ := agent.ParseAskArgs(raw)
+		return "", "", agent.AskQuestionsText(args.Questions), ""
+	case "terminal_screen":
+		return "", "", "", ""
 	}
 	return strings.TrimSpace(raw), "", "", ""
 }
 
 func agentToolCallRisk(name, raw string) agent.Risk {
 	switch name {
-	case "read_file":
+	case "read_file", "list_dir", "terminal_screen":
 		return agent.RiskReadOnly
 	case "write_file":
 		return agent.RiskCaution
+	case "memory":
+		args, _ := agent.ParseMemoryArgs(raw)
+		if args.Action == "read" {
+			return agent.RiskReadOnly
+		}
+		return agent.RiskCaution
+	case "web_fetch":
+		return agent.RiskUnknown
+	case "ask_user":
+		return agent.RiskReadOnly
 	case "run_shell_command":
 		args, _ := agent.ParseShellArgs(raw)
 		risk := agent.Classify(args.Command)
@@ -461,6 +513,16 @@ func agentToolLabel(name string) (string, *ui.SVG) {
 		return locales.AgentToolReadFile(), folderIcon
 	case "write_file":
 		return locales.AgentToolWriteFile(), pencilIcon
+	case "list_dir":
+		return locales.AgentToolListDir(), folderIcon
+	case "terminal_screen":
+		return locales.AgentToolTerminal(), terminalIcon
+	case "memory":
+		return locales.AgentToolMemory(), bulbIcon
+	case "web_fetch":
+		return locales.AgentToolWeb(), globeIcon
+	case "ask_user":
+		return locales.AgentToolAsk(), chatIcon
 	case "run_shell_command":
 		return locales.AgentToolShell(), terminalIcon
 	default:
