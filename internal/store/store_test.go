@@ -52,9 +52,12 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		ConfirmQuit:   true,
 		AutoConnect:   true,
 
-		AgentBaseURL:     "https://api.example.com/v1",
-		AgentModel:       "test-model",
-		AgentAutoRunSafe: true,
+		AgentBaseURL:          "https://api.example.com/v1",
+		AgentModel:            "test-model",
+		AgentAutoRunSafe:      true,
+		AgentAutoRunReadTools: true,
+		AgentNoTools:          true,
+		AgentNoToolReadFile:   true,
 		AgentProviders: []AgentProvider{
 			{ID: "p1", Name: "OpenAI", BaseURL: "https://api.openai.com/v1", Models: []string{"gpt-4o", "gpt-4o-mini"}},
 		},
@@ -78,7 +81,8 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		got.CloseBehavior != want.CloseBehavior || got.HideAtLogin != want.HideAtLogin ||
 		got.ConfirmQuit != want.ConfirmQuit || got.AutoConnect != want.AutoConnect ||
 		got.AgentBaseURL != want.AgentBaseURL || got.AgentModel != want.AgentModel ||
-		got.AgentAutoRunSafe != want.AgentAutoRunSafe ||
+		got.AgentAutoRunSafe != want.AgentAutoRunSafe || got.AgentAutoRunReadTools != want.AgentAutoRunReadTools ||
+		got.AgentNoTools != want.AgentNoTools || got.AgentNoToolReadFile != want.AgentNoToolReadFile ||
 		len(got.AgentProviders) != 1 || got.AgentProviders[0].ID != "p1" ||
 		!slices.Equal(got.AgentProviders[0].Models, []string{"gpt-4o", "gpt-4o-mini"}) ||
 		got.AgentDefaultProvider != "p1" || got.AgentDefaultModel != "gpt-4o-mini" ||

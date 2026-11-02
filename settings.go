@@ -49,22 +49,27 @@ func (s *settingsState) scrollOf(id string) *ui.ScrollState {
 
 // settingsValues are the settings a change applies, comparable as a set.
 type settingsValues struct {
-	appearance, theme string
-	fontFamily        string
-	fontSize          float64
-	cursor            string
-	noBlink           bool
-	language          string
-	privacy           bool
-	noVibrancy        bool
-	closeBehavior     string
-	hideAtLogin       bool
-	confirmQuit       bool
-	autoConnect       bool
-	agentBaseURL      string
-	agentModel        string
-	agentAutoRunSafe  bool
-	agentNoStream     bool
+	appearance, theme     string
+	fontFamily            string
+	fontSize              float64
+	cursor                string
+	noBlink               bool
+	language              string
+	privacy               bool
+	noVibrancy            bool
+	closeBehavior         string
+	hideAtLogin           bool
+	confirmQuit           bool
+	autoConnect           bool
+	agentBaseURL          string
+	agentModel            string
+	agentAutoRunSafe      bool
+	agentAutoRunReadTools bool
+	agentNoStream         bool
+	agentNoTools          bool
+	agentNoToolShell      bool
+	agentNoToolReadFile   bool
+	agentNoToolWriteFile  bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -74,7 +79,10 @@ func valuesOf(s store.State) settingsValues {
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
 		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit, autoConnect: s.AutoConnect,
 		agentBaseURL: s.AgentBaseURL, agentModel: s.AgentModel, agentAutoRunSafe: s.AgentAutoRunSafe,
-		agentNoStream: s.AgentNoStream,
+		agentAutoRunReadTools: s.AgentAutoRunReadTools,
+		agentNoStream:         s.AgentNoStream, agentNoTools: s.AgentNoTools,
+		agentNoToolShell: s.AgentNoToolShell, agentNoToolReadFile: s.AgentNoToolReadFile,
+		agentNoToolWriteFile: s.AgentNoToolWriteFile,
 	}
 }
 
@@ -529,15 +537,66 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 
 func (a *App) agentPage(c *ui.Context, pal *palette) {
 	a.agentProviderSettings(c, pal)
-	settingsGroup(c, pal, locales.AgentBehaviorGroup(), locales.AgentBehaviorNote(), func() {
-		settingRow(c, pal, locales.SetAgentAutoRun(), locales.SetAgentAutoRunDetail(), func() {
-			toggle(c.Key("agent-auto-run"), &a.state.AgentAutoRunSafe, pal)
+	settingsGroup(c, pal, locales.AgentToolsGroup(), locales.AgentToolsNote(), func() {
+		settingRow(c, pal, locales.SetAgentTools(), locales.SetAgentToolsDetail(), func() {
+			on := !a.state.AgentNoTools
+			if toggle(c.Key("agent-tools"), &on, pal).Changed() {
+				a.state.AgentNoTools = !on
+			}
 		})
+	})
+	a.agentToolSettings(c, pal)
+	settingsGroup(c, pal, locales.AgentBehaviorGroup(), locales.AgentBehaviorNote(), func() {
 		settingRow(c, pal, locales.SetAgentStream(), locales.SetAgentStreamDetail(), func() {
 			stream := !a.state.AgentNoStream
 			toggle(c.Key("agent-stream"), &stream, pal)
 			a.state.AgentNoStream = !stream
 		})
+	})
+}
+
+// agentToolSettings lists the built-in tools and the actions that may run
+// without asking, each with its own switch.
+func (a *App) agentToolSettings(c *ui.Context, pal *palette) {
+	note := ""
+	switch {
+	case a.state.AgentNoTools:
+		note = locales.AgentToolsOff()
+	case a.state.AgentNoToolShell && a.state.AgentNoToolReadFile && a.state.AgentNoToolWriteFile:
+		note = locales.AgentToolsNone()
+	}
+	settingsGroup(c, pal, locales.AgentBuiltinGroup(), note, func() {
+		a.agentToolRow(c, pal, "agent-tool-shell", locales.SetAgentToolShell(), locales.SetAgentToolShellDetail(), &a.state.AgentNoToolShell)
+		a.agentToolRow(c, pal, "agent-tool-read", locales.SetAgentToolReadFile(), locales.SetAgentToolReadFileDetail(), &a.state.AgentNoToolReadFile)
+		a.agentToolRow(c, pal, "agent-tool-write", locales.SetAgentToolWriteFile(), locales.SetAgentToolWriteFileDetail(), &a.state.AgentNoToolWriteFile)
+	})
+	settingsGroup(c, pal, locales.AgentNoAskGroup(), locales.AgentNoAskNote(), func() {
+		a.agentAutoRow(c, pal, "agent-auto-read-tools", locales.SetAgentAutoReadTools(), locales.SetAgentAutoReadToolsDetail(),
+			&a.state.AgentAutoRunReadTools, !a.agentToolEnabled("read_file"))
+		a.agentAutoRow(c, pal, "agent-auto-shell", locales.SetAgentAutoRun(), locales.SetAgentAutoRunDetail(),
+			&a.state.AgentAutoRunSafe, !a.agentToolEnabled("run_shell_command"))
+	})
+}
+
+func (a *App) agentToolRow(c *ui.Context, pal *palette, key, label, detail string, off *bool) {
+	settingRow(c, pal, label, detail, func() {
+		on := !*off
+		sw := toggle(c.Key(key), &on, pal)
+		if a.state.AgentNoTools {
+			sw.Disabled(true)
+		}
+		if sw.Changed() {
+			*off = !on
+		}
+	})
+}
+
+func (a *App) agentAutoRow(c *ui.Context, pal *palette, key, label, detail string, on *bool, disabled bool) {
+	settingRow(c, pal, label, detail, func() {
+		sw := toggle(c.Key(key), on, pal)
+		if disabled {
+			sw.Disabled(true)
+		}
 	})
 }
 
