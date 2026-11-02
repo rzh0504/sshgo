@@ -325,14 +325,7 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 				})
 			}
 			if agentOpen {
-				ui.Icon(c, agentIcon).Size(15, 15).TextColor(pal.accent).Shrink(0)
-				ui.Text(c, locales.AgentTitle()).FontSize(14).FontWeight(600).TextColor(pal.text).
-					SingleLine().Margin(0, 0, 0, 8)
-				if title := a.agentCurrentTitle(); title != "" {
-					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
-						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)
-				}
-				ui.Row(c).Gap(2).Shrink(0).Margin(0, 0, 0, 10).Children(func() {
+				ui.Row(c).Gap(2).Shrink(0).Margin(0).Children(func() {
 					iconButton(c, "agent-history", clockIcon, locales.AgentChats(), pal, func() {
 						a.agent.showHistory = !a.agent.showHistory
 						a.repaint()
@@ -340,14 +333,13 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 					iconButton(c, "agent-new-chat", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
 					iconButton(c, "agent-close", closeIcon, locales.AgentClose(), pal, a.toggleAgent)
 				})
+				if title := a.agentCurrentTitle(); title != "" {
+					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
+						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)
+				}
 			} else if hasHost && !dashboard {
-				a.hostGlyph(c, pal, h, 16)
 				ui.Text(c, h.Name).FontSize(14).FontWeight(600).TextColor(pal.text).SingleLine().Ellipsis("…").
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
-			} else {
-				ui.Icon(c, serverIcon).Size(15, 15).TextColor(pal.textMuted).Shrink(0)
-				ui.Text(c, locales.DashboardTitle()).FontSize(14).FontWeight(600).TextColor(pal.text).
-					SingleLine().Margin(0, 0, 0, 8)
 			}
 			ui.Spacer(c)
 			if !agentOpen {
