@@ -250,7 +250,7 @@
   "setAgentToolListDir": "列出目录",
   "setAgentToolListDirDetail": "通过 SFTP 读取目录项，每次最多 500 条。",
   "setAgentToolTerminal": "读取终端",
-  "setAgentToolTerminalDetail": "读取该主机当前终端的屏幕与回滚内容。",
+  "setAgentToolTerminalDetail": "读取该主机当前终端的屏幕与回滚内容（需保持连接）。",
   "setAgentToolMemory": "记忆",
   "setAgentToolMemoryDetail": "读写可供后续会话使用的本地笔记；写入始终需要你批准。",
   "setAgentToolWeb": "网页读取",

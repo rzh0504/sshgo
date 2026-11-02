@@ -2542,11 +2542,11 @@ func (msgs Messages) SetAgentToolTerminal() string {
 	return Catalog.Format(msgs.locale, "setAgentToolTerminal", nil)
 }
 
-// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback."
+// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback, while it is connected."
 // in the language the app shows.
 func SetAgentToolTerminalDetail() string { return In(i18n.Locale()).SetAgentToolTerminalDetail() }
 
-// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback."
+// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback, while it is connected."
 // in the language of msgs.
 func (msgs Messages) SetAgentToolTerminalDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentToolTerminalDetail", nil)

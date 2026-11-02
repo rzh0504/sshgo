@@ -250,7 +250,7 @@
   "setAgentToolListDir": "List directories",
   "setAgentToolListDirDetail": "Read directory entries over SFTP, up to 500 at a time.",
   "setAgentToolTerminal": "Read the terminal",
-  "setAgentToolTerminalDetail": "Read the current terminal of the host, screen and scrollback.",
+  "setAgentToolTerminalDetail": "Read the current terminal of the host, screen and scrollback, while it is connected.",
   "setAgentToolMemory": "Memory",
   "setAgentToolMemoryDetail": "Read and write notes that later conversations can use; writes always wait for your approval.",
   "setAgentToolWeb": "Web fetch",

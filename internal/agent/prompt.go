@@ -61,7 +61,7 @@ You have these tools:
 			b.WriteString("- list_dir lists the entries of a directory at an absolute path. At most 500 entries are returned.\n")
 		}
 		if has("terminal_screen") {
-			b.WriteString("- terminal_screen reads the end of the terminal for this host, screen and scrollback, if it is open.\n")
+			b.WriteString("- terminal_screen reads the end of the terminal for this host, screen and scrollback, while the host is connected.\n")
 		}
 		if has("memory") {
 			b.WriteString("- memory reads, replaces or appends to notes kept on this device for later conversations.\n")

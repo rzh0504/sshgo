@@ -906,8 +906,8 @@ func (a *App) readAgentTerminal(ctx context.Context, hostID string, max int) (st
 	ch := make(chan picked, 1)
 	a.win.Update(func() {
 		rt := a.runtimes[hostID]
-		if rt == nil || rt.term == nil {
-			ch <- picked{err: errors.New("the terminal for this host is not open")}
+		if rt == nil || rt.term == nil || rt.state != connConnected || rt.ssh == nil {
+			ch <- picked{err: errors.New("the terminal for this host is not connected")}
 			return
 		}
 		ch <- picked{text: rt.term.Text()}
