@@ -6,11 +6,11 @@ import (
 )
 
 func TestParseShellArgsLenient(t *testing.T) {
-	args, err := ParseShellArgs(`{"host":"web-1","command":" ls ","explanation":"list files","safe_to_run":"true","destructive":1}`)
+	args, err := ParseShellArgs(`{"command":" ls ","explanation":"list files","safe_to_run":"true","destructive":1}`)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if args.HostID != "web-1" || args.Command != "ls" || args.Description != "list files" {
+	if args.Command != "ls" || args.Description != "list files" {
 		t.Fatalf("args = %+v", args)
 	}
 	if !args.SafeToRun || !args.Destructive {
@@ -21,23 +21,12 @@ func TestParseShellArgsLenient(t *testing.T) {
 	}
 }
 
-func TestSystemPromptListsHosts(t *testing.T) {
-	prompt := SystemPrompt([]Host{
-		{ID: "h1", Name: "web", Address: "me@web:22", OS: "linux"},
-		{ID: "h2", Name: "db", Address: "me@db:22"},
-	}, "h2")
-	if !strings.Contains(prompt, `"id":"h1"`) || !strings.Contains(prompt, `"id":"h2"`) {
-		t.Fatalf("prompt does not list the hosts: %s", prompt)
-	}
-	if !strings.Contains(prompt, `"current":true`) {
-		t.Fatal("prompt does not mark the current host")
-	}
-	if !strings.Contains(prompt, "connected hosts") {
-		t.Fatal("prompt does not say which hosts it can reach")
-	}
-	empty := SystemPrompt(nil, "")
-	if !strings.Contains(empty, "- None.") {
-		t.Fatalf("empty prompt = %s", empty)
+func TestSystemPromptNamesTheHost(t *testing.T) {
+	prompt := SystemPrompt(Host{ID: "h1", Name: "web", Address: "me@web:22", OS: "linux"})
+	for _, want := range []string{`"id":"h1"`, `"name":"web"`, `"address":"me@web:22"`, "about this host", "another host"} {
+		if !strings.Contains(prompt, want) {
+			t.Fatalf("prompt does not contain %q: %s", want, prompt)
+		}
 	}
 }
 

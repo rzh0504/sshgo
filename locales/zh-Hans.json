@@ -232,7 +232,14 @@
   "setAgentKeyDetail": "保存在系统凭据库。",
   "setAgentKeyPlaceholder": "sk-…",
   "agentBehaviorGroup": "行为",
-  "agentBehaviorNote": "Agent 只能访问 sshgo 中已连接的主机，不能自行建立连接或询问密码。会话保存在 sshgo 的数据目录中。",
+  "agentBehaviorNote": "每个会话只针对一台主机。Agent 只能访问 sshgo 中已连接的主机，不能自行建立连接或询问密码。会话保存在 sshgo 的数据目录中。",
   "setAgentAutoRun": "只读命令免确认",
-  "setAgentAutoRunDetail": "每条消息最多自动执行三条明确只读的命令，且需模型与 sshgo 自身的判断一致。其余命令都要你批准。"
+  "setAgentAutoRunDetail": "每条消息最多自动执行三条明确只读的命令，且需模型与 sshgo 自身的判断一致。其余命令都要你批准。",
+  "agentSelectHost": "选择主机",
+  "agentTargetHost": "目标主机",
+  "agentHostOffline": "未连接",
+  "agentNoConnectedHosts": "没有已连接的主机",
+  "agentPickHost": "请先选择一个已连接的主机。",
+  "agentAttach": "添加附件",
+  "agentAttachSoon": "附件功能即将支持。"
 }

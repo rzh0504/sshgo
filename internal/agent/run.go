@@ -27,11 +27,11 @@ type Hooks struct {
 
 // Engine runs one conversation with the model.
 type Engine struct {
-	Client      *llm.Client
-	Hosts       []Host
-	DefaultHost string
-	Policy      Policy
-	Hooks       Hooks
+	Client *llm.Client
+	// Host is the one machine this conversation is about.
+	Host   Host
+	Policy Policy
+	Hooks  Hooks
 	// MaxRounds bounds how many tool rounds one prompt may take.
 	MaxRounds int
 }
@@ -45,7 +45,7 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 	}
 	msgs := Sanitize(messages)
 	e.emit(msgs)
-	system := SystemPrompt(e.Hosts, e.DefaultHost)
+	system := SystemPrompt(e.Host)
 	used := 0
 	rounds := e.MaxRounds
 	if rounds <= 0 {
@@ -112,21 +112,11 @@ func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall, u
 	if err != nil {
 		return e.finishCall(msgs, call, ToolResult{Error: "The arguments are not valid JSON: " + err.Error()}), nil
 	}
-	hostID := args.HostID
-	if hostID == "" {
-		hostID = e.DefaultHost
+	host := e.Host
+	if host.ID == "" {
+		return e.finishCall(msgs, call, ToolResult{Error: "This conversation has no host. Ask the user to choose a connected host in the composer."}), nil
 	}
-	host, ok := e.host(hostID)
-	if !ok {
-		hint := "Ask the user to connect it in sshgo."
-		if hostID == "" {
-			hint = "No host was given, and none is current. The user must connect and select a host in sshgo."
-		}
-		return e.finishCall(msgs, call, ToolResult{
-			HostID: hostID,
-			Error:  fmt.Sprintf("Host %q is not connected. %s", hostID, hint),
-		}), nil
-	}
+	call.HostID = host.ID
 	risk := Classify(args.Command)
 	if args.Destructive {
 		risk = RiskDestructive
@@ -226,15 +216,6 @@ func (e *Engine) emit(msgs []*Message) {
 	if e.Hooks.Messages != nil {
 		e.Hooks.Messages(CloneMessages(msgs))
 	}
-}
-
-func (e *Engine) host(id string) (Host, bool) {
-	for _, h := range e.Hosts {
-		if h.ID == id {
-			return h, true
-		}
-	}
-	return Host{}, false
 }
 
 // apiMessages is a conversation in the shape the API takes.

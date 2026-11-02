@@ -350,7 +350,7 @@ func TestChatStoreRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	chat := &agent.Chat{
-		ID: "c1", Title: "check disk", CreatedAt: 100, UpdatedAt: 200,
+		ID: "c1", Title: "check disk", HostID: "h1", CreatedAt: 100, UpdatedAt: 200,
 		Messages: []*agent.Message{
 			{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100},
 			{ID: "m2", Role: "assistant", Content: "Checking.", CreatedAt: 200, ToolCalls: []*agent.ToolCall{
@@ -364,7 +364,7 @@ func TestChatStoreRoundTrip(t *testing.T) {
 	}
 	want := ChatIndex{
 		Current: "c1",
-		Chats:   []ChatMeta{{ID: "c1", Title: "check disk", CreatedAt: 100, UpdatedAt: 200}},
+		Chats:   []ChatMeta{{ID: "c1", Title: "check disk", HostID: "h1", CreatedAt: 100, UpdatedAt: 200}},
 	}
 	if err := want.saveTo(indexPath); err != nil {
 		t.Fatal(err)
@@ -374,14 +374,14 @@ func TestChatStoreRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotIdx.Current != "c1" || len(gotIdx.Chats) != 1 || gotIdx.Chats[0].UpdatedAt != 200 {
+	if gotIdx.Current != "c1" || len(gotIdx.Chats) != 1 || gotIdx.Chats[0].UpdatedAt != 200 || gotIdx.Chats[0].HostID != "h1" {
 		t.Fatalf("index = %+v", gotIdx)
 	}
 	got, err := loadChatFrom(chatPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != "c1" || got.Title != "check disk" || len(got.Messages) != 2 {
+	if got.ID != "c1" || got.Title != "check disk" || got.HostID != "h1" || len(got.Messages) != 2 {
 		t.Fatalf("chat = %+v", got)
 	}
 	call := got.Messages[1].ToolCalls[0]

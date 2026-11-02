@@ -21,7 +21,7 @@ type recordedRequest struct {
 	Stream   bool          `json:"stream"`
 }
 
-const diskCallArguments = `{"host_id":"h1","command":"df -h","description":"disk usage","safe_to_run":true,"destructive":false}`
+const diskCallArguments = `{"command":"df -h","description":"disk usage","safe_to_run":true,"destructive":false}`
 
 // scripted replies to the first request with a tool call, and to a request
 // carrying a tool result with a final answer.
@@ -54,12 +54,9 @@ func scriptedAgentServer(t *testing.T, requests *[]recordedRequest) *httptest.Se
 func testEngine(url string, policy Policy, hooks Hooks) *Engine {
 	return &Engine{
 		Client: &llm.Client{BaseURL: url, Model: "test"},
-		Hosts: []Host{
-			{ID: "h1", Name: "web", Address: "me@web:22", OS: "linux"},
-		},
-		DefaultHost: "h1",
-		Policy:      policy,
-		Hooks:       hooks,
+		Host:   Host{ID: "h1", Name: "web", Address: "me@web:22", OS: "linux"},
+		Policy: policy,
+		Hooks:  hooks,
 	}
 }
 
@@ -120,7 +117,7 @@ func TestRunRunsSafeReadOnlyAutomatically(t *testing.T) {
 		t.Fatalf("roles = %s %s %s %s", snapshot[0].Role, snapshot[1].Role, snapshot[2].Role, snapshot[3].Role)
 	}
 	call := snapshot[1].ToolCalls[0]
-	if call.Status != CallDone || call.Result == nil || call.Result.ExitCode != 0 {
+	if call.Status != CallDone || call.HostID != "h1" || call.Result == nil || call.Result.ExitCode != 0 {
 		t.Fatalf("call = %+v", call)
 	}
 	if snapshot[3].Content != "All good." {
@@ -171,45 +168,6 @@ func TestRunHonorsDenial(t *testing.T) {
 	}
 	if len(requests) != 2 {
 		t.Fatalf("requests = %d, want 2", len(requests))
-	}
-}
-
-func TestRunReportsAnUnconnectedHost(t *testing.T) {
-	var requests []recordedRequest
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var body recordedRequest
-		json.NewDecoder(r.Body).Decode(&body)
-		requests = append(requests, body)
-		w.Header().Set("Content-Type", "text/event-stream")
-		answered := false
-		for _, m := range body.Messages {
-			if m.Role == "tool" {
-				answered = true
-			}
-		}
-		if !answered {
-			args := `{"host_id":"gone","command":"ls","description":"list","safe_to_run":true,"destructive":false}`
-			fmt.Fprintf(w, "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_9\",\"type\":\"function\",\"function\":{\"name\":\"run_shell_command\",\"arguments\":%q}}]},\"finish_reason\":\"tool_calls\"}]}\n\n", args)
-		} else {
-			io.WriteString(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Connect it first.\"}}]}\n\n")
-		}
-		io.WriteString(w, "data: [DONE]\n\n")
-	}))
-	defer srv.Close()
-
-	var snapshot []*Message
-	engine := testEngine(srv.URL, Policy{AutoRunSafe: true}, Hooks{
-		Messages: func(msgs []*Message) { snapshot = msgs },
-		Exec: func(context.Context, string, string) (ToolResult, error) {
-			t.Error("ran on a host that is not connected")
-			return ToolResult{}, nil
-		},
-	})
-	if err := engine.Run(context.Background(), userMessage("list")); err != nil {
-		t.Fatal(err)
-	}
-	if len(snapshot) != 4 || !strings.Contains(snapshot[2].Content, "not connected") {
-		t.Fatalf("conversation = %+v", snapshot)
 	}
 }
 

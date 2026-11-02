@@ -41,6 +41,7 @@ type agentState struct {
 
 	open          bool // the Agent is what the main card shows
 	showHistory   bool
+	target        string // the connected host this conversation runs on
 	focusComposer bool
 	composer      ui.Handle
 	draft         ui.TextBuffer
@@ -76,7 +77,8 @@ func (a *App) loadAgent() {
 	a.agent.chats = make([]*agent.Chat, 0, len(idx.Chats))
 	for _, meta := range idx.Chats {
 		a.agent.chats = append(a.agent.chats, &agent.Chat{
-			ID: meta.ID, Title: meta.Title, CreatedAt: meta.CreatedAt, UpdatedAt: meta.UpdatedAt,
+			ID: meta.ID, Title: meta.Title, HostID: meta.HostID,
+			CreatedAt: meta.CreatedAt, UpdatedAt: meta.UpdatedAt,
 		})
 	}
 	a.agent.current = idx.Current
@@ -85,6 +87,7 @@ func (a *App) loadAgent() {
 	}
 	current := a.agent.current
 	a.agent.mu.Unlock()
+	a.agent.target = a.agentDefaultHost()
 	if current == "" {
 		return
 	}
@@ -94,7 +97,13 @@ func (a *App) loadAgent() {
 		a.agent.current = ""
 		a.agent.mu.Unlock()
 		a.saveAgentIndex()
+		return
 	}
+	a.agent.mu.Lock()
+	if chat := a.agent.chatLocked(current); chat != nil && chat.HostID != "" {
+		a.agent.target = chat.HostID
+	}
+	a.agent.mu.Unlock()
 }
 
 // loadAgentChat reads one conversation's messages.
@@ -111,6 +120,7 @@ func (a *App) loadAgentChat(id string) error {
 	if chat := a.agent.chatLocked(id); chat != nil {
 		chat.Messages = loaded.Messages
 		chat.Title = loaded.Title
+		chat.HostID = loaded.HostID
 		chat.CreatedAt = loaded.CreatedAt
 		chat.UpdatedAt = loaded.UpdatedAt
 	}
@@ -122,7 +132,7 @@ func (s *agentState) indexLocked() store.ChatIndex {
 	idx := store.ChatIndex{Current: s.current}
 	for _, c := range s.chats {
 		idx.Chats = append(idx.Chats, store.ChatMeta{
-			ID: c.ID, Title: c.Title, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt,
+			ID: c.ID, Title: c.Title, HostID: c.HostID, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt,
 		})
 	}
 	return idx
@@ -205,6 +215,7 @@ func (a *App) newAgentChat() {
 	a.agent.current = ""
 	a.agent.err = ""
 	a.agent.mu.Unlock()
+	a.agent.target = a.agentDefaultHost()
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
@@ -235,11 +246,21 @@ func (a *App) selectAgentChat(id string) {
 		}
 	}
 	a.agent.mu.Lock()
-	if a.agent.busy || a.agent.chatLocked(id) == nil {
+	if a.agent.busy {
+		a.agent.mu.Unlock()
+		return
+	}
+	chat = a.agent.chatLocked(id)
+	if chat == nil {
 		a.agent.mu.Unlock()
 		return
 	}
 	a.agent.current = id
+	if chat.HostID != "" {
+		a.agent.target = chat.HostID
+	} else {
+		a.agent.target = a.agentDefaultHost()
+	}
 	a.agent.err = ""
 	a.agent.mu.Unlock()
 	a.agent.showHistory = false
@@ -262,11 +283,15 @@ func (a *App) deleteAgentChat(id string) {
 		}
 	}
 	a.agent.chats = out
-	if a.agent.current == id {
+	wasCurrent := a.agent.current == id
+	if wasCurrent {
 		a.agent.current = ""
 	}
 	a.agent.err = ""
 	a.agent.mu.Unlock()
+	if wasCurrent {
+		a.agent.target = a.agentDefaultHost()
+	}
 	if err := store.DeleteChat(id); err != nil {
 		a.agentSaveFailed(err)
 	}
@@ -295,6 +320,29 @@ func (a *App) openAgentDelete(id string) {
 	a.repaint()
 }
 
+// pickAgentHost points this conversation at another connected host.
+func (a *App) pickAgentHost(id string) {
+	if !a.agentHostConnected(id) {
+		return
+	}
+	a.agent.mu.Lock()
+	if a.agent.busy {
+		a.agent.mu.Unlock()
+		return
+	}
+	a.agent.target = id
+	chat := a.agent.chatLocked(a.agent.current)
+	if chat != nil {
+		chat.HostID = id
+		chat.UpdatedAt = time.Now().UnixMilli()
+	}
+	a.agent.mu.Unlock()
+	if chat != nil {
+		a.saveAgentChat(chat.ID)
+	}
+	a.repaint()
+}
+
 // sendAgent sends text to the Agent, starting a conversation when there
 // is none. It reports whether the turn started.
 func (a *App) sendAgent(text string) bool {
@@ -313,12 +361,20 @@ func (a *App) sendAgent(text string) bool {
 		a.repaint()
 		return false
 	}
+	host, ok := a.agentTargetHost()
+	if !ok {
+		a.agent.err = locales.AgentPickHost()
+		a.agent.mu.Unlock()
+		a.repaint()
+		return false
+	}
 	chat := a.agent.chatLocked(a.agent.current)
 	if chat == nil {
 		chat = &agent.Chat{ID: agent.NewID("chat"), CreatedAt: time.Now().UnixMilli()}
 		a.agent.chats = append(a.agent.chats, chat)
 		a.agent.current = chat.ID
 	}
+	chat.HostID = host.ID
 	now := time.Now().UnixMilli()
 	chat.Messages = append(chat.Messages, &agent.Message{
 		ID:        agent.NewID("msg"),
@@ -350,9 +406,8 @@ func (a *App) sendAgent(text string) bool {
 			APIKey:  a.savedSecret(agentSecretKey),
 			Model:   a.state.AgentModel,
 		},
-		Hosts:       a.agentHosts(),
-		DefaultHost: a.agentDefaultHost(),
-		Policy:      agent.Policy{AutoRunSafe: a.state.AgentAutoRunSafe},
+		Host:   host,
+		Policy: agent.Policy{AutoRunSafe: a.state.AgentAutoRunSafe},
 		Hooks: agent.Hooks{
 			Messages: func(messages []*agent.Message) {
 				a.applyAgentMessages(chatID, messages)
@@ -560,6 +615,31 @@ func (a *App) agentDefaultHost() string {
 		return hosts[0].ID
 	}
 	return ""
+}
+
+// agentHostByID is a host the app knows, connected or not.
+func (a *App) agentHostByID(id string) (agent.Host, bool) {
+	h, ok := a.state.Host(id)
+	if !ok {
+		return agent.Host{}, false
+	}
+	return agent.Host{ID: h.ID, Name: h.Name, Address: h.Address(), OS: h.OS}, true
+}
+
+func (a *App) agentHostConnected(id string) bool {
+	if id == "" {
+		return false
+	}
+	rt := a.runtimes[id]
+	return rt != nil && rt.state == connConnected && rt.ssh != nil
+}
+
+// agentTargetHost is the host this conversation runs on, when connected.
+func (a *App) agentTargetHost() (agent.Host, bool) {
+	if !a.agentHostConnected(a.agent.target) {
+		return agent.Host{}, false
+	}
+	return a.agentHostByID(a.agent.target)
 }
 
 func (a *App) agentConfigured() bool {

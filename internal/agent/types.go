@@ -24,6 +24,7 @@ const (
 type Chat struct {
 	ID        string     `json:"id"`
 	Title     string     `json:"title"`
+	HostID    string     `json:"hostId,omitempty"`
 	CreatedAt int64      `json:"createdAt"`
 	UpdatedAt int64      `json:"updatedAt"`
 	Messages  []*Message `json:"messages"`
@@ -44,6 +45,7 @@ type ToolCall struct {
 	ID        string      `json:"id"`
 	Name      string      `json:"name"`
 	Arguments string      `json:"arguments"`
+	HostID    string      `json:"hostId,omitempty"`
 	Status    CallStatus  `json:"status,omitempty"`
 	Result    *ToolResult `json:"result,omitempty"`
 }

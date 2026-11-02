@@ -2362,11 +2362,11 @@ func (msgs Messages) AgentBehaviorGroup() string {
 	return Catalog.Format(msgs.locale, "agentBehaviorGroup", nil)
 }
 
-// AgentBehaviorNote says "The Agent only reaches hosts connected in sshgo. It cannot open a connection or ask for a password. Conversations are…"
+// AgentBehaviorNote says "Each conversation works on one host. The Agent only reaches hosts connected in sshgo; it cannot open a connection or …"
 // in the language the app shows.
 func AgentBehaviorNote() string { return In(i18n.Locale()).AgentBehaviorNote() }
 
-// AgentBehaviorNote says "The Agent only reaches hosts connected in sshgo. It cannot open a connection or ask for a password. Conversations are…"
+// AgentBehaviorNote says "Each conversation works on one host. The Agent only reaches hosts connected in sshgo; it cannot open a connection or …"
 // in the language of msgs.
 func (msgs Messages) AgentBehaviorNote() string {
 	return Catalog.Format(msgs.locale, "agentBehaviorNote", nil)
@@ -2390,4 +2390,74 @@ func SetAgentAutoRunDetail() string { return In(i18n.Locale()).SetAgentAutoRunDe
 // in the language of msgs.
 func (msgs Messages) SetAgentAutoRunDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentAutoRunDetail", nil)
+}
+
+// AgentSelectHost says "Select host"
+// in the language the app shows.
+func AgentSelectHost() string { return In(i18n.Locale()).AgentSelectHost() }
+
+// AgentSelectHost says "Select host"
+// in the language of msgs.
+func (msgs Messages) AgentSelectHost() string {
+	return Catalog.Format(msgs.locale, "agentSelectHost", nil)
+}
+
+// AgentTargetHost says "Target host"
+// in the language the app shows.
+func AgentTargetHost() string { return In(i18n.Locale()).AgentTargetHost() }
+
+// AgentTargetHost says "Target host"
+// in the language of msgs.
+func (msgs Messages) AgentTargetHost() string {
+	return Catalog.Format(msgs.locale, "agentTargetHost", nil)
+}
+
+// AgentHostOffline says "not connected"
+// in the language the app shows.
+func AgentHostOffline() string { return In(i18n.Locale()).AgentHostOffline() }
+
+// AgentHostOffline says "not connected"
+// in the language of msgs.
+func (msgs Messages) AgentHostOffline() string {
+	return Catalog.Format(msgs.locale, "agentHostOffline", nil)
+}
+
+// AgentNoConnectedHosts says "No connected hosts"
+// in the language the app shows.
+func AgentNoConnectedHosts() string { return In(i18n.Locale()).AgentNoConnectedHosts() }
+
+// AgentNoConnectedHosts says "No connected hosts"
+// in the language of msgs.
+func (msgs Messages) AgentNoConnectedHosts() string {
+	return Catalog.Format(msgs.locale, "agentNoConnectedHosts", nil)
+}
+
+// AgentPickHost says "Choose a connected host first."
+// in the language the app shows.
+func AgentPickHost() string { return In(i18n.Locale()).AgentPickHost() }
+
+// AgentPickHost says "Choose a connected host first."
+// in the language of msgs.
+func (msgs Messages) AgentPickHost() string {
+	return Catalog.Format(msgs.locale, "agentPickHost", nil)
+}
+
+// AgentAttach says "Add attachment"
+// in the language the app shows.
+func AgentAttach() string { return In(i18n.Locale()).AgentAttach() }
+
+// AgentAttach says "Add attachment"
+// in the language of msgs.
+func (msgs Messages) AgentAttach() string {
+	return Catalog.Format(msgs.locale, "agentAttach", nil)
+}
+
+// AgentAttachSoon says "Attachments are coming soon."
+// in the language the app shows.
+func AgentAttachSoon() string { return In(i18n.Locale()).AgentAttachSoon() }
+
+// AgentAttachSoon says "Attachments are coming soon."
+// in the language of msgs.
+func (msgs Messages) AgentAttachSoon() string {
+	return Catalog.Format(msgs.locale, "agentAttachSoon", nil)
 }

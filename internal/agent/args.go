@@ -15,7 +15,6 @@ const MaxAutoRuns = 3
 
 // ShellArgs is what run_shell_command was called with.
 type ShellArgs struct {
-	HostID      string
 	Command     string
 	Description string
 	SafeToRun   bool
@@ -30,7 +29,6 @@ func ParseShellArgs(raw string) (ShellArgs, error) {
 		return ShellArgs{}, err
 	}
 	args := ShellArgs{
-		HostID:      stringArg(m, "host_id", "host", "server_id"),
 		Command:     stringArg(m, "command"),
 		Description: stringArg(m, "description", "explanation"),
 		SafeToRun:   boolArg(m, "safe_to_run", "safeToRun"),
@@ -70,23 +68,19 @@ func boolArg(m map[string]any, names ...string) bool {
 	return false
 }
 
-// ShellTool is the one tool this Agent has: a shell command on a
-// connected host.
+// ShellTool is the one tool this Agent has: a shell command on the host
+// the conversation is about.
 func ShellTool() llm.Tool {
 	return llm.Tool{
 		Type: "function",
 		Function: llm.ToolFunction{
 			Name:        "run_shell_command",
-			Description: "Run one non-interactive shell command on a connected SSH host. The user reviews it before it runs and sees its output.",
+			Description: "Run one non-interactive shell command on the host this conversation is about. The user reviews it before it runs and sees its output.",
 			Parameters: map[string]any{
 				"type":                 "object",
 				"additionalProperties": false,
-				"required":             []string{"host_id", "command", "description", "safe_to_run", "destructive"},
+				"required":             []string{"command", "description", "safe_to_run", "destructive"},
 				"properties": map[string]any{
-					"host_id": map[string]any{
-						"type":        "string",
-						"description": "The id of a connected host, exactly as the host list gives it.",
-					},
 					"command": map[string]any{
 						"type":        "string",
 						"description": "A complete, non-interactive shell command.",

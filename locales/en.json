@@ -232,7 +232,14 @@
   "setAgentKeyDetail": "Stored in the system credential store.",
   "setAgentKeyPlaceholder": "sk-…",
   "agentBehaviorGroup": "Behavior",
-  "agentBehaviorNote": "The Agent only reaches hosts connected in sshgo. It cannot open a connection or ask for a password. Conversations are saved in sshgo's data folder.",
+  "agentBehaviorNote": "Each conversation works on one host. The Agent only reaches hosts connected in sshgo; it cannot open a connection or ask for a password. Conversations are saved in sshgo's data folder.",
   "setAgentAutoRun": "Run read-only commands without asking",
-  "setAgentAutoRunDetail": "Up to three clearly read-only commands per message, when both the model and sshgo's own check agree. Everything else waits for you."
+  "setAgentAutoRunDetail": "Up to three clearly read-only commands per message, when both the model and sshgo's own check agree. Everything else waits for you.",
+  "agentSelectHost": "Select host",
+  "agentTargetHost": "Target host",
+  "agentHostOffline": "not connected",
+  "agentNoConnectedHosts": "No connected hosts",
+  "agentPickHost": "Choose a connected host first.",
+  "agentAttach": "Add attachment",
+  "agentAttachSoon": "Attachments are coming soon."
 }

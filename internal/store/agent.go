@@ -20,6 +20,7 @@ const (
 type ChatMeta struct {
 	ID        string `json:"id"`
 	Title     string `json:"title,omitempty"`
+	HostID    string `json:"hostId,omitempty"`
 	CreatedAt int64  `json:"createdAt,omitempty"`
 	UpdatedAt int64  `json:"updatedAt,omitempty"`
 }

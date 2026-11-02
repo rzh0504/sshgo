@@ -20,6 +20,7 @@ import (
 type agentSnap struct {
 	chats       []*agent.Chat
 	current     string
+	target      string
 	messages    []*agent.Message
 	busy        bool
 	err         string
@@ -33,6 +34,7 @@ func (a *App) agentSnapshot() agentSnap {
 	defer a.agent.mu.Unlock()
 	snap := agentSnap{
 		current:     a.agent.current,
+		target:      a.agent.target,
 		busy:        a.agent.busy,
 		err:         a.agent.err,
 		streamingID: a.agent.streamingID,
@@ -149,7 +151,11 @@ func (a *App) agentHistoryRow(c *ui.Context, pal *palette, chat *agent.Chat, sna
 	if title == "" {
 		title = locales.AgentUntitledChat()
 	}
-	row := ui.Row(c.Key("agent-chat-"+chat.ID)).Height(32).Padding(0, 8, 0, 8).Gap(8).
+	hostName := ""
+	if chat.HostID != "" {
+		hostName = a.agentHostName(chat.HostID)
+	}
+	row := ui.Row(c.Key("agent-chat-"+chat.ID)).Height(40).Padding(6, 8, 6, 8).Gap(8).
 		AlignItems(ui.Center).Radius(7)
 	if pal.dark {
 		row.Border(1, ui.Transparent)
@@ -174,8 +180,13 @@ func (a *App) agentHistoryRow(c *ui.Context, pal *palette, chat *agent.Chat, sna
 	})
 	row.Children(func() {
 		ui.Icon(c, chatIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
-		ui.Text(c, title).FontSize(13).TextColor(fg).SingleLine().Ellipsis("…").
-			Shrink(1).MinWidth(0).Tooltip(title)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			ui.Text(c, title).FontSize(13).TextColor(fg).SingleLine().Ellipsis("…").
+				Shrink(1).MinWidth(0).Tooltip(title)
+			if hostName != "" {
+				ui.Text(c, hostName).FontSize(11).TextColor(pal.textFaint).SingleLine().Ellipsis("…")
+			}
+		})
 	})
 }
 
@@ -212,7 +223,14 @@ func (a *App) agentCallCard(c *ui.Context, pal *palette, call *agent.ToolCall, s
 	if args.Destructive {
 		risk = agent.RiskDestructive
 	}
-	hostName := a.agentHostName(args.HostID)
+	hostID := call.HostID
+	if hostID == "" && call.Result != nil {
+		hostID = call.Result.HostID
+	}
+	if hostID == "" {
+		hostID = snap.target
+	}
+	hostName := a.agentHostName(hostID)
 	badge, badgeColor := agentRiskBadge(pal, risk)
 
 	card := ui.Column(c).Radius(10).Padding(10, 12).Gap(7).Background(pal.chip)
@@ -339,13 +357,13 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 				ui.Text(c, label).FontSize(12).TextColor(pal.textMuted)
 			})
 		}
-		box := ui.Row(c).FillWidth().Shrink(0).MinWidth(0).Radius(10).Clip()
+		box := ui.Column(c).FillWidth().Shrink(0).MinWidth(0).Radius(10).Clip()
 		var in ui.Element
 		box.Children(func() {
 			in = ui.TextAreaBufferBase(c.Key("agent-input"), &a.agent.draft).Lines(3, 8).
-				Padding(8, 46, 8, 10).FontSize(13.5).TextColor(pal.text).Background(ui.Transparent).
+				Padding(8, 10, 4, 10).FontSize(13.5).TextColor(pal.text).Background(ui.Transparent).
 				Placeholder(locales.AgentPlaceholder()).Label(locales.AgentPlaceholder()).
-				Grow(1).MinWidth(0).Bind(&a.agent.composer)
+				FillWidth().Bind(&a.agent.composer)
 			in.OnTextKey(func(k ui.TextKey) bool {
 				if k.Key != ui.KeyEnter || k.Mods != 0 {
 					return false
@@ -355,42 +373,11 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 				}
 				return true
 			})
-			if snap.busy {
-				b := ui.ButtonBase(c.Key("agent-stop")).Size(26, 26).Radius(7).Center().
-					Absolute().Right(6).Bottom(6).Label(locales.AgentStop()).Tooltip(locales.AgentStop())
-				bg := pal.text.Alpha(0.08)
-				if b.Pressed() {
-					bg = pal.text.Alpha(0.14)
-				} else if b.Hovered() {
-					bg = pal.text.Alpha(0.12)
-				}
-				b.Background(bg).TextColor(pal.textMuted)
-				b.Children(func() { ui.Icon(c, stopIcon).Size(12, 12) })
-				if b.Clicked() {
-					a.stopAgent()
-				}
-				return
-			}
-			active := strings.TrimSpace(a.agent.draft.String()) != ""
-			bg, fg := pal.text.Alpha(0.08), pal.textFaint
-			if active {
-				bg, fg = pal.accent, ui.Hex("#ffffff")
-			}
-			b := ui.ButtonBase(c.Key("agent-send")).Size(26, 26).Radius(7).Center().
-				Absolute().Right(6).Bottom(6).Label(locales.AgentSend()).Tooltip(locales.AgentSend())
-			switch {
-			case b.Pressed() && active:
-				bg = bg.Mix(ui.Hex("#000000"), 0.08)
-			case b.Hovered() && active:
-				bg = bg.Mix(ui.Hex("#ffffff"), 0.08)
-			case b.Hovered():
-				bg = pal.text.Alpha(0.12)
-			}
-			b.Background(bg).TextColor(fg)
-			b.Children(func() { ui.Icon(c, sendIcon).Size(14, 14) })
-			if b.Clicked() && active {
-				a.sendAgent(a.agent.draft.String())
-			}
+			ui.Row(c).FillWidth().Height(32).Shrink(0).Padding(0, 8, 5, 8).Gap(6).AlignItems(ui.Center).Children(func() {
+				a.agentAttachButton(c, pal)
+				ui.Spacer(c)
+				a.agentSendButton(c, pal, snap)
+			})
 		})
 		fieldFace(box, pal)
 		focusEdge(box, in.Focused(), pal)
@@ -398,7 +385,118 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 			a.agent.focusComposer = false
 			a.agent.composer.Focus()
 		}
+		ui.Row(c).FillWidth().Height(24).Shrink(0).Padding(0, 0, 0, 4).AlignItems(ui.Center).Children(func() {
+			a.agentHostPicker(c, pal, snap)
+		})
 	})
+}
+
+func (a *App) agentAttachButton(c *ui.Context, pal *palette) {
+	b := ui.ButtonBase(c.Key("agent-attach")).Size(26, 26).Radius(7).Center().
+		Label(locales.AgentAttach()).Tooltip(locales.AgentAttachSoon()).Disabled(true)
+	b.Background(pal.text.Alpha(0.05)).TextColor(pal.textFaint)
+	b.Children(func() { ui.Icon(c, plusIcon).Size(12, 12) })
+}
+
+// agentHostPicker is the host the conversation runs on, in the composer's
+// footer: a menu of the hosts connected now.
+func (a *App) agentHostPicker(c *ui.Context, pal *palette, snap agentSnap) {
+	host, known := a.agentHostByID(snap.target)
+	connected := known && a.agentHostConnected(snap.target)
+	label := locales.AgentSelectHost()
+	tip := locales.AgentTargetHost()
+	fg := pal.attention
+	if known {
+		label = host.Name
+		tip = host.Address
+		fg = pal.textMuted
+	}
+	if known && !connected {
+		label = host.Name + " · " + locales.AgentHostOffline()
+		fg = pal.attention
+	}
+	b := ui.ButtonBase(c.Key("agent-host")).Height(24).Padding(0, 4).Radius(6).Gap(5).
+		AlignItems(ui.Center).Shrink(1).MinWidth(0).Label(label).Tooltip(tip)
+	if snap.busy {
+		b.Disabled(true)
+	}
+	bg := ui.Transparent
+	switch {
+	case b.Pressed() && !snap.busy:
+		bg = pal.rowHover
+	case b.Hovered() && !snap.busy:
+		bg = pal.rowHover
+	}
+	b.Background(b.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
+	if !snap.busy {
+		b.Cursor(ui.CursorPointer)
+	}
+	b.Children(func() {
+		ui.Icon(c, serverIcon).Size(12, 12).TextColor(pal.textMuted).Shrink(0)
+		ui.Text(c, label).FontSize(12).TextColor(fg).SingleLine().Ellipsis("…").
+			Shrink(1).MinWidth(0)
+		if !snap.busy {
+			ui.Icon(c, chevronDownIcon).Size(10, 10).TextColor(pal.textFaint).Shrink(0)
+		}
+	})
+	if snap.busy {
+		return
+	}
+	b.Menu(func(m *ui.Menu) {
+		hosts := a.agentHosts()
+		if len(hosts) == 0 {
+			m.Item(locales.AgentNoConnectedHosts()).Disabled(true)
+			return
+		}
+		for _, h := range hosts {
+			item := h.Name + " — " + h.Address
+			if h.ID == snap.target {
+				item = "✓ " + item
+			}
+			if m.Item(item).Chosen() {
+				a.pickAgentHost(h.ID)
+			}
+		}
+	})
+}
+
+func (a *App) agentSendButton(c *ui.Context, pal *palette, snap agentSnap) {
+	if snap.busy {
+		b := ui.ButtonBase(c.Key("agent-stop")).Size(26, 26).Radius(7).Center().
+			Label(locales.AgentStop()).Tooltip(locales.AgentStop())
+		bg := pal.text.Alpha(0.08)
+		if b.Pressed() {
+			bg = pal.text.Alpha(0.14)
+		} else if b.Hovered() {
+			bg = pal.text.Alpha(0.12)
+		}
+		b.Background(bg).TextColor(pal.textMuted)
+		b.Children(func() { ui.Icon(c, stopIcon).Size(12, 12) })
+		if b.Clicked() {
+			a.stopAgent()
+		}
+		return
+	}
+	active := strings.TrimSpace(a.agent.draft.String()) != "" && a.agentHostConnected(snap.target)
+	bg, fg := pal.text.Alpha(0.08), pal.textFaint
+	if active {
+		bg, fg = pal.accent, ui.Hex("#ffffff")
+	}
+	b := ui.ButtonBase(c.Key("agent-send")).Size(26, 26).Radius(7).Center().
+		Label(locales.AgentSend()).Tooltip(locales.AgentSend())
+	switch {
+	case b.Pressed() && active:
+		bg = bg.Mix(ui.Hex("#000000"), 0.08)
+	case b.Hovered() && active:
+		bg = bg.Mix(ui.Hex("#ffffff"), 0.08)
+	case b.Hovered():
+		bg = pal.text.Alpha(0.12)
+	}
+	b.Background(bg).TextColor(fg)
+	b.Children(func() { ui.Icon(c, sendIcon).Size(14, 14) })
+	if b.Clicked() && active {
+		a.sendAgent(a.agent.draft.String())
+	}
 }
 
 func (a *App) agentError(c *ui.Context, pal *palette, message string) {

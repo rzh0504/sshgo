@@ -517,6 +517,9 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 			default:
 				rt.state = connConnected
 			}
+			if rt.state == connConnected && a.agent.target == "" {
+				a.agent.target = h.ID
+			}
 			a.recordRecent(h.ID)
 			a.updateTitle()
 			a.focusTerminal(h.ID)
