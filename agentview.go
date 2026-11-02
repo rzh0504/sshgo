@@ -82,7 +82,7 @@ func (a *App) agentConversation(c *ui.Context, pal *palette, snap agentSnap) {
 			a.agent.list.FollowAnimation = &ui.Smooth
 			ui.List(c, &a.agent.list, len(rows), func(i int) {
 				a.agentMessage(c, pal, rows[i], snap)
-			}).Grow(1).MinHeight(0).Padding(18, 24, 12, 24).Gap(18).Justify(ui.End)
+			}).Grow(1).MinHeight(0).Padding(18, 40, 12, 40).Gap(18).Justify(ui.End)
 		}
 		if snap.err != "" {
 			a.agentError(c, pal, snap.err)
@@ -110,10 +110,8 @@ func agentRows(msgs []*agent.Message) []*agent.Message {
 
 func (a *App) agentEmpty(c *ui.Context, pal *palette, snap agentSnap) {
 	ui.Column(c).Grow(1).MinHeight(0).FillWidth().Center().Gap(10).Padding(24).Children(func() {
-		ui.Icon(c, sparklesIcon).Size(30, 30).TextColor(pal.accent)
+		ui.Icon(c, agentIcon).Size(30, 30).TextColor(pal.accent)
 		ui.Text(c, locales.AgentEmptyTitle()).FontSize(17).FontWeight(650).TextColor(pal.text)
-		ui.Text(c, locales.AgentEmptyDetail()).FontSize(13).TextColor(pal.textMuted).
-			MaxWidth(440).TextAlign(ui.Center).LineHeight(1.5)
 		switch {
 		case !snap.configured:
 			ui.Text(c, locales.AgentNotConfigured()).FontSize(12.5).TextColor(pal.attention).
@@ -132,8 +130,6 @@ func (a *App) agentHistory(c *ui.Context, pal *palette, snap agentSnap) {
 	ui.Column(c).Width(216).Shrink(0).Padding(10, 10, 8, 10).Gap(2).Children(func() {
 		ui.Row(c).Height(28).Padding(0, 8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.AgentChats()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
-			ui.Spacer(c)
-			iconButton(c, "agent-rail-new", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
 		})
 		ui.Scroll(c.Key("agent-chats")).Grow(1).Children(func() {
 			if len(snap.chats) == 0 {
@@ -332,7 +328,7 @@ func (a *App) agentCallResult(c *ui.Context, pal *palette, call *agent.ToolCall)
 const agentPreviewChars = 1600
 
 func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
-	ui.Column(c).Shrink(0).Padding(10, 18, 14, 18).Gap(8).Children(func() {
+	ui.Column(c).Shrink(0).Padding(10, 40, 14, 40).Gap(8).Children(func() {
 		if snap.busy {
 			ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c).Size(11, 11)
@@ -343,17 +339,13 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 				ui.Text(c, label).FontSize(12).TextColor(pal.textMuted)
 			})
 		}
-		ui.Row(c).Gap(8).AlignItems(ui.End).Children(func() {
-			in := ui.TextAreaBuffer(c.Key("agent-input"), &a.agent.draft).Lines(1, 6).
-				Padding(8, 10).Radius(10).FontSize(13.5).TextColor(pal.text).
-				Placeholder(locales.AgentPlaceholder()).Label(locales.AgentPlaceholder()).Grow(1).MinWidth(0).
-				Bind(&a.agent.composer)
-			fieldFace(in, pal)
-			focusEdge(in, in.Focused(), pal)
-			if a.agent.focusComposer && !snap.busy && !a.anyDialogOpen() {
-				a.agent.focusComposer = false
-				a.agent.composer.Focus()
-			}
+		box := ui.Row(c).FillWidth().Shrink(0).MinWidth(0).Radius(10).Clip()
+		var in ui.Element
+		box.Children(func() {
+			in = ui.TextAreaBufferBase(c.Key("agent-input"), &a.agent.draft).Lines(3, 8).
+				Padding(8, 46, 8, 10).FontSize(13.5).TextColor(pal.text).Background(ui.Transparent).
+				Placeholder(locales.AgentPlaceholder()).Label(locales.AgentPlaceholder()).
+				Grow(1).MinWidth(0).Bind(&a.agent.composer)
 			in.OnTextKey(func(k ui.TextKey) bool {
 				if k.Key != ui.KeyEnter || k.Mods != 0 {
 					return false
@@ -364,20 +356,53 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 				return true
 			})
 			if snap.busy {
-				if button(c, "agent-stop", locales.AgentStop(), "", false, pal) {
+				b := ui.ButtonBase(c.Key("agent-stop")).Size(26, 26).Radius(7).Center().
+					Absolute().Right(6).Bottom(6).Label(locales.AgentStop()).Tooltip(locales.AgentStop())
+				bg := pal.text.Alpha(0.08)
+				if b.Pressed() {
+					bg = pal.text.Alpha(0.14)
+				} else if b.Hovered() {
+					bg = pal.text.Alpha(0.12)
+				}
+				b.Background(bg).TextColor(pal.textMuted)
+				b.Children(func() { ui.Icon(c, stopIcon).Size(12, 12) })
+				if b.Clicked() {
 					a.stopAgent()
 				}
 				return
 			}
-			if button(c, "agent-send", locales.AgentSend(), "↵", true, pal) {
+			active := strings.TrimSpace(a.agent.draft.String()) != ""
+			bg, fg := pal.text.Alpha(0.08), pal.textFaint
+			if active {
+				bg, fg = pal.accent, ui.Hex("#ffffff")
+			}
+			b := ui.ButtonBase(c.Key("agent-send")).Size(26, 26).Radius(7).Center().
+				Absolute().Right(6).Bottom(6).Label(locales.AgentSend()).Tooltip(locales.AgentSend())
+			switch {
+			case b.Pressed() && active:
+				bg = bg.Mix(ui.Hex("#000000"), 0.08)
+			case b.Hovered() && active:
+				bg = bg.Mix(ui.Hex("#ffffff"), 0.08)
+			case b.Hovered():
+				bg = pal.text.Alpha(0.12)
+			}
+			b.Background(bg).TextColor(fg)
+			b.Children(func() { ui.Icon(c, sendIcon).Size(14, 14) })
+			if b.Clicked() && active {
 				a.sendAgent(a.agent.draft.String())
 			}
 		})
+		fieldFace(box, pal)
+		focusEdge(box, in.Focused(), pal)
+		if a.agent.focusComposer && !snap.busy && !a.anyDialogOpen() {
+			a.agent.focusComposer = false
+			a.agent.composer.Focus()
+		}
 	})
 }
 
 func (a *App) agentError(c *ui.Context, pal *palette, message string) {
-	ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Padding(0, 18).Children(func() {
+	ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Padding(0, 40).Children(func() {
 		ui.Icon(c, infoIcon).Size(13, 13).TextColor(pal.danger).Shrink(0)
 		ui.Text(c, message).FontSize(12).TextColor(pal.danger).LineHeight(1.35).
 			Selectable().Grow(1).MinWidth(0)

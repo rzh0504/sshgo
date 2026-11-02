@@ -193,7 +193,6 @@
   "agentNewChat": "新会话",
   "agentClose": "关闭 Agent",
   "agentEmptyTitle": "问问你的服务器",
-  "agentEmptyDetail": "Agent 可以检查和操作已连接的主机。它每次只提议一条命令，你批准后才会执行；若开启只读命令免确认，明确只读的命令会自动执行。",
   "agentNotConfigured": "尚未配置模型。请在 设置 → Agent 中填写 OpenAI 兼容的接口地址和模型。",
   "agentOpenSettings": "打开设置",
   "agentNoHosts": "还没有已连接的主机。请先在侧栏连接一台，再让 Agent 操作。",
@@ -223,7 +222,6 @@
   "agentRiskDestructive": "危险",
   "agentKeySaved": "API Key 已保存",
   "agentProviderGroup": "模型服务",
-  "agentProviderNote": "任意 OpenAI 兼容的聊天接口；地址未以 /chat/completions 结尾时会自动补上。",
   "setAgentEndpoint": "接口地址",
   "setAgentEndpointDetail": "基础地址，例如 https://api.openai.com/v1",
   "setAgentEndpointPlaceholder": "https://api.openai.com/v1",
@@ -231,12 +229,10 @@
   "setAgentModelDetail": "接口要求的模型名称",
   "setAgentModelPlaceholder": "gpt-4o-mini",
   "setAgentKey": "API Key",
-  "setAgentKeyDetail": "保存在系统凭据库，而不是 sshgo 的设置文件。本地接口可留空。",
+  "setAgentKeyDetail": "保存在系统凭据库。",
   "setAgentKeyPlaceholder": "sk-…",
   "agentBehaviorGroup": "行为",
   "agentBehaviorNote": "Agent 只能访问 sshgo 中已连接的主机，不能自行建立连接或询问密码。会话保存在 sshgo 的数据目录中。",
   "setAgentAutoRun": "只读命令免确认",
-  "setAgentAutoRunDetail": "每条消息最多自动执行三条明确只读的命令，且需模型与 sshgo 自身的判断一致。其余命令都要你批准。",
-  "agentHostsGroup": "主机",
-  "agentHostsNote": "仅限已连接的主机。命令复用现有 SSH 连接，在终端旁单独开会话执行。"
+  "setAgentAutoRunDetail": "每条消息最多自动执行三条明确只读的命令，且需模型与 sshgo 自身的判断一致。其余命令都要你批准。"
 }

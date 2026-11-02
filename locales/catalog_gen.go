@@ -1972,16 +1972,6 @@ func (msgs Messages) AgentEmptyTitle() string {
 	return Catalog.Format(msgs.locale, "agentEmptyTitle", nil)
 }
 
-// AgentEmptyDetail says "The Agent can inspect and operate the hosts you have connected. It proposes one command at a time; nothing runs until…"
-// in the language the app shows.
-func AgentEmptyDetail() string { return In(i18n.Locale()).AgentEmptyDetail() }
-
-// AgentEmptyDetail says "The Agent can inspect and operate the hosts you have connected. It proposes one command at a time; nothing runs until…"
-// in the language of msgs.
-func (msgs Messages) AgentEmptyDetail() string {
-	return Catalog.Format(msgs.locale, "agentEmptyDetail", nil)
-}
-
 // AgentNotConfigured says "No model is set up yet. Add an OpenAI-compatible endpoint and model in Settings → Agent."
 // in the language the app shows.
 func AgentNotConfigured() string { return In(i18n.Locale()).AgentNotConfigured() }
@@ -2272,16 +2262,6 @@ func (msgs Messages) AgentProviderGroup() string {
 	return Catalog.Format(msgs.locale, "agentProviderGroup", nil)
 }
 
-// AgentProviderNote says "Any OpenAI-compatible chat endpoint. /chat/completions is added when the address does not end with it."
-// in the language the app shows.
-func AgentProviderNote() string { return In(i18n.Locale()).AgentProviderNote() }
-
-// AgentProviderNote says "Any OpenAI-compatible chat endpoint. /chat/completions is added when the address does not end with it."
-// in the language of msgs.
-func (msgs Messages) AgentProviderNote() string {
-	return Catalog.Format(msgs.locale, "agentProviderNote", nil)
-}
-
 // SetAgentEndpoint says "Endpoint"
 // in the language the app shows.
 func SetAgentEndpoint() string { return In(i18n.Locale()).SetAgentEndpoint() }
@@ -2352,11 +2332,11 @@ func (msgs Messages) SetAgentKey() string {
 	return Catalog.Format(msgs.locale, "setAgentKey", nil)
 }
 
-// SetAgentKeyDetail says "Stored in the system credential store, not in sshgo's settings file. Leave empty for a local endpoint."
+// SetAgentKeyDetail says "Stored in the system credential store."
 // in the language the app shows.
 func SetAgentKeyDetail() string { return In(i18n.Locale()).SetAgentKeyDetail() }
 
-// SetAgentKeyDetail says "Stored in the system credential store, not in sshgo's settings file. Leave empty for a local endpoint."
+// SetAgentKeyDetail says "Stored in the system credential store."
 // in the language of msgs.
 func (msgs Messages) SetAgentKeyDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentKeyDetail", nil)
@@ -2410,24 +2390,4 @@ func SetAgentAutoRunDetail() string { return In(i18n.Locale()).SetAgentAutoRunDe
 // in the language of msgs.
 func (msgs Messages) SetAgentAutoRunDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentAutoRunDetail", nil)
-}
-
-// AgentHostsGroup says "Hosts"
-// in the language the app shows.
-func AgentHostsGroup() string { return In(i18n.Locale()).AgentHostsGroup() }
-
-// AgentHostsGroup says "Hosts"
-// in the language of msgs.
-func (msgs Messages) AgentHostsGroup() string {
-	return Catalog.Format(msgs.locale, "agentHostsGroup", nil)
-}
-
-// AgentHostsNote says "Only connected hosts are available. Commands run over the existing SSH connection, in a session of their own beside t…"
-// in the language the app shows.
-func AgentHostsNote() string { return In(i18n.Locale()).AgentHostsNote() }
-
-// AgentHostsNote says "Only connected hosts are available. Commands run over the existing SSH connection, in a session of their own beside t…"
-// in the language of msgs.
-func (msgs Messages) AgentHostsNote() string {
-	return Catalog.Format(msgs.locale, "agentHostsNote", nil)
 }

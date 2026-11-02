@@ -24,7 +24,7 @@ var settingsPages = []settingsPage{
 	{id: "general", title: locales.PageGeneral, icon: gearIcon},
 	{id: "appearance", title: locales.PageAppearance, icon: paintbrushIcon},
 	{id: "terminal", title: locales.PageTerminal, icon: terminalIcon},
-	{id: "agent", title: locales.PageAgent, icon: sparklesIcon},
+	{id: "agent", title: locales.PageAgent, icon: agentIcon},
 	{id: "about", title: locales.PageAbout, icon: infoIcon},
 }
 
@@ -528,7 +528,7 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 
 func (a *App) agentPage(c *ui.Context, pal *palette) {
 	a.loadAgentKey()
-	settingsGroup(c, pal, locales.AgentProviderGroup(), locales.AgentProviderNote(), func() {
+	settingsGroup(c, pal, locales.AgentProviderGroup(), "", func() {
 		settingRow(c, pal, locales.SetAgentEndpoint(), locales.SetAgentEndpointDetail(), func() {
 			in := ui.TextInputBase(c.Key("agent-base-url"), &a.state.AgentBaseURL).
 				Width(280).Height(30).Padding(0, 10).Radius(8).FontSize(13).
@@ -568,7 +568,6 @@ func (a *App) agentPage(c *ui.Context, pal *palette) {
 			toggle(c.Key("agent-auto-run"), &a.state.AgentAutoRunSafe, pal)
 		})
 	})
-	settingsGroup(c, pal, locales.AgentHostsGroup(), locales.AgentHostsNote(), nil)
 }
 
 // --- Language ---

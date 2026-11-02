@@ -193,7 +193,6 @@
   "agentNewChat": "New Chat",
   "agentClose": "Close Agent",
   "agentEmptyTitle": "Ask about your servers",
-  "agentEmptyDetail": "The Agent can inspect and operate the hosts you have connected. It proposes one command at a time; nothing runs until you approve it, unless you allow read-only commands to run by themselves.",
   "agentNotConfigured": "No model is set up yet. Add an OpenAI-compatible endpoint and model in Settings → Agent.",
   "agentOpenSettings": "Open Settings",
   "agentNoHosts": "No host is connected. Connect one in the sidebar before asking the Agent to work.",
@@ -223,7 +222,6 @@
   "agentRiskDestructive": "Destructive",
   "agentKeySaved": "API key saved",
   "agentProviderGroup": "Provider",
-  "agentProviderNote": "Any OpenAI-compatible chat endpoint. /chat/completions is added when the address does not end with it.",
   "setAgentEndpoint": "Endpoint",
   "setAgentEndpointDetail": "Base address, as https://api.openai.com/v1",
   "setAgentEndpointPlaceholder": "https://api.openai.com/v1",
@@ -231,12 +229,10 @@
   "setAgentModelDetail": "The model name the endpoint expects",
   "setAgentModelPlaceholder": "gpt-4o-mini",
   "setAgentKey": "API key",
-  "setAgentKeyDetail": "Stored in the system credential store, not in sshgo's settings file. Leave empty for a local endpoint.",
+  "setAgentKeyDetail": "Stored in the system credential store.",
   "setAgentKeyPlaceholder": "sk-…",
   "agentBehaviorGroup": "Behavior",
   "agentBehaviorNote": "The Agent only reaches hosts connected in sshgo. It cannot open a connection or ask for a password. Conversations are saved in sshgo's data folder.",
   "setAgentAutoRun": "Run read-only commands without asking",
-  "setAgentAutoRunDetail": "Up to three clearly read-only commands per message, when both the model and sshgo's own check agree. Everything else waits for you.",
-  "agentHostsGroup": "Hosts",
-  "agentHostsNote": "Only connected hosts are available. Commands run over the existing SSH connection, in a session of their own beside the terminal."
+  "setAgentAutoRunDetail": "Up to three clearly read-only commands per message, when both the model and sshgo's own check agree. Everything else waits for you."
 }
