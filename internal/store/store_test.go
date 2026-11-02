@@ -55,6 +55,11 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		AgentBaseURL:     "https://api.example.com/v1",
 		AgentModel:       "test-model",
 		AgentAutoRunSafe: true,
+		AgentProviders: []AgentProvider{
+			{ID: "p1", Name: "OpenAI", BaseURL: "https://api.openai.com/v1", Models: []string{"gpt-4o", "gpt-4o-mini"}},
+		},
+		AgentDefaultProvider: "p1",
+		AgentDefaultModel:    "gpt-4o-mini",
 	}
 	if err := want.saveTo(path); err != nil {
 		t.Fatal(err)
@@ -72,7 +77,10 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		got.CloseBehavior != want.CloseBehavior || got.HideAtLogin != want.HideAtLogin ||
 		got.ConfirmQuit != want.ConfirmQuit || got.AutoConnect != want.AutoConnect ||
 		got.AgentBaseURL != want.AgentBaseURL || got.AgentModel != want.AgentModel ||
-		got.AgentAutoRunSafe != want.AgentAutoRunSafe {
+		got.AgentAutoRunSafe != want.AgentAutoRunSafe ||
+		len(got.AgentProviders) != 1 || got.AgentProviders[0].ID != "p1" ||
+		!slices.Equal(got.AgentProviders[0].Models, []string{"gpt-4o", "gpt-4o-mini"}) ||
+		got.AgentDefaultProvider != "p1" || got.AgentDefaultModel != "gpt-4o-mini" {
 		t.Fatalf("settings = %+v, want %+v", got, want)
 	}
 	if got.LightTheme != "" || got.DarkTheme != "" {
@@ -350,7 +358,8 @@ func TestChatStoreRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	chat := &agent.Chat{
-		ID: "c1", Title: "check disk", HostID: "h1", CreatedAt: 100, UpdatedAt: 200,
+		ID: "c1", Title: "check disk", HostID: "h1", ProviderID: "p1", Model: "gpt-4o",
+		CreatedAt: 100, UpdatedAt: 200,
 		Messages: []*agent.Message{
 			{ID: "m1", Role: "user", Content: "check disk", CreatedAt: 100},
 			{ID: "m2", Role: "assistant", Content: "Checking.", CreatedAt: 200, ToolCalls: []*agent.ToolCall{
@@ -381,7 +390,8 @@ func TestChatStoreRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != "c1" || got.Title != "check disk" || got.HostID != "h1" || len(got.Messages) != 2 {
+	if got.ID != "c1" || got.Title != "check disk" || got.HostID != "h1" ||
+		got.ProviderID != "p1" || got.Model != "gpt-4o" || len(got.Messages) != 2 {
 		t.Fatalf("chat = %+v", got)
 	}
 	call := got.Messages[1].ToolCalls[0]

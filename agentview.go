@@ -21,6 +21,8 @@ type agentSnap struct {
 	chats       []*agent.Chat
 	current     string
 	target      string
+	provider    string
+	model       string
 	messages    []*agent.Message
 	busy        bool
 	err         string
@@ -35,6 +37,8 @@ func (a *App) agentSnapshot() agentSnap {
 	snap := agentSnap{
 		current:     a.agent.current,
 		target:      a.agent.target,
+		provider:    a.agent.provider,
+		model:       a.agent.model,
 		busy:        a.agent.busy,
 		err:         a.agent.err,
 		streamingID: a.agent.streamingID,
@@ -376,6 +380,7 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 			ui.Row(c).FillWidth().Height(32).Shrink(0).Padding(0, 8, 5, 8).Gap(6).AlignItems(ui.Center).Children(func() {
 				a.agentAttachButton(c, pal)
 				ui.Spacer(c)
+				a.agentModelPicker(c, pal, snap)
 				a.agentSendButton(c, pal, snap)
 			})
 		})
@@ -477,7 +482,8 @@ func (a *App) agentSendButton(c *ui.Context, pal *palette, snap agentSnap) {
 		}
 		return
 	}
-	active := strings.TrimSpace(a.agent.draft.String()) != "" && a.agentHostConnected(snap.target)
+	active := strings.TrimSpace(a.agent.draft.String()) != "" &&
+		a.agentHostConnected(snap.target) && a.agentModelReady(snap.provider, snap.model)
 	bg, fg := pal.text.Alpha(0.08), pal.textFaint
 	if active {
 		bg, fg = pal.accent, ui.Hex("#ffffff")
@@ -497,6 +503,75 @@ func (a *App) agentSendButton(c *ui.Context, pal *palette, snap agentSnap) {
 	if b.Clicked() && active {
 		a.sendAgent(a.agent.draft.String())
 	}
+}
+
+// agentModelPicker is the model this conversation uses, with the providers'
+// models in a menu.
+func (a *App) agentModelPicker(c *ui.Context, pal *palette, snap agentSnap) {
+	label := snap.model
+	fg := pal.textMuted
+	tip := label
+	if label == "" {
+		label = locales.AgentSelectModel()
+		fg = pal.attention
+		tip = locales.AgentSelectModel()
+	} else if p, ok := a.providerByID(snap.provider); ok {
+		tip = p.Name + " · " + p.BaseURL
+	}
+	b := ui.ButtonBase(c.Key("agent-model")).Height(24).Padding(0, 4).Radius(6).Gap(4).
+		AlignItems(ui.Center).Shrink(1).MinWidth(0).Label(label).Tooltip(tip)
+	if snap.busy {
+		b.Disabled(true)
+	}
+	bg := ui.Transparent
+	switch {
+	case b.Pressed() && !snap.busy:
+		bg = pal.rowHover
+	case b.Hovered() && !snap.busy:
+		bg = pal.rowHover
+	}
+	b.Background(b.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
+	if !snap.busy {
+		b.Cursor(ui.CursorPointer)
+	}
+	b.Children(func() {
+		ui.Text(c, label).FontSize(11.5).TextColor(fg).SingleLine().Ellipsis("…").
+			Shrink(1).MinWidth(0)
+		if !snap.busy {
+			ui.Icon(c, chevronDownIcon).Size(10, 10).TextColor(pal.textFaint).Shrink(0)
+		}
+	})
+	if snap.busy {
+		return
+	}
+	b.Menu(func(m *ui.Menu) {
+		grouped := 0
+		for _, p := range a.state.AgentProviders {
+			if len(p.Models) == 0 {
+				continue
+			}
+			if grouped > 0 {
+				m.Separator()
+			}
+			m.Item(p.Name).Disabled(true)
+			for _, model := range p.Models {
+				item := model
+				if p.ID == snap.provider && model == snap.model {
+					item = "✓ " + model
+				}
+				if m.Item(item).Chosen() {
+					a.pickAgentModel(p.ID, model)
+				}
+			}
+			grouped++
+		}
+		if grouped == 0 {
+			m.Item(locales.AgentNoModels()).Disabled(true)
+			if m.Item(locales.AgentOpenSettings()).Chosen() {
+				a.openAgentSettings()
+			}
+		}
+	})
 }
 
 func (a *App) agentError(c *ui.Context, pal *palette, message string) {

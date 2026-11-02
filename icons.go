@@ -43,6 +43,7 @@ var (
 	chatIcon         = icon(`<path d="M2.2 3.7a1.4 1.4 0 0 1 1.4-1.4h8.8a1.4 1.4 0 0 1 1.4 1.4v6.1a1.4 1.4 0 0 1-1.4 1.4H7.1L4.1 13.7v-2.5H3.6a1.4 1.4 0 0 1-1.4-1.4z"/>`)
 	sendIcon         = icon(`<path d="M8 13V3.2M4.5 6.7L8 3.2l3.5 3.5"/>`)
 	stopIcon         = icon(`<rect x="4.4" y="4.4" width="7.2" height="7.2" rx="1.5"/>`)
+	checkIcon        = icon(`<path d="M3.3 8.2l3 3 6.4-6.6"/>`)
 )
 
 var (

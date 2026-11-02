@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
 
@@ -42,6 +41,8 @@ type agentState struct {
 	open          bool // the Agent is what the main card shows
 	showHistory   bool
 	target        string // the connected host this conversation runs on
+	provider      string // the provider this conversation uses
+	model         string // the model this conversation uses
 	focusComposer bool
 	composer      ui.Handle
 	draft         ui.TextBuffer
@@ -121,6 +122,8 @@ func (a *App) loadAgentChat(id string) error {
 		chat.Messages = loaded.Messages
 		chat.Title = loaded.Title
 		chat.HostID = loaded.HostID
+		chat.ProviderID = loaded.ProviderID
+		chat.Model = loaded.Model
 		chat.CreatedAt = loaded.CreatedAt
 		chat.UpdatedAt = loaded.UpdatedAt
 	}
@@ -216,6 +219,7 @@ func (a *App) newAgentChat() {
 	a.agent.err = ""
 	a.agent.mu.Unlock()
 	a.agent.target = a.agentDefaultHost()
+	a.syncAgentModel(nil)
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
@@ -263,6 +267,7 @@ func (a *App) selectAgentChat(id string) {
 	}
 	a.agent.err = ""
 	a.agent.mu.Unlock()
+	a.syncAgentModel(chat)
 	a.agent.showHistory = false
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
@@ -291,6 +296,7 @@ func (a *App) deleteAgentChat(id string) {
 	a.agent.mu.Unlock()
 	if wasCurrent {
 		a.agent.target = a.agentDefaultHost()
+		a.syncAgentModel(nil)
 	}
 	if err := store.DeleteChat(id); err != nil {
 		a.agentSaveFailed(err)
@@ -374,7 +380,17 @@ func (a *App) sendAgent(text string) bool {
 		a.agent.chats = append(a.agent.chats, chat)
 		a.agent.current = chat.ID
 	}
+	provider, model, ok := a.resolveAgentModel(chat)
+	if !ok {
+		a.agent.err = locales.AgentPickModel()
+		a.agent.mu.Unlock()
+		a.repaint()
+		return false
+	}
 	chat.HostID = host.ID
+	chat.ProviderID = provider.ID
+	chat.Model = model
+	a.agent.provider, a.agent.model = provider.ID, model
 	now := time.Now().UnixMilli()
 	chat.Messages = append(chat.Messages, &agent.Message{
 		ID:        agent.NewID("msg"),
@@ -402,9 +418,9 @@ func (a *App) sendAgent(text string) bool {
 
 	engine := &agent.Engine{
 		Client: &llm.Client{
-			BaseURL: a.state.AgentBaseURL,
-			APIKey:  a.savedSecret(agentSecretKey),
-			Model:   a.state.AgentModel,
+			BaseURL: provider.BaseURL,
+			APIKey:  a.savedSecret(agentProviderSecret(provider.ID)),
+			Model:   model,
 		},
 		Host:   host,
 		Policy: agent.Policy{AutoRunSafe: a.state.AgentAutoRunSafe},
@@ -642,10 +658,6 @@ func (a *App) agentTargetHost() (agent.Host, bool) {
 	return a.agentHostByID(a.agent.target)
 }
 
-func (a *App) agentConfigured() bool {
-	return strings.TrimSpace(a.state.AgentBaseURL) != "" && strings.TrimSpace(a.state.AgentModel) != ""
-}
-
 func (a *App) agentCurrentTitle() string {
 	a.agent.mu.Lock()
 	defer a.agent.mu.Unlock()
@@ -660,34 +672,5 @@ func (a *App) openAgentSettings() {
 	a.ss.page = "agent"
 	if a.setWin != nil {
 		a.setWin.Invalidate()
-	}
-}
-
-func (a *App) loadAgentKey() {
-	if a.agentKeyLoaded {
-		return
-	}
-	a.agentKeyEdit = a.savedSecret(agentSecretKey)
-	a.agentKeyLoaded = true
-}
-
-func (a *App) saveAgentKey(notify bool) {
-	key := strings.TrimSpace(a.agentKeyEdit)
-	var err error
-	if key == "" {
-		err = mygo.Secrets.Delete(agentSecretKey)
-		if errors.Is(err, mygo.ErrSecretNotFound) || errors.Is(err, errors.ErrUnsupported) {
-			err = nil
-		}
-	} else {
-		err = mygo.Secrets.Set(agentSecretKey, []byte(key))
-	}
-	if err != nil {
-		a.toast = err.Error()
-		return
-	}
-	a.agentKeyDirty = false
-	if notify {
-		a.toast = locales.AgentKeySaved()
 	}
 }

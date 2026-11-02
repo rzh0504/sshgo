@@ -193,6 +193,27 @@ func (c *Client) Chat(ctx context.Context, messages []Message, tools []Tool, onD
 }
 
 func endpointOf(base string) (string, error) {
+	base, err := baseOf(base)
+	if err != nil {
+		return "", err
+	}
+	base = strings.TrimSuffix(base, "/models")
+	base = strings.TrimRight(base, "/")
+	return base + "/chat/completions", nil
+}
+
+func modelsEndpointOf(base string) (string, error) {
+	base, err := baseOf(base)
+	if err != nil {
+		return "", err
+	}
+	if strings.HasSuffix(base, "/models") {
+		return base, nil
+	}
+	return base + "/models", nil
+}
+
+func baseOf(base string) (string, error) {
 	base = strings.TrimSpace(base)
 	if base == "" {
 		return "", ErrNotConfigured
@@ -205,10 +226,78 @@ func endpointOf(base string) (string, error) {
 		return "", fmt.Errorf("llm: invalid endpoint %q", base)
 	}
 	base = strings.TrimRight(base, "/")
-	if strings.HasSuffix(base, "/chat/completions") {
-		return base, nil
+	base = strings.TrimSuffix(base, "/chat/completions")
+	return strings.TrimRight(base, "/"), nil
+}
+
+// Models lists the models the endpoint serves, as /models reports them.
+func (c *Client) Models(ctx context.Context) ([]string, error) {
+	if c == nil {
+		return nil, ErrNotConfigured
 	}
-	return base + "/chat/completions", nil
+	endpoint, err := modelsEndpointOf(c.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	if key := strings.TrimSpace(c.APIKey); key != "" {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
+	httpClient := c.HTTP
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		detail := strings.TrimSpace(readError(res.Body))
+		if detail == "" {
+			detail = res.Status
+		}
+		return nil, fmt.Errorf("llm: %s", detail)
+	}
+	var body struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+		Models []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"models"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	var out []string
+	seen := map[string]bool{}
+	add := func(name string) {
+		name = strings.TrimSpace(name)
+		if name == "" || seen[name] {
+			return
+		}
+		seen[name] = true
+		out = append(out, name)
+	}
+	for _, m := range body.Data {
+		add(m.ID)
+	}
+	if len(out) == 0 {
+		for _, m := range body.Models {
+			if m.ID != "" {
+				add(m.ID)
+			} else {
+				add(m.Name)
+			}
+		}
+	}
+	return out, nil
 }
 
 func readError(r io.Reader) string {

@@ -119,3 +119,56 @@ func TestEndpointOf(t *testing.T) {
 		t.Fatal("endpointOf accepted a non-HTTP scheme")
 	}
 }
+
+func TestModels(t *testing.T) {
+	var gotPath, gotAuth string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotAuth = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"data":[{"id":"b"},{"id":"a"},{"id":"a"}]}`)
+	}))
+	defer srv.Close()
+
+	models, err := (&Client{BaseURL: srv.URL + "/v1", APIKey: "secret"}).Models(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/v1/models" || gotAuth != "Bearer secret" {
+		t.Fatalf("request = %s, auth %q", gotPath, gotAuth)
+	}
+	if len(models) != 2 || models[0] != "b" || models[1] != "a" {
+		t.Fatalf("models = %q, want [b a]", models)
+	}
+}
+
+func TestModelsReportsAPIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, `{"error":{"message":"bad key"}}`)
+	}))
+	defer srv.Close()
+	_, err := (&Client{BaseURL: srv.URL, APIKey: "x"}).Models(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "bad key") {
+		t.Fatalf("Models = %v, want bad key", err)
+	}
+}
+
+func TestModelsEndpointOf(t *testing.T) {
+	tests := map[string]string{
+		"https://api.openai.com/v1":                  "https://api.openai.com/v1/models",
+		"https://api.openai.com/v1/":                 "https://api.openai.com/v1/models",
+		"https://api.openai.com/v1/chat/completions": "https://api.openai.com/v1/models",
+		"https://api.openai.com/v1/models":           "https://api.openai.com/v1/models",
+		"api.deepseek.com/v1":                        "https://api.deepseek.com/v1/models",
+	}
+	for in, want := range tests {
+		got, err := modelsEndpointOf(in)
+		if err != nil {
+			t.Fatalf("modelsEndpointOf(%q) = %v", in, err)
+		}
+		if got != want {
+			t.Fatalf("modelsEndpointOf(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

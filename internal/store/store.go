@@ -84,6 +84,15 @@ const DefaultFontSize = 13
 // RecentHostsMax is how many hosts the dashboard's recent group keeps.
 const RecentHostsMax = 6
 
+// AgentProvider is one OpenAI-compatible endpoint, the models it serves,
+// and a name for the menu. Its API key is in the credential store.
+type AgentProvider struct {
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	BaseURL string   `json:"baseUrl"`
+	Models  []string `json:"models,omitempty"`
+}
+
 // State is what sshgo remembers: its hosts and groups, the window as it
 // was, and the settings.
 type State struct {
@@ -115,6 +124,12 @@ type State struct {
 	AgentBaseURL     string `json:"agentBaseURL,omitempty"`
 	AgentModel       string `json:"agentModel,omitempty"`
 	AgentAutoRunSafe bool   `json:"agentAutoRunSafe,omitempty"`
+
+	// AgentProviders are the endpoints the Agent may use, and the model
+	// picked last; the old single endpoint above is read once into one.
+	AgentProviders       []AgentProvider `json:"agentProviders,omitempty"`
+	AgentDefaultProvider string          `json:"agentDefaultProvider,omitempty"`
+	AgentDefaultModel    string          `json:"agentDefaultModel,omitempty"`
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.

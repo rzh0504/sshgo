@@ -112,11 +112,9 @@ type App struct {
 
 	askMu sync.Mutex // one host key question at a time
 
-	agent          *agentState
-	agentDelete    *agentDeleteState
-	agentKeyEdit   string
-	agentKeyLoaded bool
-	agentKeyDirty  bool
+	agent        *agentState
+	agentDelete  *agentDeleteState
+	providerEdit *providerEditState
 }
 
 func newApp() *App {
@@ -150,6 +148,7 @@ func (a *App) load() {
 	setLooks(a.state.Theme)
 	a.applied = valuesOf(a.state)
 	a.loadAgent()
+	a.loadAgentProviders()
 	if dir, err := store.Dir(); err == nil {
 		a.keys = kh.Store{Path: filepath.Join(dir, "known_hosts")}
 	}

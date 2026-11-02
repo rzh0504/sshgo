@@ -1972,11 +1972,11 @@ func (msgs Messages) AgentEmptyTitle() string {
 	return Catalog.Format(msgs.locale, "agentEmptyTitle", nil)
 }
 
-// AgentNotConfigured says "No model is set up yet. Add an OpenAI-compatible endpoint and model in Settings → Agent."
+// AgentNotConfigured says "No model is set up yet. Add a provider and model in Settings → Agent."
 // in the language the app shows.
 func AgentNotConfigured() string { return In(i18n.Locale()).AgentNotConfigured() }
 
-// AgentNotConfigured says "No model is set up yet. Add an OpenAI-compatible endpoint and model in Settings → Agent."
+// AgentNotConfigured says "No model is set up yet. Add a provider and model in Settings → Agent."
 // in the language of msgs.
 func (msgs Messages) AgentNotConfigured() string {
 	return Catalog.Format(msgs.locale, "agentNotConfigured", nil)
@@ -2242,114 +2242,14 @@ func (msgs Messages) AgentRiskDestructive() string {
 	return Catalog.Format(msgs.locale, "agentRiskDestructive", nil)
 }
 
-// AgentKeySaved says "API key saved"
-// in the language the app shows.
-func AgentKeySaved() string { return In(i18n.Locale()).AgentKeySaved() }
-
-// AgentKeySaved says "API key saved"
-// in the language of msgs.
-func (msgs Messages) AgentKeySaved() string {
-	return Catalog.Format(msgs.locale, "agentKeySaved", nil)
-}
-
-// AgentProviderGroup says "Provider"
+// AgentProviderGroup says "Providers"
 // in the language the app shows.
 func AgentProviderGroup() string { return In(i18n.Locale()).AgentProviderGroup() }
 
-// AgentProviderGroup says "Provider"
+// AgentProviderGroup says "Providers"
 // in the language of msgs.
 func (msgs Messages) AgentProviderGroup() string {
 	return Catalog.Format(msgs.locale, "agentProviderGroup", nil)
-}
-
-// SetAgentEndpoint says "Endpoint"
-// in the language the app shows.
-func SetAgentEndpoint() string { return In(i18n.Locale()).SetAgentEndpoint() }
-
-// SetAgentEndpoint says "Endpoint"
-// in the language of msgs.
-func (msgs Messages) SetAgentEndpoint() string {
-	return Catalog.Format(msgs.locale, "setAgentEndpoint", nil)
-}
-
-// SetAgentEndpointDetail says "Base address, as https://api.openai.com/v1"
-// in the language the app shows.
-func SetAgentEndpointDetail() string { return In(i18n.Locale()).SetAgentEndpointDetail() }
-
-// SetAgentEndpointDetail says "Base address, as https://api.openai.com/v1"
-// in the language of msgs.
-func (msgs Messages) SetAgentEndpointDetail() string {
-	return Catalog.Format(msgs.locale, "setAgentEndpointDetail", nil)
-}
-
-// SetAgentEndpointPlaceholder says "https://api.openai.com/v1"
-// in the language the app shows.
-func SetAgentEndpointPlaceholder() string { return In(i18n.Locale()).SetAgentEndpointPlaceholder() }
-
-// SetAgentEndpointPlaceholder says "https://api.openai.com/v1"
-// in the language of msgs.
-func (msgs Messages) SetAgentEndpointPlaceholder() string {
-	return Catalog.Format(msgs.locale, "setAgentEndpointPlaceholder", nil)
-}
-
-// SetAgentModel says "Model"
-// in the language the app shows.
-func SetAgentModel() string { return In(i18n.Locale()).SetAgentModel() }
-
-// SetAgentModel says "Model"
-// in the language of msgs.
-func (msgs Messages) SetAgentModel() string {
-	return Catalog.Format(msgs.locale, "setAgentModel", nil)
-}
-
-// SetAgentModelDetail says "The model name the endpoint expects"
-// in the language the app shows.
-func SetAgentModelDetail() string { return In(i18n.Locale()).SetAgentModelDetail() }
-
-// SetAgentModelDetail says "The model name the endpoint expects"
-// in the language of msgs.
-func (msgs Messages) SetAgentModelDetail() string {
-	return Catalog.Format(msgs.locale, "setAgentModelDetail", nil)
-}
-
-// SetAgentModelPlaceholder says "gpt-4o-mini"
-// in the language the app shows.
-func SetAgentModelPlaceholder() string { return In(i18n.Locale()).SetAgentModelPlaceholder() }
-
-// SetAgentModelPlaceholder says "gpt-4o-mini"
-// in the language of msgs.
-func (msgs Messages) SetAgentModelPlaceholder() string {
-	return Catalog.Format(msgs.locale, "setAgentModelPlaceholder", nil)
-}
-
-// SetAgentKey says "API key"
-// in the language the app shows.
-func SetAgentKey() string { return In(i18n.Locale()).SetAgentKey() }
-
-// SetAgentKey says "API key"
-// in the language of msgs.
-func (msgs Messages) SetAgentKey() string {
-	return Catalog.Format(msgs.locale, "setAgentKey", nil)
-}
-
-// SetAgentKeyDetail says "Stored in the system credential store."
-// in the language the app shows.
-func SetAgentKeyDetail() string { return In(i18n.Locale()).SetAgentKeyDetail() }
-
-// SetAgentKeyDetail says "Stored in the system credential store."
-// in the language of msgs.
-func (msgs Messages) SetAgentKeyDetail() string {
-	return Catalog.Format(msgs.locale, "setAgentKeyDetail", nil)
-}
-
-// SetAgentKeyPlaceholder says "sk-…"
-// in the language the app shows.
-func SetAgentKeyPlaceholder() string { return In(i18n.Locale()).SetAgentKeyPlaceholder() }
-
-// SetAgentKeyPlaceholder says "sk-…"
-// in the language of msgs.
-func (msgs Messages) SetAgentKeyPlaceholder() string {
-	return Catalog.Format(msgs.locale, "setAgentKeyPlaceholder", nil)
 }
 
 // AgentBehaviorGroup says "Behavior"
@@ -2460,4 +2360,288 @@ func AgentAttachSoon() string { return In(i18n.Locale()).AgentAttachSoon() }
 // in the language of msgs.
 func (msgs Messages) AgentAttachSoon() string {
 	return Catalog.Format(msgs.locale, "agentAttachSoon", nil)
+}
+
+// AgentSelectModel says "Select model"
+// in the language the app shows.
+func AgentSelectModel() string { return In(i18n.Locale()).AgentSelectModel() }
+
+// AgentSelectModel says "Select model"
+// in the language of msgs.
+func (msgs Messages) AgentSelectModel() string {
+	return Catalog.Format(msgs.locale, "agentSelectModel", nil)
+}
+
+// AgentNoModels says "No models configured"
+// in the language the app shows.
+func AgentNoModels() string { return In(i18n.Locale()).AgentNoModels() }
+
+// AgentNoModels says "No models configured"
+// in the language of msgs.
+func (msgs Messages) AgentNoModels() string {
+	return Catalog.Format(msgs.locale, "agentNoModels", nil)
+}
+
+// AgentPickModel says "Choose a model first."
+// in the language the app shows.
+func AgentPickModel() string { return In(i18n.Locale()).AgentPickModel() }
+
+// AgentPickModel says "Choose a model first."
+// in the language of msgs.
+func (msgs Messages) AgentPickModel() string {
+	return Catalog.Format(msgs.locale, "agentPickModel", nil)
+}
+
+// AgentNoProviders says "No providers yet."
+// in the language the app shows.
+func AgentNoProviders() string { return In(i18n.Locale()).AgentNoProviders() }
+
+// AgentNoProviders says "No providers yet."
+// in the language of msgs.
+func (msgs Messages) AgentNoProviders() string {
+	return Catalog.Format(msgs.locale, "agentNoProviders", nil)
+}
+
+// AgentAddProvider says "Add Provider"
+// in the language the app shows.
+func AgentAddProvider() string { return In(i18n.Locale()).AgentAddProvider() }
+
+// AgentAddProvider says "Add Provider"
+// in the language of msgs.
+func (msgs Messages) AgentAddProvider() string {
+	return Catalog.Format(msgs.locale, "agentAddProvider", nil)
+}
+
+// AgentEditProvider says "Edit"
+// in the language the app shows.
+func AgentEditProvider() string { return In(i18n.Locale()).AgentEditProvider() }
+
+// AgentEditProvider says "Edit"
+// in the language of msgs.
+func (msgs Messages) AgentEditProvider() string {
+	return Catalog.Format(msgs.locale, "agentEditProvider", nil)
+}
+
+// AgentModelsCount says "{count, plural, =0 {No models} one {# model} other {# models}}"
+// in the language the app shows.
+func AgentModelsCount(count int) string { return In(i18n.Locale()).AgentModelsCount(count) }
+
+// AgentModelsCount says "{count, plural, =0 {No models} one {# model} other {# models}}"
+// in the language of msgs.
+func (msgs Messages) AgentModelsCount(count int) string {
+	return Catalog.Format(msgs.locale, "agentModelsCount", map[string]any{"count": count})
+}
+
+// AgentDefaultProvider says "Default"
+// in the language the app shows.
+func AgentDefaultProvider() string { return In(i18n.Locale()).AgentDefaultProvider() }
+
+// AgentDefaultProvider says "Default"
+// in the language of msgs.
+func (msgs Messages) AgentDefaultProvider() string {
+	return Catalog.Format(msgs.locale, "agentDefaultProvider", nil)
+}
+
+// AgentProviderNew says "New Provider"
+// in the language the app shows.
+func AgentProviderNew() string { return In(i18n.Locale()).AgentProviderNew() }
+
+// AgentProviderNew says "New Provider"
+// in the language of msgs.
+func (msgs Messages) AgentProviderNew() string {
+	return Catalog.Format(msgs.locale, "agentProviderNew", nil)
+}
+
+// AgentProviderEditTitle says "Edit Provider"
+// in the language the app shows.
+func AgentProviderEditTitle() string { return In(i18n.Locale()).AgentProviderEditTitle() }
+
+// AgentProviderEditTitle says "Edit Provider"
+// in the language of msgs.
+func (msgs Messages) AgentProviderEditTitle() string {
+	return Catalog.Format(msgs.locale, "agentProviderEditTitle", nil)
+}
+
+// AgentProviderDetail says "Keys are stored in the system credential store."
+// in the language the app shows.
+func AgentProviderDetail() string { return In(i18n.Locale()).AgentProviderDetail() }
+
+// AgentProviderDetail says "Keys are stored in the system credential store."
+// in the language of msgs.
+func (msgs Messages) AgentProviderDetail() string {
+	return Catalog.Format(msgs.locale, "agentProviderDetail", nil)
+}
+
+// AgentProviderName says "Name"
+// in the language the app shows.
+func AgentProviderName() string { return In(i18n.Locale()).AgentProviderName() }
+
+// AgentProviderName says "Name"
+// in the language of msgs.
+func (msgs Messages) AgentProviderName() string {
+	return Catalog.Format(msgs.locale, "agentProviderName", nil)
+}
+
+// AgentProviderNamePlaceholder says "e.g. OpenAI"
+// in the language the app shows.
+func AgentProviderNamePlaceholder() string { return In(i18n.Locale()).AgentProviderNamePlaceholder() }
+
+// AgentProviderNamePlaceholder says "e.g. OpenAI"
+// in the language of msgs.
+func (msgs Messages) AgentProviderNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderNamePlaceholder", nil)
+}
+
+// AgentProviderEndpoint says "Endpoint"
+// in the language the app shows.
+func AgentProviderEndpoint() string { return In(i18n.Locale()).AgentProviderEndpoint() }
+
+// AgentProviderEndpoint says "Endpoint"
+// in the language of msgs.
+func (msgs Messages) AgentProviderEndpoint() string {
+	return Catalog.Format(msgs.locale, "agentProviderEndpoint", nil)
+}
+
+// AgentProviderEndpointPlaceholder says "https://api.openai.com/v1"
+// in the language the app shows.
+func AgentProviderEndpointPlaceholder() string {
+	return In(i18n.Locale()).AgentProviderEndpointPlaceholder()
+}
+
+// AgentProviderEndpointPlaceholder says "https://api.openai.com/v1"
+// in the language of msgs.
+func (msgs Messages) AgentProviderEndpointPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderEndpointPlaceholder", nil)
+}
+
+// AgentProviderModels says "Models"
+// in the language the app shows.
+func AgentProviderModels() string { return In(i18n.Locale()).AgentProviderModels() }
+
+// AgentProviderModels says "Models"
+// in the language of msgs.
+func (msgs Messages) AgentProviderModels() string {
+	return Catalog.Format(msgs.locale, "agentProviderModels", nil)
+}
+
+// AgentProviderKey says "API key"
+// in the language the app shows.
+func AgentProviderKey() string { return In(i18n.Locale()).AgentProviderKey() }
+
+// AgentProviderKey says "API key"
+// in the language of msgs.
+func (msgs Messages) AgentProviderKey() string {
+	return Catalog.Format(msgs.locale, "agentProviderKey", nil)
+}
+
+// AgentProviderKeyPlaceholder says "sk-…"
+// in the language the app shows.
+func AgentProviderKeyPlaceholder() string { return In(i18n.Locale()).AgentProviderKeyPlaceholder() }
+
+// AgentProviderKeyPlaceholder says "sk-…"
+// in the language of msgs.
+func (msgs Messages) AgentProviderKeyPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderKeyPlaceholder", nil)
+}
+
+// AgentProviderDelete says "Remove"
+// in the language the app shows.
+func AgentProviderDelete() string { return In(i18n.Locale()).AgentProviderDelete() }
+
+// AgentProviderDelete says "Remove"
+// in the language of msgs.
+func (msgs Messages) AgentProviderDelete() string {
+	return Catalog.Format(msgs.locale, "agentProviderDelete", nil)
+}
+
+// AgentProviderDeleteConfirm says "Remove “{name}”? Its API key is deleted too."
+// in the language the app shows.
+func AgentProviderDeleteConfirm(name string) string {
+	return In(i18n.Locale()).AgentProviderDeleteConfirm(name)
+}
+
+// AgentProviderDeleteConfirm says "Remove “{name}”? Its API key is deleted too."
+// in the language of msgs.
+func (msgs Messages) AgentProviderDeleteConfirm(name string) string {
+	return Catalog.Format(msgs.locale, "agentProviderDeleteConfirm", map[string]any{"name": name})
+}
+
+// AgentProviderNameRequired says "Give the provider a name."
+// in the language the app shows.
+func AgentProviderNameRequired() string { return In(i18n.Locale()).AgentProviderNameRequired() }
+
+// AgentProviderNameRequired says "Give the provider a name."
+// in the language of msgs.
+func (msgs Messages) AgentProviderNameRequired() string {
+	return Catalog.Format(msgs.locale, "agentProviderNameRequired", nil)
+}
+
+// AgentProviderEndpointRequired says "Enter an endpoint."
+// in the language the app shows.
+func AgentProviderEndpointRequired() string { return In(i18n.Locale()).AgentProviderEndpointRequired() }
+
+// AgentProviderEndpointRequired says "Enter an endpoint."
+// in the language of msgs.
+func (msgs Messages) AgentProviderEndpointRequired() string {
+	return Catalog.Format(msgs.locale, "agentProviderEndpointRequired", nil)
+}
+
+// AgentProviderModelsRequired says "Add at least one model."
+// in the language the app shows.
+func AgentProviderModelsRequired() string { return In(i18n.Locale()).AgentProviderModelsRequired() }
+
+// AgentProviderModelsRequired says "Add at least one model."
+// in the language of msgs.
+func (msgs Messages) AgentProviderModelsRequired() string {
+	return Catalog.Format(msgs.locale, "agentProviderModelsRequired", nil)
+}
+
+// AgentProviderDetect says "Detect models"
+// in the language the app shows.
+func AgentProviderDetect() string { return In(i18n.Locale()).AgentProviderDetect() }
+
+// AgentProviderDetect says "Detect models"
+// in the language of msgs.
+func (msgs Messages) AgentProviderDetect() string {
+	return Catalog.Format(msgs.locale, "agentProviderDetect", nil)
+}
+
+// AgentProviderDetecting says "Detecting…"
+// in the language the app shows.
+func AgentProviderDetecting() string { return In(i18n.Locale()).AgentProviderDetecting() }
+
+// AgentProviderDetecting says "Detecting…"
+// in the language of msgs.
+func (msgs Messages) AgentProviderDetecting() string {
+	return Catalog.Format(msgs.locale, "agentProviderDetecting", nil)
+}
+
+// AgentProviderNoModelsFound says "The endpoint returned no models."
+// in the language the app shows.
+func AgentProviderNoModelsFound() string { return In(i18n.Locale()).AgentProviderNoModelsFound() }
+
+// AgentProviderNoModelsFound says "The endpoint returned no models."
+// in the language of msgs.
+func (msgs Messages) AgentProviderNoModelsFound() string {
+	return Catalog.Format(msgs.locale, "agentProviderNoModelsFound", nil)
+}
+
+// AgentProviderModelPlaceholder says "Model name"
+// in the language the app shows.
+func AgentProviderModelPlaceholder() string { return In(i18n.Locale()).AgentProviderModelPlaceholder() }
+
+// AgentProviderModelPlaceholder says "Model name"
+// in the language of msgs.
+func (msgs Messages) AgentProviderModelPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderModelPlaceholder", nil)
+}
+
+// AgentProviderAddModel says "Add"
+// in the language the app shows.
+func AgentProviderAddModel() string { return In(i18n.Locale()).AgentProviderAddModel() }
+
+// AgentProviderAddModel says "Add"
+// in the language of msgs.
+func (msgs Messages) AgentProviderAddModel() string {
+	return Catalog.Format(msgs.locale, "agentProviderAddModel", nil)
 }

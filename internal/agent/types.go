@@ -22,12 +22,14 @@ const (
 
 // Chat is one conversation, as the app keeps it.
 type Chat struct {
-	ID        string     `json:"id"`
-	Title     string     `json:"title"`
-	HostID    string     `json:"hostId,omitempty"`
-	CreatedAt int64      `json:"createdAt"`
-	UpdatedAt int64      `json:"updatedAt"`
-	Messages  []*Message `json:"messages"`
+	ID         string     `json:"id"`
+	Title      string     `json:"title"`
+	HostID     string     `json:"hostId,omitempty"`
+	ProviderID string     `json:"providerId,omitempty"`
+	Model      string     `json:"model,omitempty"`
+	CreatedAt  int64      `json:"createdAt"`
+	UpdatedAt  int64      `json:"updatedAt"`
+	Messages   []*Message `json:"messages"`
 }
 
 // Message is one turn of a conversation.
