@@ -36,6 +36,7 @@ type agentState struct {
 	pending     *agent.Proposal
 	answer      chan agent.Decision
 	cancel      context.CancelFunc
+	queued      *agentQueuedSend
 	saveMu      sync.Mutex
 
 	open              bool // the Agent is what the main card shows
@@ -368,9 +369,9 @@ func (a *App) openAgentDelete(id string) {
 	a.repaint()
 }
 
-// pickAgentHost points this conversation at another connected host.
+// pickAgentHost points this conversation at another host, connected or not.
 func (a *App) pickAgentHost(id string) {
-	if !a.agentHostConnected(id) {
+	if _, ok := a.state.Host(id); !ok {
 		return
 	}
 	a.agent.mu.Lock()
@@ -379,6 +380,7 @@ func (a *App) pickAgentHost(id string) {
 		return
 	}
 	a.agent.target = id
+	a.agent.err = ""
 	chat := a.agent.chatLocked(a.agent.current)
 	if chat != nil {
 		chat.HostID = id
@@ -392,13 +394,51 @@ func (a *App) pickAgentHost(id string) {
 }
 
 // sendAgent sends text to the Agent, starting a conversation when there
-// is none. It reports whether the turn started.
+// is none. It reports whether the turn started now; a host that is not
+// connected asks first.
 func (a *App) sendAgent(text string) bool {
 	text = strings.TrimSpace(text)
 	attachments := append([]agent.Attachment(nil), a.agent.attachments...)
 	if text == "" && len(attachments) == 0 {
 		return false
 	}
+	a.agent.mu.Lock()
+	if a.agent.busy {
+		a.agent.mu.Unlock()
+		return false
+	}
+	a.closeAgentMenus()
+	if !a.agentConfigured() {
+		a.agent.err = locales.AgentNotConfigured()
+		a.agent.mu.Unlock()
+		a.repaint()
+		return false
+	}
+	host, ok := a.agentTargetHost()
+	if !ok {
+		a.agent.err = locales.AgentPickHost()
+		a.agent.mu.Unlock()
+		a.repaint()
+		return false
+	}
+	if _, _, ok := a.resolveAgentModel(a.agent.chatLocked(a.agent.current)); !ok {
+		a.agent.err = locales.AgentPickModel()
+		a.agent.mu.Unlock()
+		a.repaint()
+		return false
+	}
+	a.agent.mu.Unlock()
+	if !a.agentHostConnected(host.ID) {
+		a.agentConnect = &agentConnectState{open: true, host: host, text: text, attachments: attachments}
+		a.repaint()
+		return false
+	}
+	return a.startAgentTurn(text, attachments)
+}
+
+// startAgentTurn adds the prompt to the conversation and starts the
+// engine on a host connected now.
+func (a *App) startAgentTurn(text string, attachments []agent.Attachment) bool {
 	a.agent.mu.Lock()
 	if a.agent.busy {
 		a.agent.mu.Unlock()
@@ -594,6 +634,10 @@ func (a *App) stopAgent() {
 	ch := a.agent.answer
 	a.agent.pending = nil
 	a.agent.answer = nil
+	if a.agent.queued != nil {
+		a.agent.queued = nil
+		a.agent.busy = false
+	}
 	a.agent.mu.Unlock()
 	if ch != nil {
 		select {
@@ -658,27 +702,29 @@ func (a *App) execAgentCommand(ctx context.Context, hostID, command string) (age
 	return out, nil
 }
 
-// agentHosts are the hosts the Agent may work on: those connected now.
+// agentHosts are the hosts the Agent may work on, connected or not.
 func (a *App) agentHosts() []agent.Host {
-	var out []agent.Host
+	out := make([]agent.Host, 0, len(a.state.Hosts))
 	for _, h := range a.state.Hosts {
-		rt := a.runtimes[h.ID]
-		if rt == nil || rt.state != connConnected || rt.ssh == nil {
-			continue
-		}
 		out = append(out, agent.Host{ID: h.ID, Name: h.Name, Address: h.Address(), OS: h.OS})
 	}
 	return out
 }
 
 func (a *App) agentDefaultHost() string {
-	if h, ok := a.selectedHost(); ok {
-		if rt := a.runtimes[h.ID]; rt != nil && rt.state == connConnected && rt.ssh != nil {
+	if h, ok := a.selectedHost(); ok && a.agentHostConnected(h.ID) {
+		return h.ID
+	}
+	for _, h := range a.state.Hosts {
+		if a.agentHostConnected(h.ID) {
 			return h.ID
 		}
 	}
-	if hosts := a.agentHosts(); len(hosts) > 0 {
-		return hosts[0].ID
+	if h, ok := a.selectedHost(); ok {
+		return h.ID
+	}
+	if len(a.state.Hosts) > 0 {
+		return a.state.Hosts[0].ID
 	}
 	return ""
 }
@@ -700,11 +746,8 @@ func (a *App) agentHostConnected(id string) bool {
 	return rt != nil && rt.state == connConnected && rt.ssh != nil
 }
 
-// agentTargetHost is the host this conversation runs on, when connected.
+// agentTargetHost is the host this conversation runs on, connected or not.
 func (a *App) agentTargetHost() (agent.Host, bool) {
-	if !a.agentHostConnected(a.agent.target) {
-		return agent.Host{}, false
-	}
 	return a.agentHostByID(a.agent.target)
 }
 

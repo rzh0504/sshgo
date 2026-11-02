@@ -200,6 +200,7 @@ func (a *App) dialogs(c *ui.Context, pal *palette) {
 	a.hostKeyView(c, pal)
 	a.confirmView(c, pal)
 	a.agentDeleteView(c, pal)
+	a.agentConnectView(c, pal)
 }
 
 func dialogHead(c *ui.Context, pal *palette, title, detail string) {
@@ -675,6 +676,8 @@ func (a *App) passwordView(c *ui.Context, pal *palette) {
 				p.open = true
 				a.password = p
 			}
+		} else {
+			a.agentQueuedFailed(p.host.ID, locales.AgentConnectCancelled())
 		}
 	}
 }
@@ -746,6 +749,8 @@ func (a *App) keyPassView(c *ui.Context, pal *palette) {
 				p.open = true
 				a.keyPass = p
 			}
+		} else {
+			a.agentQueuedFailed(p.host.ID, locales.AgentConnectCancelled())
 		}
 	}
 }
@@ -888,6 +893,7 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 func (a *App) deleteHost(h store.Host) {
 	idx := a.state.Index(h.ID)
 	a.resetRuntime(h.ID)
+	a.agentQueuedFailed(h.ID, locales.AgentConnectCancelled())
 	delete(a.runtimes, h.ID)
 	delete(a.handles, h.ID)
 	_ = mygo.Secrets.Delete(passwordKey(h))

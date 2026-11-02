@@ -4,19 +4,30 @@ package main
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 	updaternative "github.com/egoist/mygo/plugins/updater/native"
 	"github.com/egoist/mygo/ui"
 
+	"sshgo/internal/store"
 	"sshgo/locales"
 )
 
 func main() {
 	if !mygo.App.RequestSingleInstanceLock() {
 		return
+	}
+	if dir, err := store.Dir(); err == nil {
+		if f, err := os.OpenFile(filepath.Join(dir, "crash.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+			debug.SetTraceback("all")
+			_ = debug.SetCrashOutput(f, debug.CrashOptions{})
+			f.Close()
+		}
 	}
 	mygo.Use(updaternative.New(updater.Options{Icon: appIcon}))
 	a := newApp()

@@ -30,6 +30,7 @@ type agentSnap struct {
 	err         string
 	streamingID string
 	pending     *agent.Proposal
+	connecting  string
 	configured  bool
 }
 
@@ -61,6 +62,9 @@ func (a *App) agentSnapshot() agentSnap {
 	if a.agent.pending != nil {
 		p := *a.agent.pending
 		snap.pending = &p
+	}
+	if a.agent.queued != nil {
+		snap.connecting = a.agent.queued.hostID
 	}
 	return snap
 }
@@ -365,20 +369,23 @@ func (a *App) agentComposer(c *ui.Context, pal *palette, snap agentSnap) {
 			ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c).Size(11, 11)
 				label := locales.AgentWorking()
-				if snap.pending != nil {
+				switch {
+				case snap.connecting != "":
+					label = locales.AgentConnecting(a.agentHostName(snap.connecting))
+				case snap.pending != nil:
 					label = locales.AgentWaitingApproval()
 				}
 				ui.Text(c, label).FontSize(12).TextColor(pal.textMuted)
 			})
 		}
-		a.agentPendingAttachments(c, pal)
+		a.agentPendingAttachments(c, pal, snap.connecting != "")
 		box := ui.Column(c).FillWidth().Shrink(0).MinWidth(0).Radius(10).Clip()
 		var in ui.Element
 		box.Children(func() {
 			in = ui.TextAreaBufferBase(c.Key("agent-input"), &a.agent.draft).Lines(3, 8).
 				Padding(8, 10, 4, 10).FontSize(13.5).TextColor(pal.text).Background(ui.Transparent).
 				Placeholder(locales.AgentPlaceholder()).Label(locales.AgentPlaceholder()).
-				FillWidth().Bind(&a.agent.composer)
+				FillWidth().Bind(&a.agent.composer).Disabled(snap.connecting != "")
 			in.OnTextKey(func(k ui.TextKey) bool {
 				if k.Key != ui.KeyEnter || k.Mods != 0 {
 					return false
@@ -435,11 +442,10 @@ func (a *App) agentHostPicker(c *ui.Context, pal *palette, snap agentSnap) {
 	fg := pal.attention
 	if known {
 		label = host.Name
-		tip = host.Address
+		tip = locales.AgentTargetHost()
 		fg = pal.textMuted
 	}
 	if known && !connected {
-		label = host.Name + " · " + locales.AgentHostOffline()
 		fg = pal.attention
 	}
 	b := ui.ButtonBase(c.Key("agent-host")).Height(24).Padding(0, 4).Radius(6).Gap(5).
@@ -483,7 +489,7 @@ func (a *App) agentHostPicker(c *ui.Context, pal *palette, snap agentSnap) {
 func (a *App) agentHostMenu(c *ui.Context, pal *palette, panel ui.Element, snap agentSnap) {
 	hosts := a.agentHosts()
 	if len(hosts) == 0 {
-		label := locales.AgentNoConnectedHosts()
+		label := locales.AgentNoHostsMenu()
 		w, _ := c.MeasureText(0, ui.Span{Text: label, Size: 12, Weight: 400})
 		width := min(max(w+36, 140), 260)
 		floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
@@ -492,28 +498,25 @@ func (a *App) agentHostMenu(c *ui.Context, pal *palette, panel ui.Element, snap 
 		})
 		return
 	}
-	h := 8 + 26 + len(hosts)*40
+	h := 8 + 26 + len(hosts)*32
 	h = min(h, 300)
 	width := float32(0)
 	for _, host := range hosts {
 		if w, _ := c.MeasureText(0, ui.Span{Text: host.Name, Size: 12.5, Weight: 400}); w > width {
 			width = w
 		}
-		if w, _ := c.MeasureText(0, ui.Span{Text: host.Address, Size: 11, Weight: 400}); w > width {
-			width = w
-		}
 	}
-	width = min(max(width+51, 180), 300)
+	width = min(max(width+51, 160), 300)
 	floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
 	panel.Children(func() {
 		ui.Scroll(c.Key("agent-host-menu")).Height(float32(h)).FillWidth().Children(func() {
 			ui.Column(c).Padding(4, 0).FillWidth().Children(func() {
 				ui.Row(c).Height(26).Padding(0, 8).AlignItems(ui.Center).FillWidth().Children(func() {
-					ui.Text(c, locales.AgentConnectedHosts()).FontSize(11).FontWeight(600).TextColor(pal.textMuted)
+					ui.Text(c, locales.AgentHosts()).FontSize(11).FontWeight(600).TextColor(pal.textMuted)
 				})
 				for _, host := range hosts {
 					selected := host.ID == snap.target
-					row := ui.Row(c.Key("agent-host-"+host.ID)).Height(40).Padding(6, 8).Gap(8).
+					row := ui.Row(c.Key("agent-host-"+host.ID)).Height(32).Padding(6, 8).Gap(8).
 						Radius(6).AlignItems(ui.Center).FillWidth()
 					if row.Hovered() {
 						row.Background(pal.rowHover)
@@ -524,10 +527,8 @@ func (a *App) agentHostMenu(c *ui.Context, pal *palette, panel ui.Element, snap 
 						} else {
 							ui.Box(c).Size(11, 11).Shrink(0)
 						}
-						ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-							ui.Text(c, host.Name).FontSize(12.5).TextColor(pal.text).SingleLine().Ellipsis("…")
-							ui.Text(c, host.Address).FontSize(11).TextColor(pal.textFaint).SingleLine().Ellipsis("…")
-						})
+						ui.Text(c, host.Name).FontSize(12.5).TextColor(pal.text).SingleLine().
+							Ellipsis("…").Shrink(1).MinWidth(0)
 					})
 					if row.Clicked() {
 						a.agent.hostMenuOpen = false
@@ -556,8 +557,9 @@ func (a *App) agentSendButton(c *ui.Context, pal *palette, snap agentSnap) {
 		}
 		return
 	}
+	_, hostKnown := a.agentHostByID(snap.target)
 	active := (strings.TrimSpace(a.agent.draft.String()) != "" || len(a.agent.attachments) > 0) &&
-		a.agentHostConnected(snap.target) && a.agentModelReady(snap.provider, snap.model)
+		hostKnown && a.agentModelReady(snap.provider, snap.model)
 	bg, fg := pal.text.Alpha(0.08), pal.textFaint
 	if active {
 		bg, fg = pal.accent, ui.Hex("#ffffff")

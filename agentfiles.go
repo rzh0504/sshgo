@@ -230,7 +230,7 @@ func (a *App) agentAttachmentPreview(attachment agent.Attachment) ui.ImageSource
 	return preview
 }
 
-func (a *App) agentPendingAttachments(c *ui.Context, pal *palette) {
+func (a *App) agentPendingAttachments(c *ui.Context, pal *palette, locked bool) {
 	if len(a.agent.attachments) == 0 {
 		return
 	}
@@ -255,6 +255,9 @@ func (a *App) agentPendingAttachments(c *ui.Context, pal *palette) {
 				x := ui.ButtonBase(c.Key(key+"-x")).Size(16, 16).Radius(4).Center().
 					Label(locales.AgentAttachmentRemove()).Tooltip(locales.AgentAttachmentRemove()).
 					TextColor(pal.textFaint)
+				if locked {
+					x.Disabled(true)
+				}
 				if x.Hovered() {
 					x.Background(pal.rowHover).TextColor(pal.text)
 				}

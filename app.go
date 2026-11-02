@@ -114,6 +114,7 @@ type App struct {
 
 	agent        *agentState
 	agentDelete  *agentDeleteState
+	agentConnect *agentConnectState
 	providerEdit *providerEditState
 }
 
@@ -312,7 +313,7 @@ func (a *App) anyDialogOpen() bool {
 	return (a.editor != nil && a.editor.open) || (a.groupEdit != nil && a.groupEdit.open) ||
 		(a.password != nil && a.password.open) || (a.keyPass != nil && a.keyPass.open) ||
 		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open) ||
-		(a.agentDelete != nil && a.agentDelete.open)
+		(a.agentDelete != nil && a.agentDelete.open) || (a.agentConnect != nil && a.agentConnect.open)
 }
 
 func (a *App) connect(id string) {
@@ -415,6 +416,7 @@ func (a *App) failConnect(h store.Host, detail string) {
 	a.selected = h.ID
 	a.saveState()
 	a.updateTitle()
+	a.agentQueuedFailed(h.ID, detail)
 }
 
 func (a *App) beginConnect(h store.Host, auth connectAuth) {
@@ -432,14 +434,17 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 	a.saveState()
 	a.updateTitle()
 	go func() {
-		sess, err := sshx.Connect(context.Background(), sshx.Config{
+		cfg := sshx.Config{
 			Address:         h.Endpoint(),
 			User:            h.User,
 			Password:        auth.password,
 			Signer:          auth.signer,
-			Agent:           auth.agent,
 			HostKeyCallback: a.hostKeyCallback(h, attempt),
-		})
+		}
+		if auth.agent != nil {
+			cfg.Agent = auth.agent
+		}
+		sess, err := sshx.Connect(context.Background(), cfg)
 		if auth.agent != nil {
 			auth.agent.Close()
 		}
@@ -454,6 +459,7 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 					rt.password = ""
 					a.forgetSavedPassword(h)
 				}
+				a.agentQueuedFailed(h.ID, rt.err)
 			})
 			return
 		}
@@ -497,6 +503,7 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 				}
 				rt.state = connFailed
 				rt.err = locales.ErrorTerminal(err.Error())
+				a.agentQueuedFailed(h.ID, rt.err)
 			})
 			return
 		}
@@ -523,7 +530,14 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 			}
 			a.recordRecent(h.ID)
 			a.updateTitle()
-			a.focusTerminal(h.ID)
+			if !a.agentOpen() {
+				a.focusTerminal(h.ID)
+			}
+			if rt.state == connConnected {
+				a.agentQueuedReady(h.ID)
+			} else {
+				a.agentQueuedFailed(h.ID, rt.err)
+			}
 		})
 	}()
 }
@@ -558,6 +572,7 @@ func (a *App) resetRuntime(id string) {
 
 func (a *App) disconnect(id string) {
 	a.resetRuntime(id)
+	a.agentQueuedFailed(id, locales.AgentConnectCancelled())
 	a.updateTitle()
 }
 
