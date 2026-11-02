@@ -2152,14 +2152,64 @@ func (msgs Messages) AgentDenied() string {
 	return Catalog.Format(msgs.locale, "agentDenied", nil)
 }
 
-// AgentRunTool says "Run shell command"
+// AgentToolShell says "Shell command"
 // in the language the app shows.
-func AgentRunTool() string { return In(i18n.Locale()).AgentRunTool() }
+func AgentToolShell() string { return In(i18n.Locale()).AgentToolShell() }
 
-// AgentRunTool says "Run shell command"
+// AgentToolShell says "Shell command"
 // in the language of msgs.
-func (msgs Messages) AgentRunTool() string {
-	return Catalog.Format(msgs.locale, "agentRunTool", nil)
+func (msgs Messages) AgentToolShell() string {
+	return Catalog.Format(msgs.locale, "agentToolShell", nil)
+}
+
+// AgentToolReadFile says "Read file"
+// in the language the app shows.
+func AgentToolReadFile() string { return In(i18n.Locale()).AgentToolReadFile() }
+
+// AgentToolReadFile says "Read file"
+// in the language of msgs.
+func (msgs Messages) AgentToolReadFile() string {
+	return Catalog.Format(msgs.locale, "agentToolReadFile", nil)
+}
+
+// AgentToolWriteFile says "Write file"
+// in the language the app shows.
+func AgentToolWriteFile() string { return In(i18n.Locale()).AgentToolWriteFile() }
+
+// AgentToolWriteFile says "Write file"
+// in the language of msgs.
+func (msgs Messages) AgentToolWriteFile() string {
+	return Catalog.Format(msgs.locale, "agentToolWriteFile", nil)
+}
+
+// AgentToolUnknown says "Tool call"
+// in the language the app shows.
+func AgentToolUnknown() string { return In(i18n.Locale()).AgentToolUnknown() }
+
+// AgentToolUnknown says "Tool call"
+// in the language of msgs.
+func (msgs Messages) AgentToolUnknown() string {
+	return Catalog.Format(msgs.locale, "agentToolUnknown", nil)
+}
+
+// AgentFileContent says "Content"
+// in the language the app shows.
+func AgentFileContent() string { return In(i18n.Locale()).AgentFileContent() }
+
+// AgentFileContent says "Content"
+// in the language of msgs.
+func (msgs Messages) AgentFileContent() string {
+	return Catalog.Format(msgs.locale, "agentFileContent", nil)
+}
+
+// AgentFileTruncated says "truncated"
+// in the language the app shows.
+func AgentFileTruncated() string { return In(i18n.Locale()).AgentFileTruncated() }
+
+// AgentFileTruncated says "truncated"
+// in the language of msgs.
+func (msgs Messages) AgentFileTruncated() string {
+	return Catalog.Format(msgs.locale, "agentFileTruncated", nil)
 }
 
 // AgentReviewHint says "Approve to run on the server"
@@ -2292,24 +2342,194 @@ func (msgs Messages) AgentBehaviorNote() string {
 	return Catalog.Format(msgs.locale, "agentBehaviorNote", nil)
 }
 
-// SetAgentAutoRun says "Run read-only commands without asking"
+// AgentToolsGroup says "Tools"
+// in the language the app shows.
+func AgentToolsGroup() string { return In(i18n.Locale()).AgentToolsGroup() }
+
+// AgentToolsGroup says "Tools"
+// in the language of msgs.
+func (msgs Messages) AgentToolsGroup() string {
+	return Catalog.Format(msgs.locale, "agentToolsGroup", nil)
+}
+
+// AgentToolsNote says "Every call is shown for review, unless read-only actions are allowed below."
+// in the language the app shows.
+func AgentToolsNote() string { return In(i18n.Locale()).AgentToolsNote() }
+
+// AgentToolsNote says "Every call is shown for review, unless read-only actions are allowed below."
+// in the language of msgs.
+func (msgs Messages) AgentToolsNote() string {
+	return Catalog.Format(msgs.locale, "agentToolsNote", nil)
+}
+
+// SetAgentTools says "Use tools"
+// in the language the app shows.
+func SetAgentTools() string { return In(i18n.Locale()).SetAgentTools() }
+
+// SetAgentTools says "Use tools"
+// in the language of msgs.
+func (msgs Messages) SetAgentTools() string {
+	return Catalog.Format(msgs.locale, "setAgentTools", nil)
+}
+
+// SetAgentToolsDetail says "Let the Agent run commands and read or replace files. Off, it answers from the conversation alone."
+// in the language the app shows.
+func SetAgentToolsDetail() string { return In(i18n.Locale()).SetAgentToolsDetail() }
+
+// SetAgentToolsDetail says "Let the Agent run commands and read or replace files. Off, it answers from the conversation alone."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolsDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolsDetail", nil)
+}
+
+// AgentBuiltinGroup says "Built-in"
+// in the language the app shows.
+func AgentBuiltinGroup() string { return In(i18n.Locale()).AgentBuiltinGroup() }
+
+// AgentBuiltinGroup says "Built-in"
+// in the language of msgs.
+func (msgs Messages) AgentBuiltinGroup() string {
+	return Catalog.Format(msgs.locale, "agentBuiltinGroup", nil)
+}
+
+// SetAgentToolShell says "Run commands"
+// in the language the app shows.
+func SetAgentToolShell() string { return In(i18n.Locale()).SetAgentToolShell() }
+
+// SetAgentToolShell says "Run commands"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolShell() string {
+	return Catalog.Format(msgs.locale, "setAgentToolShell", nil)
+}
+
+// SetAgentToolShellDetail says "Run one non-interactive shell command on the host."
+// in the language the app shows.
+func SetAgentToolShellDetail() string { return In(i18n.Locale()).SetAgentToolShellDetail() }
+
+// SetAgentToolShellDetail says "Run one non-interactive shell command on the host."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolShellDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolShellDetail", nil)
+}
+
+// SetAgentToolReadFile says "Read files"
+// in the language the app shows.
+func SetAgentToolReadFile() string { return In(i18n.Locale()).SetAgentToolReadFile() }
+
+// SetAgentToolReadFile says "Read files"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolReadFile() string {
+	return Catalog.Format(msgs.locale, "setAgentToolReadFile", nil)
+}
+
+// SetAgentToolReadFileDetail says "Read a UTF-8 text file at an absolute path, up to 128 KiB."
+// in the language the app shows.
+func SetAgentToolReadFileDetail() string { return In(i18n.Locale()).SetAgentToolReadFileDetail() }
+
+// SetAgentToolReadFileDetail says "Read a UTF-8 text file at an absolute path, up to 128 KiB."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolReadFileDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolReadFileDetail", nil)
+}
+
+// SetAgentToolWriteFile says "Replace files"
+// in the language the app shows.
+func SetAgentToolWriteFile() string { return In(i18n.Locale()).SetAgentToolWriteFile() }
+
+// SetAgentToolWriteFile says "Replace files"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWriteFile() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWriteFile", nil)
+}
+
+// SetAgentToolWriteFileDetail says "Replace a UTF-8 text file; every write waits for your approval."
+// in the language the app shows.
+func SetAgentToolWriteFileDetail() string { return In(i18n.Locale()).SetAgentToolWriteFileDetail() }
+
+// SetAgentToolWriteFileDetail says "Replace a UTF-8 text file; every write waits for your approval."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWriteFileDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWriteFileDetail", nil)
+}
+
+// AgentToolsOff says "The tools switch is off; the Agent will answer from the conversation alone."
+// in the language the app shows.
+func AgentToolsOff() string { return In(i18n.Locale()).AgentToolsOff() }
+
+// AgentToolsOff says "The tools switch is off; the Agent will answer from the conversation alone."
+// in the language of msgs.
+func (msgs Messages) AgentToolsOff() string {
+	return Catalog.Format(msgs.locale, "agentToolsOff", nil)
+}
+
+// AgentToolsNone says "No built-in tools are enabled."
+// in the language the app shows.
+func AgentToolsNone() string { return In(i18n.Locale()).AgentToolsNone() }
+
+// AgentToolsNone says "No built-in tools are enabled."
+// in the language of msgs.
+func (msgs Messages) AgentToolsNone() string {
+	return Catalog.Format(msgs.locale, "agentToolsNone", nil)
+}
+
+// AgentNoAskGroup says "Run without asking"
+// in the language the app shows.
+func AgentNoAskGroup() string { return In(i18n.Locale()).AgentNoAskGroup() }
+
+// AgentNoAskGroup says "Run without asking"
+// in the language of msgs.
+func (msgs Messages) AgentNoAskGroup() string {
+	return Catalog.Format(msgs.locale, "agentNoAskGroup", nil)
+}
+
+// AgentNoAskNote says "Writes always wait for approval; only read-only actions that may run without asking are listed here."
+// in the language the app shows.
+func AgentNoAskNote() string { return In(i18n.Locale()).AgentNoAskNote() }
+
+// AgentNoAskNote says "Writes always wait for approval; only read-only actions that may run without asking are listed here."
+// in the language of msgs.
+func (msgs Messages) AgentNoAskNote() string {
+	return Catalog.Format(msgs.locale, "agentNoAskNote", nil)
+}
+
+// SetAgentAutoRun says "Read-only commands"
 // in the language the app shows.
 func SetAgentAutoRun() string { return In(i18n.Locale()).SetAgentAutoRun() }
 
-// SetAgentAutoRun says "Run read-only commands without asking"
+// SetAgentAutoRun says "Read-only commands"
 // in the language of msgs.
 func (msgs Messages) SetAgentAutoRun() string {
 	return Catalog.Format(msgs.locale, "setAgentAutoRun", nil)
 }
 
-// SetAgentAutoRunDetail says "Run a command on its own only when both the model and sshgo's local safety check find it read-only. Everything else w…"
+// SetAgentAutoRunDetail says "Run a shell command by itself only when both the model and sshgo's local safety check find it read-only."
 // in the language the app shows.
 func SetAgentAutoRunDetail() string { return In(i18n.Locale()).SetAgentAutoRunDetail() }
 
-// SetAgentAutoRunDetail says "Run a command on its own only when both the model and sshgo's local safety check find it read-only. Everything else w…"
+// SetAgentAutoRunDetail says "Run a shell command by itself only when both the model and sshgo's local safety check find it read-only."
 // in the language of msgs.
 func (msgs Messages) SetAgentAutoRunDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentAutoRunDetail", nil)
+}
+
+// SetAgentAutoReadTools says "Read-only tools"
+// in the language the app shows.
+func SetAgentAutoReadTools() string { return In(i18n.Locale()).SetAgentAutoReadTools() }
+
+// SetAgentAutoReadTools says "Read-only tools"
+// in the language of msgs.
+func (msgs Messages) SetAgentAutoReadTools() string {
+	return Catalog.Format(msgs.locale, "setAgentAutoReadTools", nil)
+}
+
+// SetAgentAutoReadToolsDetail says "Run tools that only read, such as reading a file, without asking."
+// in the language the app shows.
+func SetAgentAutoReadToolsDetail() string { return In(i18n.Locale()).SetAgentAutoReadToolsDetail() }
+
+// SetAgentAutoReadToolsDetail says "Run tools that only read, such as reading a file, without asking."
+// in the language of msgs.
+func (msgs Messages) SetAgentAutoReadToolsDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentAutoReadToolsDetail", nil)
 }
 
 // SetAgentStream says "Stream replies"

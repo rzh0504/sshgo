@@ -241,15 +241,8 @@ func (a *App) agentMessage(c *ui.Context, pal *palette, m *agent.Message, snap a
 }
 
 func (a *App) agentCallCard(c *ui.Context, pal *palette, call *agent.ToolCall, snap agentSnap) {
-	args, _ := agent.ParseShellArgs(call.Arguments)
-	command := args.Command
-	if command == "" {
-		command = strings.TrimSpace(call.Arguments)
-	}
-	risk := agent.Classify(command)
-	if args.Destructive {
-		risk = agent.RiskDestructive
-	}
+	command, path, content, description := agentToolCallPreview(call.Name, call.Arguments)
+	risk := agentToolCallRisk(call.Name, call.Arguments)
 	hostID := call.HostID
 	if hostID == "" && call.Result != nil {
 		hostID = call.Result.HostID
@@ -259,6 +252,7 @@ func (a *App) agentCallCard(c *ui.Context, pal *palette, call *agent.ToolCall, s
 	}
 	hostName := a.agentHostName(hostID)
 	badge, badgeColor := agentRiskBadge(pal, risk)
+	label, toolIcon := agentToolLabel(call.Name)
 
 	card := ui.Column(c).Radius(10).Padding(10, 12).Gap(7).Background(pal.chip)
 	if pal.dark {
@@ -268,8 +262,8 @@ func (a *App) agentCallCard(c *ui.Context, pal *palette, call *agent.ToolCall, s
 	}
 	card.Children(func() {
 		ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, terminalIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
-			ui.Text(c, locales.AgentRunTool()).FontSize(12.5).FontWeight(600).TextColor(pal.text).SingleLine()
+			ui.Icon(c, toolIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
+			ui.Text(c, label).FontSize(12.5).FontWeight(600).TextColor(pal.text).SingleLine()
 			if hostName != "" {
 				ui.Text(c, hostName).FontSize(11.5).TextColor(pal.textMuted).SingleLine().Shrink(1).MinWidth(0)
 			}
@@ -277,16 +271,34 @@ func (a *App) agentCallCard(c *ui.Context, pal *palette, call *agent.ToolCall, s
 			ui.Text(c, badge).FontSize(10.5).FontWeight(600).TextColor(badgeColor).
 				Background(badgeColor.Alpha(0.12)).Padding(1, 6).Radius(4)
 		})
-		if command != "" {
-			box := ui.Box(c).Padding(8, 10).Radius(7).Background(pal.control)
-			box.Border(1, pal.text.Alpha(0.08))
-			box.Children(func() {
-				ui.Text(c, command).Font("monospace").FontSize(12.5).TextColor(pal.text).
-					LineHeight(1.4).Selectable().Wrap()
-			})
+		switch call.Name {
+		case "run_shell_command":
+			if command != "" {
+				agentCodeBlock(c, pal, command, 12.5)
+			}
+		case "read_file":
+			if path != "" {
+				agentCodeBlock(c, pal, path, 12.5)
+			} else if command != "" {
+				agentCodeBlock(c, pal, command, 12.5)
+			}
+		case "write_file":
+			if path != "" {
+				agentCodeBlock(c, pal, path, 12.5)
+			} else if command != "" {
+				agentCodeBlock(c, pal, command, 12.5)
+			}
+			if content != "" {
+				ui.Text(c, locales.AgentFileContent()).FontSize(11.5).TextColor(pal.textMuted)
+				a.agentTextBlock(c, pal, call.ID+"-content", content, 12)
+			}
+		default:
+			if raw := strings.TrimSpace(call.Arguments); raw != "" {
+				agentCodeBlock(c, pal, raw, 12.5)
+			}
 		}
-		if args.Description != "" && args.Description != command {
-			ui.Text(c, args.Description).FontSize(12).TextColor(pal.textMuted).LineHeight(1.4)
+		if description != "" && description != command && description != path {
+			ui.Text(c, description).FontSize(12).TextColor(pal.textMuted).LineHeight(1.4)
 		}
 		switch call.Status {
 		case agent.CallPending:
@@ -324,49 +336,146 @@ func (a *App) agentCallResult(c *ui.Context, pal *palette, call *agent.ToolCall)
 	if res == nil {
 		return
 	}
-	out := agentToolOutput(res)
-	meta := ""
-	if call.Status == agent.CallError && res.Error != "" {
-		meta = res.Error
-	} else if res.DurationMS > 0 {
-		meta = fmt.Sprintf("%s · %.1fs", locales.AgentExitPrefix()+strconv.Itoa(res.ExitCode), float64(res.DurationMS)/1000)
-	} else {
-		meta = locales.AgentExitPrefix() + strconv.Itoa(res.ExitCode)
+	if meta := agentResultMeta(call); meta != "" {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, meta).FontSize(11.5).TextColor(pal.textFaint).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
+		})
 	}
-	ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-		ui.Text(c, meta).FontSize(11.5).TextColor(pal.textFaint).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
-	})
+	out := agentToolOutput(call)
 	if out == "" {
 		return
 	}
-	long := len([]rune(out)) > agentPreviewChars
-	expanded := a.agent.expanded[call.ID]
-	shown := out
+	a.agentTextBlock(c, pal, call.ID+"-result", out, 12)
+}
+
+// agentCodeBlock is a fixed text the call is about: a command or a path.
+func agentCodeBlock(c *ui.Context, pal *palette, text string, size float32) {
+	box := ui.Box(c).Padding(8, 10).Radius(7).Background(pal.control)
+	box.Border(1, pal.text.Alpha(0.08))
+	box.Children(func() {
+		ui.Text(c, text).Font("monospace").FontSize(size).TextColor(pal.text).
+			LineHeight(1.4).Selectable().Wrap()
+	})
+}
+
+// agentTextBlock is a long text with a Show all toggle, keyed so that a
+// preview and a result in the same card expand apart.
+func (a *App) agentTextBlock(c *ui.Context, pal *palette, key, text string, size float32) {
+	long := len([]rune(text)) > agentPreviewChars
+	expanded := a.agent.expanded[key]
+	shown := text
 	if long && !expanded {
-		shown = string([]rune(out)[:agentPreviewChars]) + "\n…"
+		shown = string([]rune(text)[:agentPreviewChars]) + "\n…"
 	}
 	box := ui.Box(c).Padding(8, 10).Radius(7).Background(pal.control)
 	box.Border(1, pal.text.Alpha(0.08))
 	box.Children(func() {
-		ui.Text(c, shown).Font("monospace").FontSize(12).TextColor(pal.text).
+		ui.Text(c, shown).Font("monospace").FontSize(size).TextColor(pal.text).
 			LineHeight(1.4).Selectable().Wrap()
 	})
-	if long {
-		label := locales.AgentShowAll()
-		if expanded {
-			label = locales.AgentShowLess()
+	if !long {
+		return
+	}
+	label := locales.AgentShowAll()
+	if expanded {
+		label = locales.AgentShowLess()
+	}
+	b := ui.ButtonBase(c.Key("agent-text-"+key)).Height(22).Padding(0, 7).Radius(5).Center().Label(label)
+	b.TextColor(pal.accent)
+	b.Children(func() {
+		ui.Text(c, label).FontSize(11.5).TextColor(pal.accent)
+	})
+	if b.Clicked() {
+		if a.agent.expanded == nil {
+			a.agent.expanded = map[string]bool{}
 		}
-		b := ui.ButtonBase(c.Key("agent-output-"+call.ID)).Height(22).Padding(0, 7).Radius(5).Center().Label(label)
-		b.TextColor(pal.accent)
-		b.Children(func() {
-			ui.Text(c, label).FontSize(11.5).TextColor(pal.accent)
-		})
-		if b.Clicked() {
-			if a.agent.expanded == nil {
-				a.agent.expanded = map[string]bool{}
-			}
-			a.agent.expanded[call.ID] = !expanded
+		a.agent.expanded[key] = !expanded
+	}
+}
+
+func agentResultMeta(call *agent.ToolCall) string {
+	res := call.Result
+	if res == nil {
+		return ""
+	}
+	if call.Status == agent.CallError && res.Error != "" {
+		return res.Error
+	}
+	var parts []string
+	switch call.Name {
+	case "run_shell_command":
+		parts = append(parts, locales.AgentExitPrefix()+strconv.Itoa(res.ExitCode))
+	case "read_file":
+		parts = append(parts, agentFormatBytes(res.Bytes))
+		if res.Truncated {
+			parts = append(parts, locales.AgentFileTruncated())
 		}
+	case "write_file":
+		parts = append(parts, agentFormatBytes(res.Bytes))
+	default:
+		if res.Summary != "" {
+			parts = append(parts, res.Summary)
+		}
+	}
+	if res.DurationMS > 0 {
+		parts = append(parts, fmt.Sprintf("%.1fs", float64(res.DurationMS)/1000))
+	}
+	return strings.Join(parts, " · ")
+}
+
+func agentToolCallPreview(name, raw string) (command, path, content, description string) {
+	switch name {
+	case "run_shell_command":
+		args, _ := agent.ParseShellArgs(raw)
+		return args.Command, "", "", args.Description
+	case "read_file":
+		args, _ := agent.ParseReadFileArgs(raw)
+		return "", args.Path, "", args.Description
+	case "write_file":
+		args, _ := agent.ParseWriteFileArgs(raw)
+		return "", args.Path, args.Content, args.Description
+	}
+	return strings.TrimSpace(raw), "", "", ""
+}
+
+func agentToolCallRisk(name, raw string) agent.Risk {
+	switch name {
+	case "read_file":
+		return agent.RiskReadOnly
+	case "write_file":
+		return agent.RiskCaution
+	case "run_shell_command":
+		args, _ := agent.ParseShellArgs(raw)
+		risk := agent.Classify(args.Command)
+		if args.Destructive {
+			risk = agent.RiskDestructive
+		}
+		return risk
+	}
+	return agent.RiskUnknown
+}
+
+func agentToolLabel(name string) (string, *ui.SVG) {
+	switch name {
+	case "read_file":
+		return locales.AgentToolReadFile(), folderIcon
+	case "write_file":
+		return locales.AgentToolWriteFile(), pencilIcon
+	case "run_shell_command":
+		return locales.AgentToolShell(), terminalIcon
+	default:
+		return locales.AgentToolUnknown(), infoIcon
+	}
+}
+
+func agentFormatBytes(n int64) string {
+	switch {
+	case n >= 1<<20:
+		return fmt.Sprintf("%.1f MB", float64(n)/(1<<20))
+	case n >= 1<<10:
+		return fmt.Sprintf("%.1f KB", float64(n)/(1<<10))
+	default:
+		return fmt.Sprintf("%d B", n)
 	}
 }
 
@@ -795,8 +904,15 @@ func agentRiskBadge(pal *palette, risk agent.Risk) (string, ui.Color) {
 	return locales.AgentRiskUnknown(), pal.attention
 }
 
-func agentToolOutput(res *agent.ToolResult) string {
+func agentToolOutput(call *agent.ToolCall) string {
+	res := call.Result
 	if res == nil {
+		return ""
+	}
+	switch call.Name {
+	case "read_file":
+		return strings.TrimSpace(stripANSI(res.Content))
+	case "write_file":
 		return ""
 	}
 	var b strings.Builder
@@ -812,9 +928,11 @@ func agentToolOutput(res *agent.ToolResult) string {
 			b.WriteString("\n")
 		}
 	}
-	if res.Error != "" {
-		b.WriteString(res.Error)
-		b.WriteString("\n")
+	if res.Content != "" {
+		b.WriteString(res.Content)
+		if !strings.HasSuffix(res.Content, "\n") {
+			b.WriteString("\n")
+		}
 	}
 	return strings.TrimSpace(stripANSI(b.String()))
 }
