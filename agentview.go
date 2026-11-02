@@ -31,6 +31,7 @@ type agentSnap struct {
 	streamingID string
 	pending     *agent.Proposal
 	connecting  string
+	hostLocked  bool
 	configured  bool
 }
 
@@ -58,6 +59,7 @@ func (a *App) agentSnapshot() agentSnap {
 	})
 	if chat := a.agent.chatLocked(a.agent.current); chat != nil {
 		snap.messages = agent.CloneMessages(chat.Messages)
+		snap.hostLocked = chat.HostID != "" || len(chat.Messages) > 0
 	}
 	if a.agent.pending != nil {
 		p := *a.agent.pending
@@ -218,10 +220,17 @@ func (a *App) agentMessage(c *ui.Context, pal *palette, m *agent.Message, snap a
 		return
 	}
 	ui.Column(c).MaxWidth(760).Gap(10).Children(func() {
+		streaming := snap.busy && snap.streamingID == m.ID
 		if m.Content != "" {
-			if snap.busy && snap.streamingID == m.ID {
+			switch {
+			case streaming && !a.state.AgentNoStream:
 				markdown.Stream(c, m.Content, &a.agent.md)
-			} else {
+			case streaming:
+				ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
+					ui.Spinner(c).Size(11, 11)
+					ui.Text(c, locales.AgentReplying()).FontSize(12).TextColor(pal.textMuted)
+				})
+			default:
 				markdown.View(c, m.Content, &a.agent.md)
 			}
 		}
@@ -432,48 +441,66 @@ func (a *App) agentAttachButton(c *ui.Context, pal *palette) {
 	}
 }
 
+// agentHostColor is how the composer's host picker shows the target:
+// green once connected, red after a failure or a session that ended.
+func (a *App) agentHostColor(pal *palette, id string) ui.Color {
+	rt := a.runtimes[id]
+	if rt == nil {
+		return pal.attention
+	}
+	switch rt.state {
+	case connConnected:
+		return okColor(pal)
+	case connFailed, connEnded:
+		return pal.danger
+	}
+	return pal.attention
+}
+
 // agentHostPicker is the host the conversation runs on, in the composer's
-// footer: a menu of the hosts connected now.
+// footer: a menu of the hosts the app knows.
 func (a *App) agentHostPicker(c *ui.Context, pal *palette, snap agentSnap) {
 	host, known := a.agentHostByID(snap.target)
-	connected := known && a.agentHostConnected(snap.target)
 	label := locales.AgentSelectHost()
 	tip := locales.AgentTargetHost()
-	fg := pal.attention
+	fg := pal.textMuted
 	if known {
 		label = host.Name
-		tip = locales.AgentTargetHost()
-		fg = pal.textMuted
+		fg = a.agentHostColor(pal, host.ID)
 	}
-	if known && !connected {
-		fg = pal.attention
+	if known && snap.hostLocked {
+		tip = locales.AgentHostLocked()
 	}
+	locked := snap.busy || snap.hostLocked
 	b := ui.ButtonBase(c.Key("agent-host")).Height(24).Padding(0, 4).Radius(6).Gap(5).
 		AlignItems(ui.Center).Shrink(1).MinWidth(0).Label(label).Tooltip(tip)
-	if snap.busy {
+	if locked {
 		b.Disabled(true)
 	}
 	bg := ui.Transparent
 	switch {
-	case b.Pressed() && !snap.busy:
+	case b.Pressed() && !locked:
 		bg = pal.rowHover
-	case b.Hovered() && !snap.busy:
+	case b.Hovered() && !locked:
 		bg = pal.rowHover
 	}
 	b.Background(b.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	if !snap.busy {
+	if !locked {
 		b.Cursor(ui.CursorPointer)
 	}
 	b.Children(func() {
 		ui.Icon(c, serverIcon).Size(12, 12).TextColor(pal.textMuted).Shrink(0)
 		ui.Text(c, label).FontSize(12).TextColor(fg).SingleLine().Ellipsis("…").
 			Shrink(1).MinWidth(0)
-		if !snap.busy {
+		if !locked {
 			ui.Icon(c, chevronDownIcon).Size(10, 10).TextColor(pal.textFaint).Shrink(0)
 		}
 	})
 	if snap.busy {
 		a.closeAgentMenus()
+		return
+	}
+	if snap.hostLocked {
 		return
 	}
 	if b.Clicked() {
@@ -500,13 +527,21 @@ func (a *App) agentHostMenu(c *ui.Context, pal *palette, panel ui.Element, snap 
 	}
 	h := 8 + 26 + len(hosts)*32
 	h = min(h, 300)
+	marked := false
 	width := float32(0)
 	for _, host := range hosts {
+		if host.ID == snap.target {
+			marked = true
+		}
 		if w, _ := c.MeasureText(0, ui.Span{Text: host.Name, Size: 12.5, Weight: 400}); w > width {
 			width = w
 		}
 	}
-	width = min(max(width+51, 160), 300)
+	extra, minWidth := float32(32), float32(140)
+	if marked {
+		extra, minWidth = 51, 160
+	}
+	width = min(max(width+extra, minWidth), 300)
 	floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
 	panel.Children(func() {
 		ui.Scroll(c.Key("agent-host-menu")).Height(float32(h)).FillWidth().Children(func() {
@@ -522,10 +557,12 @@ func (a *App) agentHostMenu(c *ui.Context, pal *palette, panel ui.Element, snap 
 						row.Background(pal.rowHover)
 					}
 					row.Children(func() {
-						if selected {
-							ui.Icon(c, checkIcon).Size(11, 11).TextColor(pal.accent).Shrink(0)
-						} else {
-							ui.Box(c).Size(11, 11).Shrink(0)
+						if marked {
+							if selected {
+								ui.Icon(c, checkIcon).Size(11, 11).TextColor(pal.accent).Shrink(0)
+							} else {
+								ui.Box(c).Size(11, 11).Shrink(0)
+							}
 						}
 						ui.Text(c, host.Name).FontSize(12.5).TextColor(pal.text).SingleLine().
 							Ellipsis("…").Shrink(1).MinWidth(0)
@@ -738,9 +775,6 @@ func (a *App) agentError(c *ui.Context, pal *palette, message string) {
 }
 
 func (a *App) agentHostName(id string) string {
-	if id == "" {
-		id = a.agentDefaultHost()
-	}
 	for _, h := range a.state.Hosts {
 		if h.ID == id {
 			return h.Name

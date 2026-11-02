@@ -2102,6 +2102,16 @@ func (msgs Messages) AgentWorking() string {
 	return Catalog.Format(msgs.locale, "agentWorking", nil)
 }
 
+// AgentReplying says "Replying…"
+// in the language the app shows.
+func AgentReplying() string { return In(i18n.Locale()).AgentReplying() }
+
+// AgentReplying says "Replying…"
+// in the language of msgs.
+func (msgs Messages) AgentReplying() string {
+	return Catalog.Format(msgs.locale, "agentReplying", nil)
+}
+
 // AgentWaitingApproval says "Waiting for your approval"
 // in the language the app shows.
 func AgentWaitingApproval() string { return In(i18n.Locale()).AgentWaitingApproval() }
@@ -2292,14 +2302,34 @@ func (msgs Messages) SetAgentAutoRun() string {
 	return Catalog.Format(msgs.locale, "setAgentAutoRun", nil)
 }
 
-// SetAgentAutoRunDetail says "Up to three clearly read-only commands per message, when both the model and sshgo's own check agree. Everything else …"
+// SetAgentAutoRunDetail says "Run a command on its own only when both the model and sshgo's local safety check find it read-only. Everything else w…"
 // in the language the app shows.
 func SetAgentAutoRunDetail() string { return In(i18n.Locale()).SetAgentAutoRunDetail() }
 
-// SetAgentAutoRunDetail says "Up to three clearly read-only commands per message, when both the model and sshgo's own check agree. Everything else …"
+// SetAgentAutoRunDetail says "Run a command on its own only when both the model and sshgo's local safety check find it read-only. Everything else w…"
 // in the language of msgs.
 func (msgs Messages) SetAgentAutoRunDetail() string {
 	return Catalog.Format(msgs.locale, "setAgentAutoRunDetail", nil)
+}
+
+// SetAgentStream says "Stream replies"
+// in the language the app shows.
+func SetAgentStream() string { return In(i18n.Locale()).SetAgentStream() }
+
+// SetAgentStream says "Stream replies"
+// in the language of msgs.
+func (msgs Messages) SetAgentStream() string {
+	return Catalog.Format(msgs.locale, "setAgentStream", nil)
+}
+
+// SetAgentStreamDetail says "Turn off to show each reply only when it is complete, so text does not shift as it arrives."
+// in the language the app shows.
+func SetAgentStreamDetail() string { return In(i18n.Locale()).SetAgentStreamDetail() }
+
+// SetAgentStreamDetail says "Turn off to show each reply only when it is complete, so text does not shift as it arrives."
+// in the language of msgs.
+func (msgs Messages) SetAgentStreamDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentStreamDetail", nil)
 }
 
 // AgentSelectHost says "Select host"
@@ -2320,6 +2350,16 @@ func AgentTargetHost() string { return In(i18n.Locale()).AgentTargetHost() }
 // in the language of msgs.
 func (msgs Messages) AgentTargetHost() string {
 	return Catalog.Format(msgs.locale, "agentTargetHost", nil)
+}
+
+// AgentHostLocked says "This conversation stays on one host."
+// in the language the app shows.
+func AgentHostLocked() string { return In(i18n.Locale()).AgentHostLocked() }
+
+// AgentHostLocked says "This conversation stays on one host."
+// in the language of msgs.
+func (msgs Messages) AgentHostLocked() string {
+	return Catalog.Format(msgs.locale, "agentHostLocked", nil)
 }
 
 // AgentHostOffline says "not connected"

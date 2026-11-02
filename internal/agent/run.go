@@ -47,7 +47,6 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 	msgs := Sanitize(messages)
 	e.emit(msgs)
 	system := SystemPrompt(e.Host)
-	used := 0
 	rounds := e.MaxRounds
 	if rounds <= 0 {
 		rounds = 6
@@ -95,7 +94,7 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 				return err
 			}
 			var err error
-			msgs, err = e.runCall(ctx, msgs, call, &used)
+			msgs, err = e.runCall(ctx, msgs, call)
 			if err != nil {
 				e.stopRemaining(msgs, assistant.ToolCalls[i+1:], err)
 				return err
@@ -105,7 +104,7 @@ func (e *Engine) Run(ctx context.Context, messages []*Message) error {
 	return ErrRoundLimit
 }
 
-func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall, used *int) ([]*Message, error) {
+func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall) ([]*Message, error) {
 	if call.Name != "run_shell_command" {
 		return e.finishCall(msgs, call, ToolResult{Error: fmt.Sprintf("Unknown tool %q.", call.Name)}), nil
 	}
@@ -128,11 +127,9 @@ func (e *Engine) runCall(ctx context.Context, msgs []*Message, call *ToolCall, u
 		Command:     args.Command,
 		Description: args.Description,
 		Risk:        risk,
-		Auto:        e.Policy.Allows(args, risk, *used),
+		Auto:        e.Policy.Allows(args, risk),
 	}
-	if proposal.Auto {
-		*used = *used + 1
-	} else {
+	if !proposal.Auto {
 		if e.Hooks.Review == nil {
 			return e.finishCall(msgs, call, ToolResult{Error: "No one could approve this command."}), nil
 		}

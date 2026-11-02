@@ -95,7 +95,7 @@ func (a *App) loadAgent() {
 	}
 	current := a.agent.current
 	a.agent.mu.Unlock()
-	a.agent.target = a.agentDefaultHost()
+	a.agent.target = ""
 	if current == "" {
 		return
 	}
@@ -234,7 +234,7 @@ func (a *App) newAgentChat() {
 	a.agent.err = ""
 	a.agent.mu.Unlock()
 	a.closeAgentMenus()
-	a.agent.target = a.agentDefaultHost()
+	a.agent.target = ""
 	a.syncAgentModel(nil)
 	a.syncAgentReasoning(nil)
 	a.agent.showHistory = false
@@ -281,7 +281,7 @@ func (a *App) selectAgentChat(id string) {
 	if chat.HostID != "" {
 		a.agent.target = chat.HostID
 	} else {
-		a.agent.target = a.agentDefaultHost()
+		a.agent.target = ""
 	}
 	a.agent.err = ""
 	a.agent.mu.Unlock()
@@ -332,7 +332,7 @@ func (a *App) deleteAgentChat(id string) {
 	a.agent.err = ""
 	a.agent.mu.Unlock()
 	if wasCurrent {
-		a.agent.target = a.agentDefaultHost()
+		a.agent.target = ""
 		a.closeAgentMenus()
 		a.syncAgentModel(nil)
 		a.syncAgentReasoning(nil)
@@ -379,9 +379,13 @@ func (a *App) pickAgentHost(id string) {
 		a.agent.mu.Unlock()
 		return
 	}
+	chat := a.agent.chatLocked(a.agent.current)
+	if chat != nil && (chat.HostID != "" || len(chat.Messages) > 0) {
+		a.agent.mu.Unlock()
+		return
+	}
 	a.agent.target = id
 	a.agent.err = ""
-	chat := a.agent.chatLocked(a.agent.current)
 	if chat != nil {
 		chat.HostID = id
 		chat.UpdatedAt = time.Now().UnixMilli()
@@ -709,24 +713,6 @@ func (a *App) agentHosts() []agent.Host {
 		out = append(out, agent.Host{ID: h.ID, Name: h.Name, Address: h.Address(), OS: h.OS})
 	}
 	return out
-}
-
-func (a *App) agentDefaultHost() string {
-	if h, ok := a.selectedHost(); ok && a.agentHostConnected(h.ID) {
-		return h.ID
-	}
-	for _, h := range a.state.Hosts {
-		if a.agentHostConnected(h.ID) {
-			return h.ID
-		}
-	}
-	if h, ok := a.selectedHost(); ok {
-		return h.ID
-	}
-	if len(a.state.Hosts) > 0 {
-		return a.state.Hosts[0].ID
-	}
-	return ""
 }
 
 // agentHostByID is a host the app knows, connected or not.

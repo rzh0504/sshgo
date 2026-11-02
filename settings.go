@@ -64,6 +64,7 @@ type settingsValues struct {
 	agentBaseURL      string
 	agentModel        string
 	agentAutoRunSafe  bool
+	agentNoStream     bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -73,6 +74,7 @@ func valuesOf(s store.State) settingsValues {
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
 		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit, autoConnect: s.AutoConnect,
 		agentBaseURL: s.AgentBaseURL, agentModel: s.AgentModel, agentAutoRunSafe: s.AgentAutoRunSafe,
+		agentNoStream: s.AgentNoStream,
 	}
 }
 
@@ -530,6 +532,11 @@ func (a *App) agentPage(c *ui.Context, pal *palette) {
 	settingsGroup(c, pal, locales.AgentBehaviorGroup(), locales.AgentBehaviorNote(), func() {
 		settingRow(c, pal, locales.SetAgentAutoRun(), locales.SetAgentAutoRunDetail(), func() {
 			toggle(c.Key("agent-auto-run"), &a.state.AgentAutoRunSafe, pal)
+		})
+		settingRow(c, pal, locales.SetAgentStream(), locales.SetAgentStreamDetail(), func() {
+			stream := !a.state.AgentNoStream
+			toggle(c.Key("agent-stream"), &stream, pal)
+			a.state.AgentNoStream = !stream
 		})
 	})
 }

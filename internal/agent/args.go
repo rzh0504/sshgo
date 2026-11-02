@@ -9,10 +9,6 @@ import (
 	"sshgo/internal/llm"
 )
 
-// MaxAutoRuns is how many clearly read-only commands one prompt may run
-// without asking, when the user has allowed that.
-const MaxAutoRuns = 3
-
 // ShellArgs is what run_shell_command was called with.
 type ShellArgs struct {
 	Command     string
@@ -106,11 +102,11 @@ func ShellTool() llm.Tool {
 // Policy is when a command may run without the user's review.
 type Policy struct {
 	// AutoRunSafe lets a command the app itself judges read-only, and the
-	// model marks safe, run by itself, up to MaxAutoRuns a prompt.
+	// model marks safe, run by itself.
 	AutoRunSafe bool
 }
 
 // Allows says whether the command may run without asking.
-func (p Policy) Allows(args ShellArgs, risk Risk, used int) bool {
-	return p.AutoRunSafe && args.SafeToRun && risk == RiskReadOnly && used < MaxAutoRuns
+func (p Policy) Allows(args ShellArgs, risk Risk) bool {
+	return p.AutoRunSafe && args.SafeToRun && risk == RiskReadOnly
 }

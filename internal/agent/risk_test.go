@@ -65,19 +65,16 @@ func TestClassify(t *testing.T) {
 
 func TestPolicyAllows(t *testing.T) {
 	safe := ShellArgs{SafeToRun: true}
-	if !(Policy{AutoRunSafe: true}).Allows(safe, RiskReadOnly, 0) {
+	if !(Policy{AutoRunSafe: true}).Allows(safe, RiskReadOnly) {
 		t.Fatal("a safe read-only command should run unattended when allowed")
 	}
-	if (Policy{}).Allows(safe, RiskReadOnly, 0) {
+	if (Policy{}).Allows(safe, RiskReadOnly) {
 		t.Fatal("the policy ran a command while off")
 	}
-	if (Policy{AutoRunSafe: true}).Allows(safe, RiskCaution, 0) {
+	if (Policy{AutoRunSafe: true}).Allows(safe, RiskCaution) {
 		t.Fatal("a caution command ran unattended")
 	}
-	if (Policy{AutoRunSafe: true}).Allows(ShellArgs{}, RiskReadOnly, 0) {
+	if (Policy{AutoRunSafe: true}).Allows(ShellArgs{}, RiskReadOnly) {
 		t.Fatal("a command the model did not mark safe ran unattended")
-	}
-	if (Policy{AutoRunSafe: true}).Allows(safe, RiskReadOnly, MaxAutoRuns) {
-		t.Fatal("the auto-run limit was not kept")
 	}
 }

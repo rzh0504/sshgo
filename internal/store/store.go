@@ -124,6 +124,8 @@ type State struct {
 	AgentBaseURL     string `json:"agentBaseURL,omitempty"`
 	AgentModel       string `json:"agentModel,omitempty"`
 	AgentAutoRunSafe bool   `json:"agentAutoRunSafe,omitempty"`
+	// AgentNoStream waits for each reply to be complete before showing it.
+	AgentNoStream bool `json:"agentNoStream,omitempty"`
 
 	// AgentProviders are the endpoints the Agent may use, and the model
 	// picked last; the old single endpoint above is read once into one.
