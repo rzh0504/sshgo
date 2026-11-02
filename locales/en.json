@@ -261,7 +261,7 @@
   "agentProviderAddModel": "Add",
   "agentConnectedHosts": "Connected hosts",
   "agentThinking": "Thinking",
-  "agentThinkDefault": "Default",
+  "agentThinkDefault": "None",
   "agentThinkLow": "Low",
   "agentThinkMedium": "Medium",
   "agentThinkHigh": "High",

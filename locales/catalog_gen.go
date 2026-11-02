@@ -2656,11 +2656,11 @@ func (msgs Messages) AgentThinking() string {
 	return Catalog.Format(msgs.locale, "agentThinking", nil)
 }
 
-// AgentThinkDefault says "Default"
+// AgentThinkDefault says "None"
 // in the language the app shows.
 func AgentThinkDefault() string { return In(i18n.Locale()).AgentThinkDefault() }
 
-// AgentThinkDefault says "Default"
+// AgentThinkDefault says "None"
 // in the language of msgs.
 func (msgs Messages) AgentThinkDefault() string {
 	return Catalog.Format(msgs.locale, "agentThinkDefault", nil)

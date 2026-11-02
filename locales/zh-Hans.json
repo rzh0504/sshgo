@@ -261,7 +261,7 @@
   "agentProviderAddModel": "添加",
   "agentConnectedHosts": "已连接主机",
   "agentThinking": "思考程度",
-  "agentThinkDefault": "默认",
+  "agentThinkDefault": "无",
   "agentThinkLow": "低",
   "agentThinkMedium": "中",
   "agentThinkHigh": "高",
