@@ -433,13 +433,10 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
 			}
 			ui.Spacer(c)
-			if !agentOpen {
-				if hasHost && !dashboard {
-					if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
-						iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
-					}
+			if !agentOpen && hasHost && !dashboard {
+				if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
+					iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
 				}
-				iconButton(c, "agent-open", agentIcon, locales.AgentTitle(), pal, a.toggleAgent)
 			}
 			windowControls(c, pal, a.win)
 		})
