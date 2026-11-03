@@ -2402,6 +2402,26 @@ func (msgs Messages) AgentProviderGroup() string {
 	return Catalog.Format(msgs.locale, "agentProviderGroup", nil)
 }
 
+// SetAgentEnabled says "Enable Agent"
+// in the language the app shows.
+func SetAgentEnabled() string { return In(i18n.Locale()).SetAgentEnabled() }
+
+// SetAgentEnabled says "Enable Agent"
+// in the language of msgs.
+func (msgs Messages) SetAgentEnabled() string {
+	return Catalog.Format(msgs.locale, "setAgentEnabled", nil)
+}
+
+// SetAgentEnabledDetail says "Show Agent conversations in the sidebar and let a model run tools on your hosts. Turning it off keeps its conversatio…"
+// in the language the app shows.
+func SetAgentEnabledDetail() string { return In(i18n.Locale()).SetAgentEnabledDetail() }
+
+// SetAgentEnabledDetail says "Show Agent conversations in the sidebar and let a model run tools on your hosts. Turning it off keeps its conversatio…"
+// in the language of msgs.
+func (msgs Messages) SetAgentEnabledDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentEnabledDetail", nil)
+}
+
 // AgentBehaviorGroup says "Behavior"
 // in the language the app shows.
 func AgentBehaviorGroup() string { return In(i18n.Locale()).AgentBehaviorGroup() }

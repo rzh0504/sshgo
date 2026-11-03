@@ -122,6 +122,7 @@ type State struct {
 
 	// The Agent's provider and behavior. Its API key is kept in the
 	// system's credential store, never here.
+	AgentEnabled bool   `json:"agentEnabled,omitempty"` // show the Agent in the sidebar
 	AgentBaseURL string `json:"agentBaseURL,omitempty"`
 	AgentModel   string `json:"agentModel,omitempty"`
 	// AgentAutoRunSafe lets a read-only shell command run without asking.

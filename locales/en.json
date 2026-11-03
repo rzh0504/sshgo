@@ -236,6 +236,8 @@
   "agentRiskCaution": "Changes",
   "agentRiskDestructive": "Destructive",
   "agentProviderGroup": "Providers",
+  "setAgentEnabled": "Enable Agent",
+  "setAgentEnabledDetail": "Show Agent conversations in the sidebar and let a model run tools on your hosts. Turning it off keeps its conversations and settings.",
   "agentBehaviorGroup": "Behavior",
   "agentBehaviorNote": "Each conversation works on one host. The Agent can ask to connect that host when you send, and never asks for a password itself. Conversations are saved in sshgo's data folder.",
   "agentToolsGroup": "Tools",

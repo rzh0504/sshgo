@@ -135,10 +135,10 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	a.sidebarFooter(c, pal)
 }
 
-// sidebarTab is the sidebar's current column: hosts unless agent is
-// chosen, so a stored state without the field still shows the hosts.
+// sidebarTab is the sidebar's current column: hosts unless the Agent is
+// enabled and chosen, so a stored state shows the hosts without it.
 func (a *App) sidebarTab() string {
-	if a.state.SidebarTab == "agent" {
+	if a.state.AgentEnabled && a.state.SidebarTab == "agent" {
 		return "agent"
 	}
 	return "hosts"
@@ -147,6 +147,9 @@ func (a *App) sidebarTab() string {
 // sidebarTabs is the Hosts/Agent switch above the list: the compact
 // segmented look, at the list's left margin.
 func (a *App) sidebarTabs(c *ui.Context) {
+	if !a.state.AgentEnabled {
+		return
+	}
 	i := 0
 	if a.sidebarTab() == "agent" {
 		i = 1
@@ -505,7 +508,7 @@ func (a *App) shortcuts(c *ui.Context) {
 	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyB) {
 		a.toggleSidebar()
 	}
-	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA) {
+	if a.state.AgentEnabled && c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA) {
 		a.toggleAgent()
 	}
 }

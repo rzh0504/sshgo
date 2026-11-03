@@ -124,20 +124,25 @@ func (a *App) buildMenu() *mygo.Menu {
 	if runtime.GOOS == "darwin" {
 		file = append(file, &mygo.MenuItem{Role: mygo.RoleClose})
 	}
+	view := []*mygo.MenuItem{
+		{ID: "sidebar", Label: a.sidebarMenuLabel(), Accelerator: "CmdOrCtrl+Shift+B", Click: func(*mygo.MenuItem, *mygo.Window) {
+			a.toggleSidebar()
+		}},
+	}
+	if a.state.AgentEnabled {
+		view = append(view, &mygo.MenuItem{Label: locales.MenuAgent(), Accelerator: "CmdOrCtrl+Shift+A", Click: func(*mygo.MenuItem, *mygo.Window) {
+			a.toggleAgent()
+		}})
+	}
+	view = append(view,
+		mygo.Separator(),
+		&mygo.MenuItem{Role: mygo.RoleToggleFullScreen},
+	)
 	m := mygo.NewMenu([]*mygo.MenuItem{
 		{Role: mygo.RoleAppMenu},
 		{Label: locales.MenuFile(), Submenu: file},
 		{Role: mygo.RoleEditMenu},
-		{Label: locales.MenuView(), Submenu: []*mygo.MenuItem{
-			{ID: "sidebar", Label: a.sidebarMenuLabel(), Accelerator: "CmdOrCtrl+Shift+B", Click: func(*mygo.MenuItem, *mygo.Window) {
-				a.toggleSidebar()
-			}},
-			{Label: locales.MenuAgent(), Accelerator: "CmdOrCtrl+Shift+A", Click: func(*mygo.MenuItem, *mygo.Window) {
-				a.toggleAgent()
-			}},
-			mygo.Separator(),
-			{Role: mygo.RoleToggleFullScreen},
-		}},
+		{Label: locales.MenuView(), Submenu: view},
 		{Role: mygo.RoleWindowMenu},
 	})
 	a.menuBar = m

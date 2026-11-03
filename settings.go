@@ -70,6 +70,7 @@ type settingsValues struct {
 	agentNoStream         bool
 	agentNoTools          bool
 	agentDisabledTools    string
+	agentEnabled          bool
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -82,6 +83,7 @@ func valuesOf(s store.State) settingsValues {
 		agentAutoRunReadTools: s.AgentAutoRunReadTools,
 		agentNoStream:         s.AgentNoStream, agentNoTools: s.AgentNoTools,
 		agentDisabledTools: strings.Join(sortedNames(s.AgentDisabledTools), "\x00"),
+		agentEnabled:       s.AgentEnabled,
 	}
 }
 
@@ -542,7 +544,41 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 
 // --- Agent ---
 
+// setAgentEnabled shows or hides the Agent: off closes its views and takes
+// its sidebar tab away, while its conversations and settings stay saved.
+func (a *App) setAgentEnabled(on bool) {
+	a.state.AgentEnabled = on
+	if !on {
+		if a.agent.busy {
+			a.stopAgent()
+		}
+		a.agent.open = false
+		a.closeAgentMenus()
+		a.agentConnect = nil
+		a.agentDelete = nil
+		a.providerEdit = nil
+	}
+	a.saveState()
+	mygo.App.SetMenu(a.buildMenu())
+	a.updateTitle()
+	a.repaint()
+	if a.setWin != nil {
+		a.setWin.Invalidate()
+	}
+}
+
 func (a *App) agentPage(c *ui.Context, pal *palette) {
+	settingsGroup(c, pal, "", "", func() {
+		settingRow(c, pal, locales.SetAgentEnabled(), locales.SetAgentEnabledDetail(), func() {
+			on := a.state.AgentEnabled
+			if toggle(c.Key("agent-enabled"), &on, pal).Changed() {
+				a.setAgentEnabled(on)
+			}
+		})
+	})
+	if !a.state.AgentEnabled {
+		return
+	}
 	a.agentProviderSettings(c, pal)
 	settingsGroup(c, pal, locales.AgentToolsGroup(), locales.AgentToolsNote(), func() {
 		settingRow(c, pal, locales.SetAgentTools(), locales.SetAgentToolsDetail(), func() {

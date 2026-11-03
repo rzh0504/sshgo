@@ -216,6 +216,9 @@ func (a *App) closeAgentMenus() {
 
 // toggleAgent shows the Agent in the main card, or the shell again.
 func (a *App) toggleAgent() {
+	if !a.state.AgentEnabled && !a.agent.open {
+		return
+	}
 	a.agent.open = !a.agent.open
 	if a.agent.open {
 		a.agent.focusComposer = true
