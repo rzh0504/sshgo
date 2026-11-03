@@ -40,7 +40,7 @@ var (
 	backIcon         = icon(`<path d="M12.6 8H3.4M7.4 4L3.4 8l4 4"/>`)
 	sunIcon          = icon(`<circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1"/>`)
 	moonIcon         = icon(`<path d="M13.2 9.8A5.7 5.7 0 0 1 6.2 2.8a5.7 5.7 0 1 0 7 7z"/>`)
-	agentIcon        = icon(`<path d="M2.2 4.5L6 8l-3.8 3.5"/><path d="M8.2 11.5h5.6"/><path d="M11.3 1.6l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>`)
+	agentIcon        = icon(`<path d="M8 1.8l1.7 4.5 4.5 1.7-4.5 1.7L8 14.2 6.3 9.7 1.8 8l4.5-1.7z"/>`)
 	chatIcon         = icon(`<path d="M2.2 3.7a1.4 1.4 0 0 1 1.4-1.4h8.8a1.4 1.4 0 0 1 1.4 1.4v6.1a1.4 1.4 0 0 1-1.4 1.4H7.1L4.1 13.7v-2.5H3.6a1.4 1.4 0 0 1-1.4-1.4z"/>`)
 	sendIcon         = icon(`<path d="M8 13V3.2M4.5 6.7L8 3.2l3.5 3.5"/>`)
 	stopIcon         = icon(`<rect x="4.4" y="4.4" width="7.2" height="7.2" rx="1.5"/>`)
