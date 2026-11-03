@@ -200,6 +200,10 @@ func (a *App) sidebarTabs(c *ui.Context) {
 }
 
 func (a *App) hostSidebar(c *ui.Context, pal *palette) {
+	ui.Row(c).Height(32).Shrink(0).Padding(4, 12).Gap(6).AlignItems(ui.Center).DragWindow().Children(func() {
+		ui.Text(c, locales.SidebarGroups()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
+		ui.Spacer(c)
+	})
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
 		if len(a.state.Hosts) == 0 && len(a.state.Groups) == 0 {
 			ui.Column(c).Padding(8, 10).Children(func() {

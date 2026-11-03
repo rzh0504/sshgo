@@ -22,6 +22,7 @@
   "toggleShowSidebar": "Show Sidebar",
   "toggleHideSidebar": "Hide Sidebar",
   "sidebarNoHosts": "No hosts yet",
+  "sidebarGroups": "Groups",
   "sidebarConnectedCount": "{count, plural, =0 {None connected} one {# connected} other {# connected}}",
   "dashboardTitle": "Hosts",
   "dashboardRecent": "Recent Hosts",

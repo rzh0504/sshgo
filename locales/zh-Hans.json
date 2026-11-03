@@ -22,6 +22,7 @@
   "toggleShowSidebar": "显示侧栏",
   "toggleHideSidebar": "隐藏侧栏",
   "sidebarNoHosts": "还没有主机",
+  "sidebarGroups": "分组",
   "sidebarConnectedCount": "{count, plural, other {# 台已连接}}",
   "dashboardTitle": "主机",
   "dashboardRecent": "最近连接主机",

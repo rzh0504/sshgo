@@ -254,6 +254,16 @@ func (msgs Messages) SidebarNoHosts() string {
 	return Catalog.Format(msgs.locale, "sidebarNoHosts", nil)
 }
 
+// SidebarGroups says "Groups"
+// in the language the app shows.
+func SidebarGroups() string { return In(i18n.Locale()).SidebarGroups() }
+
+// SidebarGroups says "Groups"
+// in the language of msgs.
+func (msgs Messages) SidebarGroups() string {
+	return Catalog.Format(msgs.locale, "sidebarGroups", nil)
+}
+
 // SidebarConnectedCount says "{count, plural, =0 {None connected} one {# connected} other {# connected}}"
 // in the language the app shows.
 func SidebarConnectedCount(count int) string { return In(i18n.Locale()).SidebarConnectedCount(count) }
