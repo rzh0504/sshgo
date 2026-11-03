@@ -1972,16 +1972,6 @@ func (msgs Messages) AgentNewChat() string {
 	return Catalog.Format(msgs.locale, "agentNewChat", nil)
 }
 
-// AgentClose says "Close Agent"
-// in the language the app shows.
-func AgentClose() string { return In(i18n.Locale()).AgentClose() }
-
-// AgentClose says "Close Agent"
-// in the language of msgs.
-func (msgs Messages) AgentClose() string {
-	return Catalog.Format(msgs.locale, "agentClose", nil)
-}
-
 // AgentEmptyTitle says "Ask about your servers"
 // in the language the app shows.
 func AgentEmptyTitle() string { return In(i18n.Locale()).AgentEmptyTitle() }

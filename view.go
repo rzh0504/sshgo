@@ -423,18 +423,6 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 				})
 			}
 			if agentOpen {
-				ui.Row(c).Gap(2).Shrink(0).Margin(0).Children(func() {
-					iconButton(c, "agent-history", clockIcon, locales.AgentChats(), pal, func() {
-						if a.state.SidebarTab != "agent" || a.state.SidebarHidden {
-							a.state.SidebarTab = "agent"
-							a.state.SidebarHidden = false
-							a.saveState()
-							a.repaint()
-						}
-					})
-					iconButton(c, "agent-new-chat", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
-					iconButton(c, "agent-close", closeIcon, locales.AgentClose(), pal, a.toggleAgent)
-				})
 				if title := a.agentCurrentTitle(); title != "" {
 					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
 						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)

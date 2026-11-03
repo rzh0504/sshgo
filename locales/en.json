@@ -193,7 +193,6 @@
   "agentChats": "Chats",
   "agentUnknownHost": "Unknown Host",
   "agentNewChat": "New Chat",
-  "agentClose": "Close Agent",
   "agentEmptyTitle": "Ask about your servers",
   "agentNotConfigured": "No model is set up yet. Add a provider and model in Settings → Agent.",
   "agentOpenSettings": "Open Settings",
