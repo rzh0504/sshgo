@@ -200,7 +200,7 @@ func (a *App) toggleAgentFolder(id string) {
 func (a *App) agentHostFolder(c *ui.Context, pal *palette, f agentChatFolder, snap agentChatsSnap) {
 	open := !a.agentFolderClosed(f.hostID)
 	hdr := ui.Row(c.Key("agent-folder-"+f.hostID)).Height(28).Margin(4, 0, 1, 0).Padding(0, 8, 0, 4).
-		Gap(6).AlignItems(ui.Center).Radius(6)
+		Gap(6).AlignItems(ui.Center).Radius(6).Cursor(ui.CursorPointer)
 	if pal.dark {
 		hdr.Border(1, ui.Transparent)
 	}
@@ -238,7 +238,7 @@ func (a *App) agentChatRow(c *ui.Context, pal *palette, chat *agent.Chat, snap a
 		title = locales.AgentUntitledChat()
 	}
 	row := ui.Row(c.Key("agent-chat-"+chat.ID)).Height(32).Padding(0, 10, 0, rowInset+4).Gap(8).
-		AlignItems(ui.Center).Radius(7)
+		AlignItems(ui.Center).Radius(7).Cursor(ui.CursorPointer)
 	if pal.dark {
 		row.Border(1, ui.Transparent)
 	}

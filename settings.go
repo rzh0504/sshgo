@@ -190,7 +190,8 @@ func (a *App) currentSettingsPage() settingsPage {
 
 func (a *App) settingsNav(c *ui.Context, pal *palette, p settingsPage) {
 	sel := a.currentSettingsPage().id == p.id
-	item := ui.Row(c.Key("nav-"+p.id)).Height(32).Padding(0, 10).Gap(10).AlignItems(ui.Center).Radius(8)
+	item := ui.Row(c.Key("nav-"+p.id)).Height(32).Padding(0, 10).Gap(10).AlignItems(ui.Center).Radius(8).
+		Cursor(ui.CursorPointer)
 	if pal.dark {
 		item.Border(1, ui.Transparent)
 	}
@@ -272,7 +273,7 @@ func segmented(c *ui.Context, key string, value *string, ids, labels []string) {
 					sep.Background(pal.text.Alpha(0.14))
 				}
 			}
-			s := seg.Segment(n).FillHeight().Padding(0, 12).Radius(5).Center()
+			s := seg.Segment(n).FillHeight().Padding(0, 12).Radius(5).Center().Cursor(ui.CursorPointer)
 			if n == i {
 				s.Background(thumb)
 				if pal.dark {
@@ -398,7 +399,8 @@ func (a *App) themeTile(c *ui.Context, pal *palette, id string) {
 	dark := c.Theme().Dark
 	sel := a.state.Theme == id
 	name := themeName(id)
-	tile := ui.ButtonBase(c.Key("theme-" + id)).Column().Width(124).Gap(8).AlignItems(ui.Stretch).Label(name)
+	tile := ui.ButtonBase(c.Key("theme-" + id)).Column().Width(124).Gap(8).AlignItems(ui.Stretch).
+		Label(name).Cursor(ui.CursorPointer)
 	if tile.Clicked() {
 		a.state.Theme = id
 	}

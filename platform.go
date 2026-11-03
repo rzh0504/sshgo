@@ -65,7 +65,8 @@ func windowControls(c *ui.Context, pal *palette, w *mygo.Window) {
 		if maximized {
 			label, svg = locales.WindowRestore(), restoreIcon
 		}
-		m := ui.ButtonBase(c.Key("maximize")).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).Label(label).MaximizeButton()
+		m := ui.ButtonBase(c.Key("maximize")).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).
+			Label(label).MaximizeButton().Cursor(ui.CursorPointer)
 		if m.Pressed() {
 			m.Background(pal.rowHover.Alpha(0.12))
 		} else if m.Hovered() {

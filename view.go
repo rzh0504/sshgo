@@ -124,7 +124,7 @@ func (a *App) resizeHandle(c *ui.Context, pal *palette, at float32) {
 
 func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	ui.Row(c).Height(topBar).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, lead(bar)).Gap(2).DragWindow().Children(func() {
-		iconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
+		plainIconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
 	})
 	a.sidebarTabs(c)
 	if a.sidebarTab() == "agent" {
@@ -169,7 +169,7 @@ func (a *App) sidebarTabs(c *ui.Context) {
 		seg = ui.SegmentedBase(c.Key("sidebar-tabs"), &i, len(labels))
 		seg.Track.Width(total).Height(24).Padding(2).Radius(7).Background(track).Shrink(0).Children(func() {
 			for n, label := range labels {
-				part := seg.Segment(n).Width(widths[n]).FillHeight().Radius(5).Center()
+				part := seg.Segment(n).Width(widths[n]).FillHeight().Radius(5).Center().Cursor(ui.CursorPointer)
 				if n == i {
 					part.Background(thumb)
 					if pal.dark {
@@ -324,7 +324,8 @@ func (a *App) maskedText(c *ui.Context, s string, size float32, weight int, colo
 func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32) {
 	selected := h.ID == a.selected
 	rt := a.runtimes[h.ID]
-	row := ui.Row(c.Key(h.ID)).Height(rowH2).Padding(0, 10, 0, rowInset+indent).Gap(10).AlignItems(ui.Center).Radius(8).Margin(0, 0, 1, 0)
+	row := ui.Row(c.Key(h.ID)).Height(rowH2).Padding(0, 10, 0, rowInset+indent).Gap(10).AlignItems(ui.Center).Radius(8).
+		Margin(0, 0, 1, 0).Cursor(ui.CursorPointer)
 	hovered := row.Hovered()
 	if pal.dark {
 		row.Border(1, ui.Transparent)
@@ -392,11 +393,11 @@ func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 		if c.Theme().Dark {
 			icon, label, target = sunIcon, locales.ActionSwitchLight(), "light"
 		}
-		iconButton(c, "appearance-mode", icon, label, pal, func() {
+		plainIconButton(c, "appearance-mode", icon, label, pal, func() {
 			a.state.Appearance = target
 			a.applySettings()
 		})
-		iconButton(c, "settings", gearIcon, locales.ActionSettings(), pal, a.openSettings)
+		plainIconButton(c, "settings", gearIcon, locales.ActionSettings(), pal, a.openSettings)
 		ui.Spacer(c)
 		n := a.connectedCount()
 		dot := pal.textFaint
@@ -419,11 +420,11 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 		ui.Row(c).Height(headerH).Shrink(0).AlignItems(ui.Center).Padding(0, 10, 0, a.chrome.headerPad).DragWindow().Children(func() {
 			if shown < 0.5 {
 				ui.Row(c).Absolute().Left(a.chrome.buttonsLeft(bar)).Top(0).Bottom(0).AlignItems(ui.Center).Gap(2).Opacity(1 - 2*shown).Children(func() {
-					iconButton(c, "show-sidebar", sidebarIcon, locales.ToggleShowSidebar(), pal, a.toggleSidebar)
+					plainIconButton(c, "show-sidebar", sidebarIcon, locales.ToggleShowSidebar(), pal, a.toggleSidebar)
 				})
 			}
 			if agentOpen {
-				backButton(c, "agent-back", backIcon, locales.ActionBack(), pal, a.toggleAgent)
+				plainIconButton(c, "agent-back", backIcon, locales.ActionBack(), pal, a.toggleAgent)
 				if title := a.agentCurrentTitle(); title != "" {
 					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
 						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)

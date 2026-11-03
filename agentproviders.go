@@ -404,7 +404,7 @@ func (a *App) agentProviderView(c *ui.Context, pal *palette) {
 				} else {
 					b := ui.ButtonBase(c.Key("agent-provider-detect")).Height(22).Padding(0, 6).Radius(5).
 						Gap(4).AlignItems(ui.Center).Label(locales.AgentProviderDetect()).
-						Tooltip(locales.AgentProviderDetect()).Background(ui.Transparent)
+						Tooltip(locales.AgentProviderDetect()).Background(ui.Transparent).Cursor(ui.CursorPointer)
 					if b.Hovered() {
 						b.Background(pal.rowHover)
 					}
@@ -445,7 +445,7 @@ func (a *App) agentProviderView(c *ui.Context, pal *palette) {
 						for _, model := range candidates {
 							on := slices.Contains(pe.models, model)
 							row := ui.CheckboxBase(c, &on).Height(30).Padding(0, 8).Gap(8).
-								Radius(6).AlignItems(ui.Center)
+								Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 							if row.Hovered() {
 								row.Background(pal.rowHover)
 							}

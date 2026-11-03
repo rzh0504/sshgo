@@ -95,7 +95,8 @@ func defaultButton(c *ui.Context, key, label, keys string, primary bool, pal *pa
 }
 
 func sizedButtonAt(c *ui.Context, key, label, keys string, primary bool, height, radius float32, pal *palette, focus bool) bool {
-	b := ui.ButtonBase(c.Key(key)).Height(height).Padding(0, 14).Gap(8).Radius(radius).AlignItems(ui.Center).Label(label)
+	b := ui.ButtonBase(c.Key(key)).Height(height).Padding(0, 14).Gap(8).Radius(radius).AlignItems(ui.Center).
+		Label(label).Cursor(ui.CursorPointer)
 	if focus {
 		b.AutoFocus()
 	}
@@ -123,7 +124,8 @@ func sizedButtonAt(c *ui.Context, key, label, keys string, primary bool, height,
 
 // dangerButton is a button for what cannot be undone.
 func dangerButton(c *ui.Context, key, label string, pal *palette) bool {
-	b := ui.ButtonBase(c.Key(key)).Height(30).Padding(0, 14).Radius(8).AlignItems(ui.Center).Label(label)
+	b := ui.ButtonBase(c.Key(key)).Height(30).Padding(0, 14).Radius(8).AlignItems(ui.Center).
+		Label(label).Cursor(ui.CursorPointer)
 	bg := pal.danger
 	if b.Pressed() {
 		bg = bg.Mix(ui.Hex("#000000"), 0.10)
@@ -138,7 +140,7 @@ func dangerButton(c *ui.Context, key, label string, pal *palette) bool {
 // toggle is sshgo's switch: a track that shows on and off alike, the
 // accent's when on, with a knob that springs across.
 func toggle(c *ui.Context, on *bool, pal *palette) ui.Element {
-	sw := ui.SwitchBase(c, on).Size(38, 22).Radius(11).Padding(2).Shrink(0)
+	sw := ui.SwitchBase(c, on).Size(38, 22).Radius(11).Padding(2).Shrink(0).Cursor(ui.CursorPointer)
 	track := pal.text.Alpha(0.14)
 	if pal.dark {
 		track = ui.RGBA(255, 255, 255, 0.2)
@@ -164,28 +166,26 @@ func iconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palet
 	}
 }
 
-// addButton is iconButton with a plus, for something new, under the
-// pointer.
+// addButton is iconButton with a plus, for something new.
 func addButton(c *ui.Context, key string, label string, pal *palette, fn func()) {
 	b := quietIconButton(c, key, plusIcon, label, pal)
-	b.Tooltip(label).Cursor(ui.CursorPointer)
+	b.Tooltip(label)
 	if b.Clicked() {
 		fn()
 	}
 }
 
-// backButton is iconButton for leaving a page, under the pointer and
-// without a tooltip.
-func backButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette, fn func()) {
+// plainIconButton is iconButton without a tooltip.
+func plainIconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette, fn func()) {
 	b := quietIconButton(c, key, svg, label, pal)
-	b.Cursor(ui.CursorPointer)
 	if b.Clicked() {
 		fn()
 	}
 }
 
 func quietIconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette) ui.Element {
-	b := ui.ButtonBase(c.Key(key)).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).Label(label)
+	b := ui.ButtonBase(c.Key(key)).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).
+		Label(label).Cursor(ui.CursorPointer)
 	if b.Pressed() {
 		b.Background(pal.rowHover.Alpha(0.12))
 	} else if b.Hovered() {

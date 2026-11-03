@@ -130,7 +130,7 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 	rt := a.runtimes[h.ID]
 	selected := h.ID == a.selected
 	card := ui.ButtonBase(c.Key("dash-"+h.ID)).Row().Width(hostCardW).Height(hostCardH).Shrink(0).
-		Padding(12, 12).Gap(10).Radius(12).AlignItems(ui.Center).Label(h.Name)
+		Padding(12, 12).Gap(10).Radius(12).AlignItems(ui.Center).Label(h.Name).Cursor(ui.CursorPointer)
 	bg := pal.chip
 	switch {
 	case selected:

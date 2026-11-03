@@ -106,7 +106,7 @@ func (a *App) hostGroupMenu(m *ui.Menu, id string) {
 func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name string, hosts []store.Host) {
 	open := !a.groupCollapsed(g.ID)
 	hdr := ui.Row(c.Key("group-"+g.ID)).Height(28).Margin(4, 0, 1, 0).Padding(0, 8, 0, 4).
-		Gap(6).AlignItems(ui.Center).Radius(6)
+		Gap(6).AlignItems(ui.Center).Radius(6).Cursor(ui.CursorPointer)
 	if pal.dark {
 		hdr.Border(1, ui.Transparent)
 	}
