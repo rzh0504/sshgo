@@ -423,6 +423,7 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 				})
 			}
 			if agentOpen {
+				backButton(c, "agent-back", backIcon, locales.ActionBack(), pal, a.toggleAgent)
 				if title := a.agentCurrentTitle(); title != "" {
 					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
 						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)

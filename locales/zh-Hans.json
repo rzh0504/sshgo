@@ -15,6 +15,7 @@
   "actionSave": "保存",
   "actionSaveAndConnect": "保存并连接",
   "actionCancel": "取消",
+  "actionBack": "返回",
   "actionDelete": "删除",
   "actionRetry": "重试",
   "actionTrustConnect": "信任并连接",

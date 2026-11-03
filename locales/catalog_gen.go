@@ -184,6 +184,16 @@ func (msgs Messages) ActionCancel() string {
 	return Catalog.Format(msgs.locale, "actionCancel", nil)
 }
 
+// ActionBack says "Back"
+// in the language the app shows.
+func ActionBack() string { return In(i18n.Locale()).ActionBack() }
+
+// ActionBack says "Back"
+// in the language of msgs.
+func (msgs Messages) ActionBack() string {
+	return Catalog.Format(msgs.locale, "actionBack", nil)
+}
+
 // ActionDelete says "Delete"
 // in the language the app shows.
 func ActionDelete() string { return In(i18n.Locale()).ActionDelete() }

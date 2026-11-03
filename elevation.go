@@ -158,6 +158,7 @@ func toggle(c *ui.Context, on *bool, pal *palette) ui.Element {
 // iconButton is a quiet square button with an icon, as in a toolbar.
 func iconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette, fn func()) {
 	b := quietIconButton(c, key, svg, label, pal)
+	b.Tooltip(label)
 	if b.Clicked() {
 		fn()
 	}
@@ -167,6 +168,16 @@ func iconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palet
 // pointer.
 func addButton(c *ui.Context, key string, label string, pal *palette, fn func()) {
 	b := quietIconButton(c, key, plusIcon, label, pal)
+	b.Tooltip(label).Cursor(ui.CursorPointer)
+	if b.Clicked() {
+		fn()
+	}
+}
+
+// backButton is iconButton for leaving a page, under the pointer and
+// without a tooltip.
+func backButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette, fn func()) {
+	b := quietIconButton(c, key, svg, label, pal)
 	b.Cursor(ui.CursorPointer)
 	if b.Clicked() {
 		fn()
@@ -174,7 +185,7 @@ func addButton(c *ui.Context, key string, label string, pal *palette, fn func())
 }
 
 func quietIconButton(c *ui.Context, key string, svg *ui.SVG, label string, pal *palette) ui.Element {
-	b := ui.ButtonBase(c.Key(key)).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).Label(label).Tooltip(label)
+	b := ui.ButtonBase(c.Key(key)).Size(28, 26).Radius(6).Center().TextColor(pal.textMuted).Label(label)
 	if b.Pressed() {
 		b.Background(pal.rowHover.Alpha(0.12))
 	} else if b.Hovered() {
