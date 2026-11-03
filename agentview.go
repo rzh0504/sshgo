@@ -77,26 +77,54 @@ func (a *App) agentView(c *ui.Context, pal *palette) {
 	a.agentConversation(c, pal, a.agentSnapshot())
 }
 
+// agentChatFolder is a host's conversations in the sidebar, listed under
+// the host's name.
+type agentChatFolder struct {
+	hostID string
+	name   string
+	chats  []*agent.Chat
+}
+
 // agentChatsSnap is the sidebar's view of the conversations: what it
 // lists, without the messages the conversation page reads.
 type agentChatsSnap struct {
-	chats   []*agent.Chat
+	folders []agentChatFolder
 	current string
+	open    bool // the main card shows the Agent
 	busy    bool
 }
 
+// agentChatsSnapshot lists the conversations in their hosts' folders, the
+// hosts whose conversation came last first.
 func (a *App) agentChatsSnapshot() agentChatsSnap {
 	a.agent.mu.Lock()
-	defer a.agent.mu.Unlock()
-	snap := agentChatsSnap{current: a.agent.current, busy: a.agent.busy}
+	snap := agentChatsSnap{current: a.agent.current, open: a.agent.open, busy: a.agent.busy}
+	at := map[string]int{}
 	for _, c := range a.agent.chats {
-		snap.chats = append(snap.chats, &agent.Chat{
+		n, ok := at[c.HostID]
+		if !ok {
+			n = len(snap.folders)
+			at[c.HostID] = n
+			snap.folders = append(snap.folders, agentChatFolder{hostID: c.HostID})
+		}
+		snap.folders[n].chats = append(snap.folders[n].chats, &agent.Chat{
 			ID: c.ID, Title: c.Title, HostID: c.HostID,
 			CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt,
 		})
 	}
-	sort.SliceStable(snap.chats, func(i, j int) bool {
-		return snap.chats[i].UpdatedAt > snap.chats[j].UpdatedAt
+	a.agent.mu.Unlock()
+	for n := range snap.folders {
+		f := &snap.folders[n]
+		sort.SliceStable(f.chats, func(i, j int) bool {
+			return f.chats[i].UpdatedAt > f.chats[j].UpdatedAt
+		})
+		f.name = a.agentHostName(f.hostID)
+		if f.name == "" {
+			f.name = locales.AgentUnknownHost()
+		}
+	}
+	sort.SliceStable(snap.folders, func(i, j int) bool {
+		return snap.folders[i].chats[0].UpdatedAt > snap.folders[j].chats[0].UpdatedAt
 	})
 	return snap
 }
@@ -156,17 +184,60 @@ func (a *App) agentEmpty(c *ui.Context, pal *palette, snap agentSnap) {
 	})
 }
 
-func (a *App) agentChatRow(c *ui.Context, pal *palette, chat *agent.Chat, current string, busy bool) {
-	sel := chat.ID == current
+// agentFolderClosed is whether the sidebar's folder of a host's
+// conversations is closed.
+func (a *App) agentFolderClosed(id string) bool { return a.agent.folderClosed[id] }
+
+func (a *App) toggleAgentFolder(id string) {
+	if a.agent.folderClosed == nil {
+		a.agent.folderClosed = map[string]bool{}
+	}
+	a.agent.folderClosed[id] = !a.agent.folderClosed[id]
+}
+
+// agentHostFolder is a host's folder of conversations in the sidebar: the
+// host's name above its chats while the folder is open.
+func (a *App) agentHostFolder(c *ui.Context, pal *palette, f agentChatFolder, snap agentChatsSnap) {
+	open := !a.agentFolderClosed(f.hostID)
+	hdr := ui.Row(c.Key("agent-folder-"+f.hostID)).Height(28).Margin(4, 0, 1, 0).Padding(0, 8, 0, 4).
+		Gap(6).AlignItems(ui.Center).Radius(6)
+	if pal.dark {
+		hdr.Border(1, ui.Transparent)
+	}
+	bg := ui.Transparent
+	if hdr.Hovered() {
+		bg = pal.rowHover
+	}
+	hdr.Background(hdr.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
+	if hdr.Clicked() {
+		a.toggleAgentFolder(f.hostID)
+	}
+	hdr.Children(func() {
+		chevron := chevronRightIcon
+		if open {
+			chevron = chevronDownIcon
+		}
+		ui.Icon(c, chevron).Size(11, 11).TextColor(pal.textFaint).Shrink(0)
+		ui.Icon(c, folderIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
+		a.maskedText(c, f.name, 12.5, 600, pal.textMuted).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
+		ui.Spacer(c)
+		ui.Text(c, strconv.Itoa(len(f.chats))).FontSize(11.5).FontFeatures("tnum").TextColor(pal.textFaint)
+	})
+	if !open {
+		return
+	}
+	for _, chat := range f.chats {
+		a.agentChatRow(c, pal, chat, snap)
+	}
+}
+
+func (a *App) agentChatRow(c *ui.Context, pal *palette, chat *agent.Chat, snap agentChatsSnap) {
+	sel := snap.open && chat.ID == snap.current
 	title := chat.Title
 	if title == "" {
 		title = locales.AgentUntitledChat()
 	}
-	hostName := ""
-	if chat.HostID != "" {
-		hostName = a.agentHostName(chat.HostID)
-	}
-	row := ui.Row(c.Key("agent-chat-"+chat.ID)).Height(40).Padding(6, 8, 6, 8).Gap(8).
+	row := ui.Row(c.Key("agent-chat-"+chat.ID)).Height(32).Padding(0, 10, 0, rowInset+4).Gap(8).
 		AlignItems(ui.Center).Radius(7)
 	if pal.dark {
 		row.Border(1, ui.Transparent)
@@ -181,7 +252,7 @@ func (a *App) agentChatRow(c *ui.Context, pal *palette, chat *agent.Chat, curren
 		bg = pal.rowHover
 	}
 	row.Background(row.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	if row.Clicked() && !sel && !busy {
+	if row.Clicked() && !sel && !snap.busy {
 		a.selectAgentChat(chat.ID)
 	}
 	row.ContextMenu(func(m *ui.Menu) {
@@ -191,13 +262,8 @@ func (a *App) agentChatRow(c *ui.Context, pal *palette, chat *agent.Chat, curren
 	})
 	row.Children(func() {
 		ui.Icon(c, chatIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
-		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			ui.Text(c, title).FontSize(13).TextColor(fg).SingleLine().Ellipsis("…").
-				Shrink(1).MinWidth(0).Tooltip(title)
-			if hostName != "" {
-				ui.Text(c, hostName).FontSize(11).TextColor(pal.textFaint).SingleLine().Ellipsis("…")
-			}
-		})
+		ui.Text(c, title).FontSize(13).TextColor(fg).SingleLine().Ellipsis("…").
+			Grow(1).MinWidth(0).Tooltip(title)
 	})
 }
 

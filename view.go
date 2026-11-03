@@ -234,14 +234,14 @@ func (a *App) agentSidebar(c *ui.Context, pal *palette) {
 		iconButton(c, "sidebar-agent-new", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
 	})
 	ui.Scroll(c.Key("agent-chats")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
-		if len(snap.chats) == 0 {
+		if len(snap.folders) == 0 {
 			ui.Column(c).Padding(8, 10).Children(func() {
 				ui.Text(c, locales.AgentNoChats()).FontSize(12.5).TextColor(pal.textFaint)
 			})
 			return
 		}
-		for _, chat := range snap.chats {
-			a.agentChatRow(c, pal, chat, snap.current, snap.busy)
+		for _, f := range snap.folders {
+			a.agentHostFolder(c, pal, f, snap)
 		}
 	})
 }

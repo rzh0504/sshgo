@@ -191,6 +191,7 @@
   "pageAgent": "Agent",
   "agentTitle": "Agent",
   "agentChats": "会话",
+  "agentUnknownHost": "未知主机",
   "agentNewChat": "新会话",
   "agentClose": "关闭 Agent",
   "agentEmptyTitle": "问问你的服务器",

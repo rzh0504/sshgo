@@ -1952,6 +1952,16 @@ func (msgs Messages) AgentChats() string {
 	return Catalog.Format(msgs.locale, "agentChats", nil)
 }
 
+// AgentUnknownHost says "Unknown Host"
+// in the language the app shows.
+func AgentUnknownHost() string { return In(i18n.Locale()).AgentUnknownHost() }
+
+// AgentUnknownHost says "Unknown Host"
+// in the language of msgs.
+func (msgs Messages) AgentUnknownHost() string {
+	return Catalog.Format(msgs.locale, "agentUnknownHost", nil)
+}
+
 // AgentNewChat says "New Chat"
 // in the language the app shows.
 func AgentNewChat() string { return In(i18n.Locale()).AgentNewChat() }

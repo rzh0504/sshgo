@@ -61,6 +61,7 @@ type agentState struct {
 	list              ui.ListState
 	md                markdown.Options
 	expanded          map[string]bool
+	folderClosed      map[string]bool // the sidebar's host folders
 }
 
 type agentDeleteState struct {
