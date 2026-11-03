@@ -129,6 +129,20 @@ func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name stri
 		ui.Text(c, name).FontSize(12.5).FontWeight(600).TextColor(pal.textMuted).
 			SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
 		ui.Spacer(c)
+		if hdr.Hovered() {
+			add := ui.ButtonBase(c.Key("group-add-"+g.ID)).Size(20, 20).Radius(4).Center().
+				TextColor(pal.textMuted).Label(locales.ActionNewHostInGroup())
+			if g.ID == "" {
+				add.Label(locales.ActionAddHost())
+			}
+			if add.Hovered() {
+				add.TextColor(pal.text)
+			}
+			add.Children(func() { ui.Icon(c, plusIcon).Size(13, 13) })
+			if add.Clicked() {
+				a.openEditorInGroup(g.ID)
+			}
+		}
 		ui.Text(c, strconv.Itoa(len(hosts))).FontSize(11.5).FontFeatures("tnum").TextColor(pal.textFaint)
 	})
 	if !open {

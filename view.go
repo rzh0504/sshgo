@@ -203,6 +203,7 @@ func (a *App) hostSidebar(c *ui.Context, pal *palette) {
 	ui.Row(c).Height(32).Shrink(0).Padding(4, 12).Gap(6).AlignItems(ui.Center).DragWindow().Children(func() {
 		ui.Text(c, locales.SidebarGroups()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
 		ui.Spacer(c)
+		iconButton(c, "sidebar-new-group", plusIcon, locales.ActionNewGroup(), pal, func() { a.openGroupEditor("") })
 	})
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
 		if len(a.state.Hosts) == 0 && len(a.state.Groups) == 0 {
@@ -444,16 +445,7 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 			}
 			ui.Spacer(c)
 			if !agentOpen {
-				if dashboard {
-					ui.Row(c).Gap(8).Shrink(0).Margin(0, 8, 0, 8).Children(func() {
-						if button(c, "dash-new-group", locales.ActionNewGroup(), "", false, pal) {
-							a.openGroupEditor("")
-						}
-						if button(c, "dash-new-host", locales.ActionNewHost(), "", true, pal) {
-							a.openEditor("")
-						}
-					})
-				} else if hasHost {
+				if hasHost && !dashboard {
 					if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
 						iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
 					}
