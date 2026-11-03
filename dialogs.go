@@ -199,6 +199,9 @@ func (a *App) dialogs(c *ui.Context, pal *palette) {
 	a.keyPassView(c, pal)
 	a.hostKeyView(c, pal)
 	a.confirmView(c, pal)
+	a.agentDeleteView(c, pal)
+	a.agentConnectView(c, pal)
+	a.agentAskView(c, pal)
 }
 
 func dialogHead(c *ui.Context, pal *palette, title, detail string) {
@@ -242,9 +245,18 @@ func groupField(c *ui.Context, key string, value *string, options []string, pal 
 	})
 	focusEdge(box, cb.Input.Focused(), pal)
 	q := strings.ToLower(strings.TrimSpace(*value))
+	// A value that is already a group lists every group, so the field
+	// switches between them; typing another text filters the choices.
+	selected := false
+	for _, o := range options {
+		if strings.EqualFold(o, q) {
+			selected = true
+			break
+		}
+	}
 	var shown []string
 	for _, o := range options {
-		if q == "" || strings.Contains(strings.ToLower(o), q) {
+		if selected || q == "" || strings.Contains(strings.ToLower(o), q) {
 			shown = append(shown, o)
 		}
 	}
@@ -674,6 +686,8 @@ func (a *App) passwordView(c *ui.Context, pal *palette) {
 				p.open = true
 				a.password = p
 			}
+		} else {
+			a.agentQueuedFailed(p.host.ID, locales.AgentConnectCancelled())
 		}
 	}
 }
@@ -745,6 +759,8 @@ func (a *App) keyPassView(c *ui.Context, pal *palette) {
 				p.open = true
 				a.keyPass = p
 			}
+		} else {
+			a.agentQueuedFailed(p.host.ID, locales.AgentConnectCancelled())
 		}
 	}
 }
@@ -851,7 +867,7 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 	case cf.quit:
 		title, detail, action, key = locales.QuitTitle(), locales.QuitDetail(a.connectedCount()), locales.ActionQuit(), "quit"
 	case cf.group != nil:
-		title, detail = locales.DeleteGroupTitle(), locales.DeleteGroupDetail(cf.group.Name)
+		title, detail = locales.DeleteGroupTitle(), locales.DeleteGroupDetail(cf.group.Name, len(a.hostsIn(cf.group.ID)))
 	}
 	run := false
 	ui.DialogBase(c.Key("confirm-"+key), &cf.open, func(backdrop, panel ui.Element) {
@@ -887,6 +903,7 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 func (a *App) deleteHost(h store.Host) {
 	idx := a.state.Index(h.ID)
 	a.resetRuntime(h.ID)
+	a.agentQueuedFailed(h.ID, locales.AgentConnectCancelled())
 	delete(a.runtimes, h.ID)
 	delete(a.handles, h.ID)
 	_ = mygo.Secrets.Delete(passwordKey(h))

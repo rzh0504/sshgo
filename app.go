@@ -96,6 +96,10 @@ type App struct {
 	dashScroll  ui.ScrollState
 	// dashCollapsed is the dashboard's groups, apart from the sidebar's.
 	dashCollapsed map[string]bool
+	// tabEnter slides the sidebar's list in after its tab changed, toward
+	// tabDir: 1 for the Agent, -1 for the hosts.
+	tabEnter bool
+	tabDir   float32
 
 	tray          *mygo.Tray // the icon in the notification area, while it shows
 	quitting      bool       // a quit is on its way: let the windows close
@@ -111,13 +115,22 @@ type App struct {
 	updates     updatePrefs
 
 	askMu sync.Mutex // one host key question at a time
+
+	agent        *agentState
+	agentDelete  *agentDeleteState
+	agentConnect *agentConnectState
+	agentAsk     *agentAskState
+	providerEdit *providerEditState
 }
 
 func newApp() *App {
-	return &App{
+	a := &App{
 		runtimes: map[string]*hostRuntime{},
 		handles:  map[string]*ui.Handle{},
+		agent:    &agentState{},
 	}
+	a.agent.md.WrapCode = true
+	return a
 }
 
 func (a *App) load() {
@@ -140,6 +153,8 @@ func (a *App) load() {
 	a.state.Theme = knownTheme(a.state.Theme)
 	setLooks(a.state.Theme)
 	a.applied = valuesOf(a.state)
+	a.loadAgent()
+	a.loadAgentProviders()
 	if dir, err := store.Dir(); err == nil {
 		a.keys = kh.Store{Path: filepath.Join(dir, "known_hosts")}
 	}
@@ -181,6 +196,11 @@ func (a *App) selectedHost() (store.Host, bool) {
 }
 
 func (a *App) selectHost(id string) {
+	if a.agentOpen() {
+		a.agent.open = false
+		a.closeAgentMenus()
+		a.updateTitle()
+	}
 	if a.selected == id {
 		a.focusTerminal(id)
 		return
@@ -241,6 +261,14 @@ func (a *App) updateTitle() {
 	if a.win == nil {
 		return
 	}
+	if a.agentOpen() {
+		title := locales.AgentTitle() + " — sshgo"
+		if t := a.agentCurrentTitle(); t != "" {
+			title = t + " — " + locales.AgentTitle()
+		}
+		a.win.SetTitle(title)
+		return
+	}
 	if a.showsDashboard() {
 		a.win.SetTitle("sshgo")
 		return
@@ -258,6 +286,9 @@ func (a *App) updateTitle() {
 // showsDashboard reports whether the card holds the dashboard: no shell,
 // no connection on its way, and no failure to report.
 func (a *App) showsDashboard() bool {
+	if a.agentOpen() {
+		return false
+	}
 	h, ok := a.selectedHost()
 	if !ok {
 		return true
@@ -286,10 +317,15 @@ func (a *App) connectedCount() int {
 func (a *App) anyDialogOpen() bool {
 	return (a.editor != nil && a.editor.open) || (a.groupEdit != nil && a.groupEdit.open) ||
 		(a.password != nil && a.password.open) || (a.keyPass != nil && a.keyPass.open) ||
-		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open)
+		(a.hostKey != nil && a.hostKey.open) || (a.confirm != nil && a.confirm.open) ||
+		(a.agentDelete != nil && a.agentDelete.open) || (a.agentConnect != nil && a.agentConnect.open)
 }
 
 func (a *App) connect(id string) {
+	if a.agentOpen() {
+		a.agent.open = false
+		a.closeAgentMenus()
+	}
 	h, ok := a.state.Host(id)
 	if !ok {
 		return
@@ -385,6 +421,7 @@ func (a *App) failConnect(h store.Host, detail string) {
 	a.selected = h.ID
 	a.saveState()
 	a.updateTitle()
+	a.agentQueuedFailed(h.ID, detail)
 }
 
 func (a *App) beginConnect(h store.Host, auth connectAuth) {
@@ -402,14 +439,17 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 	a.saveState()
 	a.updateTitle()
 	go func() {
-		sess, err := sshx.Connect(context.Background(), sshx.Config{
+		cfg := sshx.Config{
 			Address:         h.Endpoint(),
 			User:            h.User,
 			Password:        auth.password,
 			Signer:          auth.signer,
-			Agent:           auth.agent,
 			HostKeyCallback: a.hostKeyCallback(h, attempt),
-		})
+		}
+		if auth.agent != nil {
+			cfg.Agent = auth.agent
+		}
+		sess, err := sshx.Connect(context.Background(), cfg)
 		if auth.agent != nil {
 			auth.agent.Close()
 		}
@@ -424,6 +464,7 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 					rt.password = ""
 					a.forgetSavedPassword(h)
 				}
+				a.agentQueuedFailed(h.ID, rt.err)
 			})
 			return
 		}
@@ -467,6 +508,7 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 				}
 				rt.state = connFailed
 				rt.err = locales.ErrorTerminal(err.Error())
+				a.agentQueuedFailed(h.ID, rt.err)
 			})
 			return
 		}
@@ -488,9 +530,19 @@ func (a *App) beginConnect(h store.Host, auth connectAuth) {
 			default:
 				rt.state = connConnected
 			}
+			if rt.state == connConnected && a.agent.target == "" {
+				a.agent.target = h.ID
+			}
 			a.recordRecent(h.ID)
 			a.updateTitle()
-			a.focusTerminal(h.ID)
+			if !a.agentOpen() {
+				a.focusTerminal(h.ID)
+			}
+			if rt.state == connConnected {
+				a.agentQueuedReady(h.ID)
+			} else {
+				a.agentQueuedFailed(h.ID, rt.err)
+			}
 		})
 	}()
 }
@@ -525,10 +577,12 @@ func (a *App) resetRuntime(id string) {
 
 func (a *App) disconnect(id string) {
 	a.resetRuntime(id)
+	a.agentQueuedFailed(id, locales.AgentConnectCancelled())
 	a.updateTitle()
 }
 
 func (a *App) closeAll() {
+	a.stopAgent()
 	for id := range a.runtimes {
 		a.resetRuntime(id)
 	}

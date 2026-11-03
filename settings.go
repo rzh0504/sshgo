@@ -2,7 +2,9 @@ package main
 
 import (
 	"slices"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,14 +26,16 @@ var settingsPages = []settingsPage{
 	{id: "general", title: locales.PageGeneral, icon: gearIcon},
 	{id: "appearance", title: locales.PageAppearance, icon: paintbrushIcon},
 	{id: "terminal", title: locales.PageTerminal, icon: terminalIcon},
+	{id: "agent", title: locales.PageAgent, icon: agentIcon},
 	{id: "about", title: locales.PageAbout, icon: infoIcon},
 }
 
 // settingsState is the settings window's: the page it shows, and where
 // each page scrolled to.
 type settingsState struct {
-	page   string
-	scroll map[string]*ui.ScrollState
+	page           string
+	titleModelOpen bool // the title model's menu
+	scroll         map[string]*ui.ScrollState
 }
 
 func (s *settingsState) scrollOf(id string) *ui.ScrollState {
@@ -48,18 +52,27 @@ func (s *settingsState) scrollOf(id string) *ui.ScrollState {
 
 // settingsValues are the settings a change applies, comparable as a set.
 type settingsValues struct {
-	appearance, theme string
-	fontFamily        string
-	fontSize          float64
-	cursor            string
-	noBlink           bool
-	language          string
-	privacy           bool
-	noVibrancy        bool
-	closeBehavior     string
-	hideAtLogin       bool
-	confirmQuit       bool
-	autoConnect       bool
+	appearance, theme     string
+	fontFamily            string
+	fontSize              float64
+	cursor                string
+	noBlink               bool
+	language              string
+	privacy               bool
+	noVibrancy            bool
+	closeBehavior         string
+	hideAtLogin           bool
+	confirmQuit           bool
+	autoConnect           bool
+	agentBaseURL          string
+	agentModel            string
+	agentAutoRunSafe      bool
+	agentAutoRunReadTools bool
+	agentNoStream         bool
+	agentNoTools          bool
+	agentDisabledTools    string
+	agentEnabled          bool
+	agentTitle            string
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -68,7 +81,19 @@ func valuesOf(s store.State) settingsValues {
 		fontSize: s.FontSize, cursor: s.Cursor, noBlink: s.NoBlink, language: s.Language,
 		privacy: s.Privacy, noVibrancy: s.NoVibrancy, closeBehavior: s.CloseBehavior,
 		hideAtLogin: s.HideAtLogin, confirmQuit: s.ConfirmQuit, autoConnect: s.AutoConnect,
+		agentBaseURL: s.AgentBaseURL, agentModel: s.AgentModel, agentAutoRunSafe: s.AgentAutoRunSafe,
+		agentAutoRunReadTools: s.AgentAutoRunReadTools,
+		agentNoStream:         s.AgentNoStream, agentNoTools: s.AgentNoTools,
+		agentDisabledTools: strings.Join(sortedNames(s.AgentDisabledTools), "\x00"),
+		agentEnabled:       s.AgentEnabled,
+		agentTitle:         s.AgentTitleProvider + "\x00" + s.AgentTitleModel,
 	}
+}
+
+func sortedNames(names []string) []string {
+	out := append([]string(nil), names...)
+	sort.Strings(out)
+	return out
 }
 
 func localeTag(language string) string {
@@ -103,6 +128,7 @@ func (a *App) openSettings() {
 	}))
 	a.setWin.SetVibrancy(a.vibrancy())
 	a.setWin.OnClosed(func() {
+		a.providerEdit = nil
 		offUpdates()
 		a.setWin = nil
 	})
@@ -144,6 +170,8 @@ func (a *App) settingsView(c *ui.Context) {
 							a.appearancePage(c, pal)
 						case "terminal":
 							a.terminalPage(c, pal)
+						case "agent":
+							a.agentPage(c, pal)
 						case "about":
 							a.aboutPage(c, pal)
 						}
@@ -152,6 +180,7 @@ func (a *App) settingsView(c *ui.Context) {
 			})
 		})
 	})
+	a.agentProviderView(c, pal)
 	a.applySettings()
 }
 
@@ -166,7 +195,8 @@ func (a *App) currentSettingsPage() settingsPage {
 
 func (a *App) settingsNav(c *ui.Context, pal *palette, p settingsPage) {
 	sel := a.currentSettingsPage().id == p.id
-	item := ui.Row(c.Key("nav-"+p.id)).Height(32).Padding(0, 10).Gap(10).AlignItems(ui.Center).Radius(8)
+	item := ui.Row(c.Key("nav-"+p.id)).Height(32).Padding(0, 10).Gap(10).AlignItems(ui.Center).Radius(8).
+		Cursor(ui.CursorPointer)
 	if pal.dark {
 		item.Border(1, ui.Transparent)
 	}
@@ -248,7 +278,7 @@ func segmented(c *ui.Context, key string, value *string, ids, labels []string) {
 					sep.Background(pal.text.Alpha(0.14))
 				}
 			}
-			s := seg.Segment(n).FillHeight().Padding(0, 12).Radius(5).Center()
+			s := seg.Segment(n).FillHeight().Padding(0, 12).Radius(5).Center().Cursor(ui.CursorPointer)
 			if n == i {
 				s.Background(thumb)
 				if pal.dark {
@@ -374,7 +404,8 @@ func (a *App) themeTile(c *ui.Context, pal *palette, id string) {
 	dark := c.Theme().Dark
 	sel := a.state.Theme == id
 	name := themeName(id)
-	tile := ui.ButtonBase(c.Key("theme-" + id)).Column().Width(124).Gap(8).AlignItems(ui.Stretch).Label(name)
+	tile := ui.ButtonBase(c.Key("theme-" + id)).Column().Width(124).Gap(8).AlignItems(ui.Stretch).
+		Label(name).Cursor(ui.CursorPointer)
 	if tile.Clicked() {
 		a.state.Theme = id
 	}
@@ -511,6 +542,136 @@ func (a *App) terminalPage(c *ui.Context, pal *palette) {
 				a.state.NoBlink = !on
 			}
 		})
+	})
+}
+
+// --- Agent ---
+
+// setAgentEnabled shows or hides the Agent: off closes its views and takes
+// its sidebar tab away, while its conversations and settings stay saved.
+func (a *App) setAgentEnabled(on bool) {
+	a.state.AgentEnabled = on
+	if !on {
+		if a.agent.busy {
+			a.stopAgent()
+		}
+		a.agent.open = false
+		a.closeAgentMenus()
+		a.agentConnect = nil
+		a.agentDelete = nil
+		a.providerEdit = nil
+	}
+	a.saveState()
+	mygo.App.SetMenu(a.buildMenu())
+	a.updateTitle()
+	a.repaint()
+	if a.setWin != nil {
+		a.setWin.Invalidate()
+	}
+}
+
+func (a *App) agentPage(c *ui.Context, pal *palette) {
+	settingsGroup(c, pal, "", "", func() {
+		settingRow(c, pal, locales.SetAgentEnabled(), locales.SetAgentEnabledDetail(), func() {
+			on := a.state.AgentEnabled
+			if toggle(c.Key("agent-enabled"), &on, pal).Changed() {
+				a.setAgentEnabled(on)
+			}
+		})
+	})
+	if !a.state.AgentEnabled {
+		return
+	}
+	a.agentProviderSettings(c, pal)
+	settingsGroup(c, pal, locales.AgentTitleGroup(), "", func() {
+		a.agentTitleModelRow(c, pal)
+	})
+	settingsGroup(c, pal, locales.AgentToolsGroup(), locales.AgentToolsNote(), func() {
+		settingRow(c, pal, locales.SetAgentTools(), locales.SetAgentToolsDetail(), func() {
+			on := !a.state.AgentNoTools
+			if toggle(c.Key("agent-tools"), &on, pal).Changed() {
+				a.state.AgentNoTools = !on
+			}
+		})
+	})
+	a.agentToolSettings(c, pal)
+	settingsGroup(c, pal, locales.AgentBehaviorGroup(), locales.AgentBehaviorNote(), func() {
+		settingRow(c, pal, locales.SetAgentStream(), locales.SetAgentStreamDetail(), func() {
+			stream := !a.state.AgentNoStream
+			toggle(c.Key("agent-stream"), &stream, pal)
+			a.state.AgentNoStream = !stream
+		})
+	})
+}
+
+type agentToolSetting struct {
+	name   string
+	label  func() string
+	detail func() string
+}
+
+var builtinAgentTools = []agentToolSetting{
+	{"run_shell_command", locales.SetAgentToolShell, locales.SetAgentToolShellDetail},
+	{"read_file", locales.SetAgentToolReadFile, locales.SetAgentToolReadFileDetail},
+	{"write_file", locales.SetAgentToolWriteFile, locales.SetAgentToolWriteFileDetail},
+	{"list_dir", locales.SetAgentToolListDir, locales.SetAgentToolListDirDetail},
+	{"terminal_screen", locales.SetAgentToolTerminal, locales.SetAgentToolTerminalDetail},
+	{"memory", locales.SetAgentToolMemory, locales.SetAgentToolMemoryDetail},
+	{"web_fetch", locales.SetAgentToolWeb, locales.SetAgentToolWebDetail},
+	{"ask_user", locales.SetAgentToolAsk, locales.SetAgentToolAskDetail},
+}
+
+// agentToolSettings lists the built-in tools and the actions that may run
+// without asking, each with its own switch.
+func (a *App) agentToolSettings(c *ui.Context, pal *palette) {
+	note := ""
+	switch {
+	case a.state.AgentNoTools:
+		note = locales.AgentToolsOff()
+	default:
+		enabled := false
+		for _, tool := range builtinAgentTools {
+			if !slices.Contains(a.state.AgentDisabledTools, tool.name) {
+				enabled = true
+				break
+			}
+		}
+		if !enabled {
+			note = locales.AgentToolsNone()
+		}
+	}
+	settingsGroup(c, pal, locales.AgentBuiltinGroup(), note, func() {
+		for _, tool := range builtinAgentTools {
+			a.agentToolRow(c, pal, tool)
+		}
+	})
+	settingsGroup(c, pal, locales.AgentNoAskGroup(), locales.AgentNoAskNote(), func() {
+		a.agentAutoRow(c, pal, "agent-auto-read-tools", locales.SetAgentAutoReadTools(), locales.SetAgentAutoReadToolsDetail(),
+			&a.state.AgentAutoRunReadTools, !a.agentReadToolEnabled())
+		a.agentAutoRow(c, pal, "agent-auto-shell", locales.SetAgentAutoRun(), locales.SetAgentAutoRunDetail(),
+			&a.state.AgentAutoRunSafe, !a.agentToolEnabled("run_shell_command"))
+	})
+}
+
+func (a *App) agentToolRow(c *ui.Context, pal *palette, tool agentToolSetting) {
+	settingRow(c, pal, tool.label(), tool.detail(), func() {
+		on := !slices.Contains(a.state.AgentDisabledTools, tool.name)
+		sw := toggle(c.Key("agent-tool-"+tool.name), &on, pal)
+		if a.state.AgentNoTools {
+			sw.Disabled(true)
+		}
+		if sw.Changed() {
+			a.setAgentToolEnabled(tool.name, on)
+		}
+	})
+}
+
+func (a *App) agentAutoRow(c *ui.Context, pal *palette, key, label, detail string, on *bool, disabled bool) {
+	settingRow(c, pal, label, detail, func() {
+		sw := toggle(c.Key(key), on, pal)
+		if disabled {
+			sw.Disabled(true)
+		}
 	})
 }
 

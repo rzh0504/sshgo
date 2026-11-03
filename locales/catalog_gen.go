@@ -184,6 +184,16 @@ func (msgs Messages) ActionCancel() string {
 	return Catalog.Format(msgs.locale, "actionCancel", nil)
 }
 
+// ActionBack says "Back"
+// in the language the app shows.
+func ActionBack() string { return In(i18n.Locale()).ActionBack() }
+
+// ActionBack says "Back"
+// in the language of msgs.
+func (msgs Messages) ActionBack() string {
+	return Catalog.Format(msgs.locale, "actionBack", nil)
+}
+
 // ActionDelete says "Delete"
 // in the language the app shows.
 func ActionDelete() string { return In(i18n.Locale()).ActionDelete() }
@@ -252,6 +262,16 @@ func SidebarNoHosts() string { return In(i18n.Locale()).SidebarNoHosts() }
 // in the language of msgs.
 func (msgs Messages) SidebarNoHosts() string {
 	return Catalog.Format(msgs.locale, "sidebarNoHosts", nil)
+}
+
+// SidebarGroups says "Groups"
+// in the language the app shows.
+func SidebarGroups() string { return In(i18n.Locale()).SidebarGroups() }
+
+// SidebarGroups says "Groups"
+// in the language of msgs.
+func (msgs Messages) SidebarGroups() string {
+	return Catalog.Format(msgs.locale, "sidebarGroups", nil)
 }
 
 // SidebarConnectedCount says "{count, plural, =0 {None connected} one {# connected} other {# connected}}"
@@ -454,14 +474,16 @@ func (msgs Messages) DeleteGroupTitle() string {
 	return Catalog.Format(msgs.locale, "deleteGroupTitle", nil)
 }
 
-// DeleteGroupDetail says "Delete {name}? Its hosts stay, ungrouped."
+// DeleteGroupDetail says "Delete {name}? {count, plural, =0 {} one {Its host stays, ungrouped.} other {Its # hosts stay, ungrouped.}}"
 // in the language the app shows.
-func DeleteGroupDetail(name string) string { return In(i18n.Locale()).DeleteGroupDetail(name) }
+func DeleteGroupDetail(name string, count int) string {
+	return In(i18n.Locale()).DeleteGroupDetail(name, count)
+}
 
-// DeleteGroupDetail says "Delete {name}? Its hosts stay, ungrouped."
+// DeleteGroupDetail says "Delete {name}? {count, plural, =0 {} one {Its host stays, ungrouped.} other {Its # hosts stay, ungrouped.}}"
 // in the language of msgs.
-func (msgs Messages) DeleteGroupDetail(name string) string {
-	return Catalog.Format(msgs.locale, "deleteGroupDetail", map[string]any{"name": name})
+func (msgs Messages) DeleteGroupDetail(name string, count int) string {
+	return Catalog.Format(msgs.locale, "deleteGroupDetail", map[string]any{"name": name, "count": count})
 }
 
 // StatusConnected says "Connected"
@@ -1900,4 +1922,1508 @@ func TrayQuit(app string) string { return In(i18n.Locale()).TrayQuit(app) }
 // in the language of msgs.
 func (msgs Messages) TrayQuit(app string) string {
 	return Catalog.Format(msgs.locale, "trayQuit", map[string]any{"app": app})
+}
+
+// MenuAgent says "Agent"
+// in the language the app shows.
+func MenuAgent() string { return In(i18n.Locale()).MenuAgent() }
+
+// MenuAgent says "Agent"
+// in the language of msgs.
+func (msgs Messages) MenuAgent() string {
+	return Catalog.Format(msgs.locale, "menuAgent", nil)
+}
+
+// PageAgent says "Agent"
+// in the language the app shows.
+func PageAgent() string { return In(i18n.Locale()).PageAgent() }
+
+// PageAgent says "Agent"
+// in the language of msgs.
+func (msgs Messages) PageAgent() string {
+	return Catalog.Format(msgs.locale, "pageAgent", nil)
+}
+
+// AgentTitle says "Agent"
+// in the language the app shows.
+func AgentTitle() string { return In(i18n.Locale()).AgentTitle() }
+
+// AgentTitle says "Agent"
+// in the language of msgs.
+func (msgs Messages) AgentTitle() string {
+	return Catalog.Format(msgs.locale, "agentTitle", nil)
+}
+
+// AgentChats says "Chats"
+// in the language the app shows.
+func AgentChats() string { return In(i18n.Locale()).AgentChats() }
+
+// AgentChats says "Chats"
+// in the language of msgs.
+func (msgs Messages) AgentChats() string {
+	return Catalog.Format(msgs.locale, "agentChats", nil)
+}
+
+// AgentUnknownHost says "Unknown Host"
+// in the language the app shows.
+func AgentUnknownHost() string { return In(i18n.Locale()).AgentUnknownHost() }
+
+// AgentUnknownHost says "Unknown Host"
+// in the language of msgs.
+func (msgs Messages) AgentUnknownHost() string {
+	return Catalog.Format(msgs.locale, "agentUnknownHost", nil)
+}
+
+// AgentNewChat says "New Chat"
+// in the language the app shows.
+func AgentNewChat() string { return In(i18n.Locale()).AgentNewChat() }
+
+// AgentNewChat says "New Chat"
+// in the language of msgs.
+func (msgs Messages) AgentNewChat() string {
+	return Catalog.Format(msgs.locale, "agentNewChat", nil)
+}
+
+// AgentEmptyTitle says "Ask about your servers"
+// in the language the app shows.
+func AgentEmptyTitle() string { return In(i18n.Locale()).AgentEmptyTitle() }
+
+// AgentEmptyTitle says "Ask about your servers"
+// in the language of msgs.
+func (msgs Messages) AgentEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "agentEmptyTitle", nil)
+}
+
+// AgentNotConfigured says "No model is set up yet. Add a provider and model in Settings → Agent."
+// in the language the app shows.
+func AgentNotConfigured() string { return In(i18n.Locale()).AgentNotConfigured() }
+
+// AgentNotConfigured says "No model is set up yet. Add a provider and model in Settings → Agent."
+// in the language of msgs.
+func (msgs Messages) AgentNotConfigured() string {
+	return Catalog.Format(msgs.locale, "agentNotConfigured", nil)
+}
+
+// AgentOpenSettings says "Open Settings"
+// in the language the app shows.
+func AgentOpenSettings() string { return In(i18n.Locale()).AgentOpenSettings() }
+
+// AgentOpenSettings says "Open Settings"
+// in the language of msgs.
+func (msgs Messages) AgentOpenSettings() string {
+	return Catalog.Format(msgs.locale, "agentOpenSettings", nil)
+}
+
+// AgentNoHosts says "No hosts yet. Add one in the sidebar first."
+// in the language the app shows.
+func AgentNoHosts() string { return In(i18n.Locale()).AgentNoHosts() }
+
+// AgentNoHosts says "No hosts yet. Add one in the sidebar first."
+// in the language of msgs.
+func (msgs Messages) AgentNoHosts() string {
+	return Catalog.Format(msgs.locale, "agentNoHosts", nil)
+}
+
+// AgentNoHostsMenu says "No hosts yet."
+// in the language the app shows.
+func AgentNoHostsMenu() string { return In(i18n.Locale()).AgentNoHostsMenu() }
+
+// AgentNoHostsMenu says "No hosts yet."
+// in the language of msgs.
+func (msgs Messages) AgentNoHostsMenu() string {
+	return Catalog.Format(msgs.locale, "agentNoHostsMenu", nil)
+}
+
+// AgentNoChats says "No conversations yet."
+// in the language the app shows.
+func AgentNoChats() string { return In(i18n.Locale()).AgentNoChats() }
+
+// AgentNoChats says "No conversations yet."
+// in the language of msgs.
+func (msgs Messages) AgentNoChats() string {
+	return Catalog.Format(msgs.locale, "agentNoChats", nil)
+}
+
+// AgentUntitledChat says "New conversation"
+// in the language the app shows.
+func AgentUntitledChat() string { return In(i18n.Locale()).AgentUntitledChat() }
+
+// AgentUntitledChat says "New conversation"
+// in the language of msgs.
+func (msgs Messages) AgentUntitledChat() string {
+	return Catalog.Format(msgs.locale, "agentUntitledChat", nil)
+}
+
+// AgentDeleteChat says "Delete Chat…"
+// in the language the app shows.
+func AgentDeleteChat() string { return In(i18n.Locale()).AgentDeleteChat() }
+
+// AgentDeleteChat says "Delete Chat…"
+// in the language of msgs.
+func (msgs Messages) AgentDeleteChat() string {
+	return Catalog.Format(msgs.locale, "agentDeleteChat", nil)
+}
+
+// AgentDeleteDetail says "Delete “{title}”? The conversation cannot be recovered."
+// in the language the app shows.
+func AgentDeleteDetail(title string) string { return In(i18n.Locale()).AgentDeleteDetail(title) }
+
+// AgentDeleteDetail says "Delete “{title}”? The conversation cannot be recovered."
+// in the language of msgs.
+func (msgs Messages) AgentDeleteDetail(title string) string {
+	return Catalog.Format(msgs.locale, "agentDeleteDetail", map[string]any{"title": title})
+}
+
+// AgentDismiss says "Dismiss"
+// in the language the app shows.
+func AgentDismiss() string { return In(i18n.Locale()).AgentDismiss() }
+
+// AgentDismiss says "Dismiss"
+// in the language of msgs.
+func (msgs Messages) AgentDismiss() string {
+	return Catalog.Format(msgs.locale, "agentDismiss", nil)
+}
+
+// AgentPlaceholder says "Ask about a server…"
+// in the language the app shows.
+func AgentPlaceholder() string { return In(i18n.Locale()).AgentPlaceholder() }
+
+// AgentPlaceholder says "Ask about a server…"
+// in the language of msgs.
+func (msgs Messages) AgentPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentPlaceholder", nil)
+}
+
+// AgentSend says "Send"
+// in the language the app shows.
+func AgentSend() string { return In(i18n.Locale()).AgentSend() }
+
+// AgentSend says "Send"
+// in the language of msgs.
+func (msgs Messages) AgentSend() string {
+	return Catalog.Format(msgs.locale, "agentSend", nil)
+}
+
+// AgentStop says "Stop"
+// in the language the app shows.
+func AgentStop() string { return In(i18n.Locale()).AgentStop() }
+
+// AgentStop says "Stop"
+// in the language of msgs.
+func (msgs Messages) AgentStop() string {
+	return Catalog.Format(msgs.locale, "agentStop", nil)
+}
+
+// AgentWorking says "Working…"
+// in the language the app shows.
+func AgentWorking() string { return In(i18n.Locale()).AgentWorking() }
+
+// AgentWorking says "Working…"
+// in the language of msgs.
+func (msgs Messages) AgentWorking() string {
+	return Catalog.Format(msgs.locale, "agentWorking", nil)
+}
+
+// AgentReplying says "Replying…"
+// in the language the app shows.
+func AgentReplying() string { return In(i18n.Locale()).AgentReplying() }
+
+// AgentReplying says "Replying…"
+// in the language of msgs.
+func (msgs Messages) AgentReplying() string {
+	return Catalog.Format(msgs.locale, "agentReplying", nil)
+}
+
+// AgentWaitingApproval says "Waiting for your approval"
+// in the language the app shows.
+func AgentWaitingApproval() string { return In(i18n.Locale()).AgentWaitingApproval() }
+
+// AgentWaitingApproval says "Waiting for your approval"
+// in the language of msgs.
+func (msgs Messages) AgentWaitingApproval() string {
+	return Catalog.Format(msgs.locale, "agentWaitingApproval", nil)
+}
+
+// AgentWaiting says "Waiting…"
+// in the language the app shows.
+func AgentWaiting() string { return In(i18n.Locale()).AgentWaiting() }
+
+// AgentWaiting says "Waiting…"
+// in the language of msgs.
+func (msgs Messages) AgentWaiting() string {
+	return Catalog.Format(msgs.locale, "agentWaiting", nil)
+}
+
+// AgentRunning says "Running…"
+// in the language the app shows.
+func AgentRunning() string { return In(i18n.Locale()).AgentRunning() }
+
+// AgentRunning says "Running…"
+// in the language of msgs.
+func (msgs Messages) AgentRunning() string {
+	return Catalog.Format(msgs.locale, "agentRunning", nil)
+}
+
+// AgentDenied says "Skipped"
+// in the language the app shows.
+func AgentDenied() string { return In(i18n.Locale()).AgentDenied() }
+
+// AgentDenied says "Skipped"
+// in the language of msgs.
+func (msgs Messages) AgentDenied() string {
+	return Catalog.Format(msgs.locale, "agentDenied", nil)
+}
+
+// AgentToolShell says "Shell command"
+// in the language the app shows.
+func AgentToolShell() string { return In(i18n.Locale()).AgentToolShell() }
+
+// AgentToolShell says "Shell command"
+// in the language of msgs.
+func (msgs Messages) AgentToolShell() string {
+	return Catalog.Format(msgs.locale, "agentToolShell", nil)
+}
+
+// AgentToolReadFile says "Read file"
+// in the language the app shows.
+func AgentToolReadFile() string { return In(i18n.Locale()).AgentToolReadFile() }
+
+// AgentToolReadFile says "Read file"
+// in the language of msgs.
+func (msgs Messages) AgentToolReadFile() string {
+	return Catalog.Format(msgs.locale, "agentToolReadFile", nil)
+}
+
+// AgentToolWriteFile says "Write file"
+// in the language the app shows.
+func AgentToolWriteFile() string { return In(i18n.Locale()).AgentToolWriteFile() }
+
+// AgentToolWriteFile says "Write file"
+// in the language of msgs.
+func (msgs Messages) AgentToolWriteFile() string {
+	return Catalog.Format(msgs.locale, "agentToolWriteFile", nil)
+}
+
+// AgentToolListDir says "List directory"
+// in the language the app shows.
+func AgentToolListDir() string { return In(i18n.Locale()).AgentToolListDir() }
+
+// AgentToolListDir says "List directory"
+// in the language of msgs.
+func (msgs Messages) AgentToolListDir() string {
+	return Catalog.Format(msgs.locale, "agentToolListDir", nil)
+}
+
+// AgentToolTerminal says "Terminal screen"
+// in the language the app shows.
+func AgentToolTerminal() string { return In(i18n.Locale()).AgentToolTerminal() }
+
+// AgentToolTerminal says "Terminal screen"
+// in the language of msgs.
+func (msgs Messages) AgentToolTerminal() string {
+	return Catalog.Format(msgs.locale, "agentToolTerminal", nil)
+}
+
+// AgentToolMemory says "Memory"
+// in the language the app shows.
+func AgentToolMemory() string { return In(i18n.Locale()).AgentToolMemory() }
+
+// AgentToolMemory says "Memory"
+// in the language of msgs.
+func (msgs Messages) AgentToolMemory() string {
+	return Catalog.Format(msgs.locale, "agentToolMemory", nil)
+}
+
+// AgentToolWeb says "Web fetch"
+// in the language the app shows.
+func AgentToolWeb() string { return In(i18n.Locale()).AgentToolWeb() }
+
+// AgentToolWeb says "Web fetch"
+// in the language of msgs.
+func (msgs Messages) AgentToolWeb() string {
+	return Catalog.Format(msgs.locale, "agentToolWeb", nil)
+}
+
+// AgentToolAsk says "Ask user"
+// in the language the app shows.
+func AgentToolAsk() string { return In(i18n.Locale()).AgentToolAsk() }
+
+// AgentToolAsk says "Ask user"
+// in the language of msgs.
+func (msgs Messages) AgentToolAsk() string {
+	return Catalog.Format(msgs.locale, "agentToolAsk", nil)
+}
+
+// AgentWebHeaders says "Headers"
+// in the language the app shows.
+func AgentWebHeaders() string { return In(i18n.Locale()).AgentWebHeaders() }
+
+// AgentWebHeaders says "Headers"
+// in the language of msgs.
+func (msgs Messages) AgentWebHeaders() string {
+	return Catalog.Format(msgs.locale, "agentWebHeaders", nil)
+}
+
+// AgentToolUnknown says "Tool call"
+// in the language the app shows.
+func AgentToolUnknown() string { return In(i18n.Locale()).AgentToolUnknown() }
+
+// AgentToolUnknown says "Tool call"
+// in the language of msgs.
+func (msgs Messages) AgentToolUnknown() string {
+	return Catalog.Format(msgs.locale, "agentToolUnknown", nil)
+}
+
+// AgentFileContent says "Content"
+// in the language the app shows.
+func AgentFileContent() string { return In(i18n.Locale()).AgentFileContent() }
+
+// AgentFileContent says "Content"
+// in the language of msgs.
+func (msgs Messages) AgentFileContent() string {
+	return Catalog.Format(msgs.locale, "agentFileContent", nil)
+}
+
+// AgentFileTruncated says "truncated"
+// in the language the app shows.
+func AgentFileTruncated() string { return In(i18n.Locale()).AgentFileTruncated() }
+
+// AgentFileTruncated says "truncated"
+// in the language of msgs.
+func (msgs Messages) AgentFileTruncated() string {
+	return Catalog.Format(msgs.locale, "agentFileTruncated", nil)
+}
+
+// AgentReviewHint says "Approve to run on the server"
+// in the language the app shows.
+func AgentReviewHint() string { return In(i18n.Locale()).AgentReviewHint() }
+
+// AgentReviewHint says "Approve to run on the server"
+// in the language of msgs.
+func (msgs Messages) AgentReviewHint() string {
+	return Catalog.Format(msgs.locale, "agentReviewHint", nil)
+}
+
+// AgentRun says "Run"
+// in the language the app shows.
+func AgentRun() string { return In(i18n.Locale()).AgentRun() }
+
+// AgentRun says "Run"
+// in the language of msgs.
+func (msgs Messages) AgentRun() string {
+	return Catalog.Format(msgs.locale, "agentRun", nil)
+}
+
+// AgentSkip says "Skip"
+// in the language the app shows.
+func AgentSkip() string { return In(i18n.Locale()).AgentSkip() }
+
+// AgentSkip says "Skip"
+// in the language of msgs.
+func (msgs Messages) AgentSkip() string {
+	return Catalog.Format(msgs.locale, "agentSkip", nil)
+}
+
+// AgentExitPrefix says "exit "
+// in the language the app shows.
+func AgentExitPrefix() string { return In(i18n.Locale()).AgentExitPrefix() }
+
+// AgentExitPrefix says "exit "
+// in the language of msgs.
+func (msgs Messages) AgentExitPrefix() string {
+	return Catalog.Format(msgs.locale, "agentExitPrefix", nil)
+}
+
+// AgentShowAll says "Show all"
+// in the language the app shows.
+func AgentShowAll() string { return In(i18n.Locale()).AgentShowAll() }
+
+// AgentShowAll says "Show all"
+// in the language of msgs.
+func (msgs Messages) AgentShowAll() string {
+	return Catalog.Format(msgs.locale, "agentShowAll", nil)
+}
+
+// AgentShowLess says "Show less"
+// in the language the app shows.
+func AgentShowLess() string { return In(i18n.Locale()).AgentShowLess() }
+
+// AgentShowLess says "Show less"
+// in the language of msgs.
+func (msgs Messages) AgentShowLess() string {
+	return Catalog.Format(msgs.locale, "agentShowLess", nil)
+}
+
+// AgentRiskReadOnly says "Read-only"
+// in the language the app shows.
+func AgentRiskReadOnly() string { return In(i18n.Locale()).AgentRiskReadOnly() }
+
+// AgentRiskReadOnly says "Read-only"
+// in the language of msgs.
+func (msgs Messages) AgentRiskReadOnly() string {
+	return Catalog.Format(msgs.locale, "agentRiskReadOnly", nil)
+}
+
+// AgentRiskUnknown says "Unverified"
+// in the language the app shows.
+func AgentRiskUnknown() string { return In(i18n.Locale()).AgentRiskUnknown() }
+
+// AgentRiskUnknown says "Unverified"
+// in the language of msgs.
+func (msgs Messages) AgentRiskUnknown() string {
+	return Catalog.Format(msgs.locale, "agentRiskUnknown", nil)
+}
+
+// AgentRiskCaution says "Changes"
+// in the language the app shows.
+func AgentRiskCaution() string { return In(i18n.Locale()).AgentRiskCaution() }
+
+// AgentRiskCaution says "Changes"
+// in the language of msgs.
+func (msgs Messages) AgentRiskCaution() string {
+	return Catalog.Format(msgs.locale, "agentRiskCaution", nil)
+}
+
+// AgentRiskDestructive says "Destructive"
+// in the language the app shows.
+func AgentRiskDestructive() string { return In(i18n.Locale()).AgentRiskDestructive() }
+
+// AgentRiskDestructive says "Destructive"
+// in the language of msgs.
+func (msgs Messages) AgentRiskDestructive() string {
+	return Catalog.Format(msgs.locale, "agentRiskDestructive", nil)
+}
+
+// AgentProviderGroup says "Providers"
+// in the language the app shows.
+func AgentProviderGroup() string { return In(i18n.Locale()).AgentProviderGroup() }
+
+// AgentProviderGroup says "Providers"
+// in the language of msgs.
+func (msgs Messages) AgentProviderGroup() string {
+	return Catalog.Format(msgs.locale, "agentProviderGroup", nil)
+}
+
+// AgentTitleGroup says "Titles"
+// in the language the app shows.
+func AgentTitleGroup() string { return In(i18n.Locale()).AgentTitleGroup() }
+
+// AgentTitleGroup says "Titles"
+// in the language of msgs.
+func (msgs Messages) AgentTitleGroup() string {
+	return Catalog.Format(msgs.locale, "agentTitleGroup", nil)
+}
+
+// SetAgentTitleModel says "Conversation titles"
+// in the language the app shows.
+func SetAgentTitleModel() string { return In(i18n.Locale()).SetAgentTitleModel() }
+
+// SetAgentTitleModel says "Conversation titles"
+// in the language of msgs.
+func (msgs Messages) SetAgentTitleModel() string {
+	return Catalog.Format(msgs.locale, "setAgentTitleModel", nil)
+}
+
+// SetAgentTitleModelDetail says "The model that names a conversation after its first reply."
+// in the language the app shows.
+func SetAgentTitleModelDetail() string { return In(i18n.Locale()).SetAgentTitleModelDetail() }
+
+// SetAgentTitleModelDetail says "The model that names a conversation after its first reply."
+// in the language of msgs.
+func (msgs Messages) SetAgentTitleModelDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentTitleModelDetail", nil)
+}
+
+// AgentTitleModelSame says "Same as the conversation"
+// in the language the app shows.
+func AgentTitleModelSame() string { return In(i18n.Locale()).AgentTitleModelSame() }
+
+// AgentTitleModelSame says "Same as the conversation"
+// in the language of msgs.
+func (msgs Messages) AgentTitleModelSame() string {
+	return Catalog.Format(msgs.locale, "agentTitleModelSame", nil)
+}
+
+// SetAgentEnabled says "Enable Agent"
+// in the language the app shows.
+func SetAgentEnabled() string { return In(i18n.Locale()).SetAgentEnabled() }
+
+// SetAgentEnabled says "Enable Agent"
+// in the language of msgs.
+func (msgs Messages) SetAgentEnabled() string {
+	return Catalog.Format(msgs.locale, "setAgentEnabled", nil)
+}
+
+// SetAgentEnabledDetail says "Show Agent conversations in the sidebar and let a model run tools on your hosts."
+// in the language the app shows.
+func SetAgentEnabledDetail() string { return In(i18n.Locale()).SetAgentEnabledDetail() }
+
+// SetAgentEnabledDetail says "Show Agent conversations in the sidebar and let a model run tools on your hosts."
+// in the language of msgs.
+func (msgs Messages) SetAgentEnabledDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentEnabledDetail", nil)
+}
+
+// AgentBehaviorGroup says "Behavior"
+// in the language the app shows.
+func AgentBehaviorGroup() string { return In(i18n.Locale()).AgentBehaviorGroup() }
+
+// AgentBehaviorGroup says "Behavior"
+// in the language of msgs.
+func (msgs Messages) AgentBehaviorGroup() string {
+	return Catalog.Format(msgs.locale, "agentBehaviorGroup", nil)
+}
+
+// AgentBehaviorNote says "Each conversation works on one host. The Agent can ask to connect that host when you send, and never asks for a passw…"
+// in the language the app shows.
+func AgentBehaviorNote() string { return In(i18n.Locale()).AgentBehaviorNote() }
+
+// AgentBehaviorNote says "Each conversation works on one host. The Agent can ask to connect that host when you send, and never asks for a passw…"
+// in the language of msgs.
+func (msgs Messages) AgentBehaviorNote() string {
+	return Catalog.Format(msgs.locale, "agentBehaviorNote", nil)
+}
+
+// AgentToolsGroup says "Tools"
+// in the language the app shows.
+func AgentToolsGroup() string { return In(i18n.Locale()).AgentToolsGroup() }
+
+// AgentToolsGroup says "Tools"
+// in the language of msgs.
+func (msgs Messages) AgentToolsGroup() string {
+	return Catalog.Format(msgs.locale, "agentToolsGroup", nil)
+}
+
+// AgentToolsNote says "Every call is shown for review, unless read-only actions are allowed below."
+// in the language the app shows.
+func AgentToolsNote() string { return In(i18n.Locale()).AgentToolsNote() }
+
+// AgentToolsNote says "Every call is shown for review, unless read-only actions are allowed below."
+// in the language of msgs.
+func (msgs Messages) AgentToolsNote() string {
+	return Catalog.Format(msgs.locale, "agentToolsNote", nil)
+}
+
+// SetAgentTools says "Use tools"
+// in the language the app shows.
+func SetAgentTools() string { return In(i18n.Locale()).SetAgentTools() }
+
+// SetAgentTools says "Use tools"
+// in the language of msgs.
+func (msgs Messages) SetAgentTools() string {
+	return Catalog.Format(msgs.locale, "setAgentTools", nil)
+}
+
+// SetAgentToolsDetail says "Let the Agent run commands and read or replace files. Off, it answers from the conversation alone."
+// in the language the app shows.
+func SetAgentToolsDetail() string { return In(i18n.Locale()).SetAgentToolsDetail() }
+
+// SetAgentToolsDetail says "Let the Agent run commands and read or replace files. Off, it answers from the conversation alone."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolsDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolsDetail", nil)
+}
+
+// AgentBuiltinGroup says "Built-in"
+// in the language the app shows.
+func AgentBuiltinGroup() string { return In(i18n.Locale()).AgentBuiltinGroup() }
+
+// AgentBuiltinGroup says "Built-in"
+// in the language of msgs.
+func (msgs Messages) AgentBuiltinGroup() string {
+	return Catalog.Format(msgs.locale, "agentBuiltinGroup", nil)
+}
+
+// SetAgentToolShell says "Run commands"
+// in the language the app shows.
+func SetAgentToolShell() string { return In(i18n.Locale()).SetAgentToolShell() }
+
+// SetAgentToolShell says "Run commands"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolShell() string {
+	return Catalog.Format(msgs.locale, "setAgentToolShell", nil)
+}
+
+// SetAgentToolShellDetail says "Run one non-interactive shell command on the host."
+// in the language the app shows.
+func SetAgentToolShellDetail() string { return In(i18n.Locale()).SetAgentToolShellDetail() }
+
+// SetAgentToolShellDetail says "Run one non-interactive shell command on the host."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolShellDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolShellDetail", nil)
+}
+
+// SetAgentToolReadFile says "Read files"
+// in the language the app shows.
+func SetAgentToolReadFile() string { return In(i18n.Locale()).SetAgentToolReadFile() }
+
+// SetAgentToolReadFile says "Read files"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolReadFile() string {
+	return Catalog.Format(msgs.locale, "setAgentToolReadFile", nil)
+}
+
+// SetAgentToolReadFileDetail says "Read a UTF-8 text file at an absolute path, up to 128 KiB."
+// in the language the app shows.
+func SetAgentToolReadFileDetail() string { return In(i18n.Locale()).SetAgentToolReadFileDetail() }
+
+// SetAgentToolReadFileDetail says "Read a UTF-8 text file at an absolute path, up to 128 KiB."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolReadFileDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolReadFileDetail", nil)
+}
+
+// SetAgentToolWriteFile says "Replace files"
+// in the language the app shows.
+func SetAgentToolWriteFile() string { return In(i18n.Locale()).SetAgentToolWriteFile() }
+
+// SetAgentToolWriteFile says "Replace files"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWriteFile() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWriteFile", nil)
+}
+
+// SetAgentToolWriteFileDetail says "Replace a UTF-8 text file; every write waits for your approval."
+// in the language the app shows.
+func SetAgentToolWriteFileDetail() string { return In(i18n.Locale()).SetAgentToolWriteFileDetail() }
+
+// SetAgentToolWriteFileDetail says "Replace a UTF-8 text file; every write waits for your approval."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWriteFileDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWriteFileDetail", nil)
+}
+
+// SetAgentToolListDir says "List directories"
+// in the language the app shows.
+func SetAgentToolListDir() string { return In(i18n.Locale()).SetAgentToolListDir() }
+
+// SetAgentToolListDir says "List directories"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolListDir() string {
+	return Catalog.Format(msgs.locale, "setAgentToolListDir", nil)
+}
+
+// SetAgentToolListDirDetail says "Read directory entries over SFTP, up to 500 at a time."
+// in the language the app shows.
+func SetAgentToolListDirDetail() string { return In(i18n.Locale()).SetAgentToolListDirDetail() }
+
+// SetAgentToolListDirDetail says "Read directory entries over SFTP, up to 500 at a time."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolListDirDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolListDirDetail", nil)
+}
+
+// SetAgentToolTerminal says "Read the terminal"
+// in the language the app shows.
+func SetAgentToolTerminal() string { return In(i18n.Locale()).SetAgentToolTerminal() }
+
+// SetAgentToolTerminal says "Read the terminal"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolTerminal() string {
+	return Catalog.Format(msgs.locale, "setAgentToolTerminal", nil)
+}
+
+// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback, while it is connected."
+// in the language the app shows.
+func SetAgentToolTerminalDetail() string { return In(i18n.Locale()).SetAgentToolTerminalDetail() }
+
+// SetAgentToolTerminalDetail says "Read the current terminal of the host, screen and scrollback, while it is connected."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolTerminalDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolTerminalDetail", nil)
+}
+
+// SetAgentToolMemory says "Memory"
+// in the language the app shows.
+func SetAgentToolMemory() string { return In(i18n.Locale()).SetAgentToolMemory() }
+
+// SetAgentToolMemory says "Memory"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolMemory() string {
+	return Catalog.Format(msgs.locale, "setAgentToolMemory", nil)
+}
+
+// SetAgentToolMemoryDetail says "Read and write notes that later conversations can use; writes always wait for your approval."
+// in the language the app shows.
+func SetAgentToolMemoryDetail() string { return In(i18n.Locale()).SetAgentToolMemoryDetail() }
+
+// SetAgentToolMemoryDetail says "Read and write notes that later conversations can use; writes always wait for your approval."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolMemoryDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolMemoryDetail", nil)
+}
+
+// SetAgentToolWeb says "Web fetch"
+// in the language the app shows.
+func SetAgentToolWeb() string { return In(i18n.Locale()).SetAgentToolWeb() }
+
+// SetAgentToolWeb says "Web fetch"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWeb() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWeb", nil)
+}
+
+// SetAgentToolWebDetail says "Fetch an http or https page or API; every call needs your approval."
+// in the language the app shows.
+func SetAgentToolWebDetail() string { return In(i18n.Locale()).SetAgentToolWebDetail() }
+
+// SetAgentToolWebDetail says "Fetch an http or https page or API; every call needs your approval."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolWebDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolWebDetail", nil)
+}
+
+// SetAgentToolAsk says "Ask you questions"
+// in the language the app shows.
+func SetAgentToolAsk() string { return In(i18n.Locale()).SetAgentToolAsk() }
+
+// SetAgentToolAsk says "Ask you questions"
+// in the language of msgs.
+func (msgs Messages) SetAgentToolAsk() string {
+	return Catalog.Format(msgs.locale, "setAgentToolAsk", nil)
+}
+
+// SetAgentToolAskDetail says "Ask with choices, text or secret fields; every question waits for you."
+// in the language the app shows.
+func SetAgentToolAskDetail() string { return In(i18n.Locale()).SetAgentToolAskDetail() }
+
+// SetAgentToolAskDetail says "Ask with choices, text or secret fields; every question waits for you."
+// in the language of msgs.
+func (msgs Messages) SetAgentToolAskDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentToolAskDetail", nil)
+}
+
+// AgentAskTitle says "The Agent asks"
+// in the language the app shows.
+func AgentAskTitle() string { return In(i18n.Locale()).AgentAskTitle() }
+
+// AgentAskTitle says "The Agent asks"
+// in the language of msgs.
+func (msgs Messages) AgentAskTitle() string {
+	return Catalog.Format(msgs.locale, "agentAskTitle", nil)
+}
+
+// AgentAskDetail says "Answer to continue this turn."
+// in the language the app shows.
+func AgentAskDetail() string { return In(i18n.Locale()).AgentAskDetail() }
+
+// AgentAskDetail says "Answer to continue this turn."
+// in the language of msgs.
+func (msgs Messages) AgentAskDetail() string {
+	return Catalog.Format(msgs.locale, "agentAskDetail", nil)
+}
+
+// AgentAskSubmit says "Submit"
+// in the language the app shows.
+func AgentAskSubmit() string { return In(i18n.Locale()).AgentAskSubmit() }
+
+// AgentAskSubmit says "Submit"
+// in the language of msgs.
+func (msgs Messages) AgentAskSubmit() string {
+	return Catalog.Format(msgs.locale, "agentAskSubmit", nil)
+}
+
+// AgentAskChooseOne says "Choose one"
+// in the language the app shows.
+func AgentAskChooseOne() string { return In(i18n.Locale()).AgentAskChooseOne() }
+
+// AgentAskChooseOne says "Choose one"
+// in the language of msgs.
+func (msgs Messages) AgentAskChooseOne() string {
+	return Catalog.Format(msgs.locale, "agentAskChooseOne", nil)
+}
+
+// AgentAskChooseMany says "Choose one or more"
+// in the language the app shows.
+func AgentAskChooseMany() string { return In(i18n.Locale()).AgentAskChooseMany() }
+
+// AgentAskChooseMany says "Choose one or more"
+// in the language of msgs.
+func (msgs Messages) AgentAskChooseMany() string {
+	return Catalog.Format(msgs.locale, "agentAskChooseMany", nil)
+}
+
+// AgentAskTextPlaceholder says "Type an answer"
+// in the language the app shows.
+func AgentAskTextPlaceholder() string { return In(i18n.Locale()).AgentAskTextPlaceholder() }
+
+// AgentAskTextPlaceholder says "Type an answer"
+// in the language of msgs.
+func (msgs Messages) AgentAskTextPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentAskTextPlaceholder", nil)
+}
+
+// AgentAskSecretPlaceholder says "Secret value"
+// in the language the app shows.
+func AgentAskSecretPlaceholder() string { return In(i18n.Locale()).AgentAskSecretPlaceholder() }
+
+// AgentAskSecretPlaceholder says "Secret value"
+// in the language of msgs.
+func (msgs Messages) AgentAskSecretPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentAskSecretPlaceholder", nil)
+}
+
+// AgentAskSecretHint says "This answer is not saved in the chat or sent to the model; tools get a handle."
+// in the language the app shows.
+func AgentAskSecretHint() string { return In(i18n.Locale()).AgentAskSecretHint() }
+
+// AgentAskSecretHint says "This answer is not saved in the chat or sent to the model; tools get a handle."
+// in the language of msgs.
+func (msgs Messages) AgentAskSecretHint() string {
+	return Catalog.Format(msgs.locale, "agentAskSecretHint", nil)
+}
+
+// AgentAskRequired says "Answer every question."
+// in the language the app shows.
+func AgentAskRequired() string { return In(i18n.Locale()).AgentAskRequired() }
+
+// AgentAskRequired says "Answer every question."
+// in the language of msgs.
+func (msgs Messages) AgentAskRequired() string {
+	return Catalog.Format(msgs.locale, "agentAskRequired", nil)
+}
+
+// AgentToolsOff says "The tools switch is off; the Agent will answer from the conversation alone."
+// in the language the app shows.
+func AgentToolsOff() string { return In(i18n.Locale()).AgentToolsOff() }
+
+// AgentToolsOff says "The tools switch is off; the Agent will answer from the conversation alone."
+// in the language of msgs.
+func (msgs Messages) AgentToolsOff() string {
+	return Catalog.Format(msgs.locale, "agentToolsOff", nil)
+}
+
+// AgentToolsNone says "No built-in tools are enabled."
+// in the language the app shows.
+func AgentToolsNone() string { return In(i18n.Locale()).AgentToolsNone() }
+
+// AgentToolsNone says "No built-in tools are enabled."
+// in the language of msgs.
+func (msgs Messages) AgentToolsNone() string {
+	return Catalog.Format(msgs.locale, "agentToolsNone", nil)
+}
+
+// AgentNoAskGroup says "Run without asking"
+// in the language the app shows.
+func AgentNoAskGroup() string { return In(i18n.Locale()).AgentNoAskGroup() }
+
+// AgentNoAskGroup says "Run without asking"
+// in the language of msgs.
+func (msgs Messages) AgentNoAskGroup() string {
+	return Catalog.Format(msgs.locale, "agentNoAskGroup", nil)
+}
+
+// AgentNoAskNote says "Changes, external requests and questions always wait for you; only read-only actions that may run without asking are …"
+// in the language the app shows.
+func AgentNoAskNote() string { return In(i18n.Locale()).AgentNoAskNote() }
+
+// AgentNoAskNote says "Changes, external requests and questions always wait for you; only read-only actions that may run without asking are …"
+// in the language of msgs.
+func (msgs Messages) AgentNoAskNote() string {
+	return Catalog.Format(msgs.locale, "agentNoAskNote", nil)
+}
+
+// SetAgentAutoRun says "Read-only commands"
+// in the language the app shows.
+func SetAgentAutoRun() string { return In(i18n.Locale()).SetAgentAutoRun() }
+
+// SetAgentAutoRun says "Read-only commands"
+// in the language of msgs.
+func (msgs Messages) SetAgentAutoRun() string {
+	return Catalog.Format(msgs.locale, "setAgentAutoRun", nil)
+}
+
+// SetAgentAutoRunDetail says "Run a shell command by itself only when both the model and sshgo's local safety check find it read-only."
+// in the language the app shows.
+func SetAgentAutoRunDetail() string { return In(i18n.Locale()).SetAgentAutoRunDetail() }
+
+// SetAgentAutoRunDetail says "Run a shell command by itself only when both the model and sshgo's local safety check find it read-only."
+// in the language of msgs.
+func (msgs Messages) SetAgentAutoRunDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentAutoRunDetail", nil)
+}
+
+// SetAgentAutoReadTools says "Read-only tools"
+// in the language the app shows.
+func SetAgentAutoReadTools() string { return In(i18n.Locale()).SetAgentAutoReadTools() }
+
+// SetAgentAutoReadTools says "Read-only tools"
+// in the language of msgs.
+func (msgs Messages) SetAgentAutoReadTools() string {
+	return Catalog.Format(msgs.locale, "setAgentAutoReadTools", nil)
+}
+
+// SetAgentAutoReadToolsDetail says "Run tools that only read, such as reading a file, without asking."
+// in the language the app shows.
+func SetAgentAutoReadToolsDetail() string { return In(i18n.Locale()).SetAgentAutoReadToolsDetail() }
+
+// SetAgentAutoReadToolsDetail says "Run tools that only read, such as reading a file, without asking."
+// in the language of msgs.
+func (msgs Messages) SetAgentAutoReadToolsDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentAutoReadToolsDetail", nil)
+}
+
+// SetAgentStream says "Stream replies"
+// in the language the app shows.
+func SetAgentStream() string { return In(i18n.Locale()).SetAgentStream() }
+
+// SetAgentStream says "Stream replies"
+// in the language of msgs.
+func (msgs Messages) SetAgentStream() string {
+	return Catalog.Format(msgs.locale, "setAgentStream", nil)
+}
+
+// SetAgentStreamDetail says "Turn off to show each reply only when it is complete, so text does not shift as it arrives."
+// in the language the app shows.
+func SetAgentStreamDetail() string { return In(i18n.Locale()).SetAgentStreamDetail() }
+
+// SetAgentStreamDetail says "Turn off to show each reply only when it is complete, so text does not shift as it arrives."
+// in the language of msgs.
+func (msgs Messages) SetAgentStreamDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentStreamDetail", nil)
+}
+
+// AgentSelectHost says "Select host"
+// in the language the app shows.
+func AgentSelectHost() string { return In(i18n.Locale()).AgentSelectHost() }
+
+// AgentSelectHost says "Select host"
+// in the language of msgs.
+func (msgs Messages) AgentSelectHost() string {
+	return Catalog.Format(msgs.locale, "agentSelectHost", nil)
+}
+
+// AgentTargetHost says "Target host"
+// in the language the app shows.
+func AgentTargetHost() string { return In(i18n.Locale()).AgentTargetHost() }
+
+// AgentTargetHost says "Target host"
+// in the language of msgs.
+func (msgs Messages) AgentTargetHost() string {
+	return Catalog.Format(msgs.locale, "agentTargetHost", nil)
+}
+
+// AgentHostLocked says "This conversation stays on one host."
+// in the language the app shows.
+func AgentHostLocked() string { return In(i18n.Locale()).AgentHostLocked() }
+
+// AgentHostLocked says "This conversation stays on one host."
+// in the language of msgs.
+func (msgs Messages) AgentHostLocked() string {
+	return Catalog.Format(msgs.locale, "agentHostLocked", nil)
+}
+
+// AgentHostOffline says "not connected"
+// in the language the app shows.
+func AgentHostOffline() string { return In(i18n.Locale()).AgentHostOffline() }
+
+// AgentHostOffline says "not connected"
+// in the language of msgs.
+func (msgs Messages) AgentHostOffline() string {
+	return Catalog.Format(msgs.locale, "agentHostOffline", nil)
+}
+
+// AgentPickHost says "Choose a host first."
+// in the language the app shows.
+func AgentPickHost() string { return In(i18n.Locale()).AgentPickHost() }
+
+// AgentPickHost says "Choose a host first."
+// in the language of msgs.
+func (msgs Messages) AgentPickHost() string {
+	return Catalog.Format(msgs.locale, "agentPickHost", nil)
+}
+
+// AgentConnectTitle says "Connect and send?"
+// in the language the app shows.
+func AgentConnectTitle() string { return In(i18n.Locale()).AgentConnectTitle() }
+
+// AgentConnectTitle says "Connect and send?"
+// in the language of msgs.
+func (msgs Messages) AgentConnectTitle() string {
+	return Catalog.Format(msgs.locale, "agentConnectTitle", nil)
+}
+
+// AgentConnectDetail says "{name} ({address}) is not connected. Connect before sending?"
+// in the language the app shows.
+func AgentConnectDetail(name string, address string) string {
+	return In(i18n.Locale()).AgentConnectDetail(name, address)
+}
+
+// AgentConnectDetail says "{name} ({address}) is not connected. Connect before sending?"
+// in the language of msgs.
+func (msgs Messages) AgentConnectDetail(name string, address string) string {
+	return Catalog.Format(msgs.locale, "agentConnectDetail", map[string]any{"name": name, "address": address})
+}
+
+// AgentConnectSend says "Connect & Send"
+// in the language the app shows.
+func AgentConnectSend() string { return In(i18n.Locale()).AgentConnectSend() }
+
+// AgentConnectSend says "Connect & Send"
+// in the language of msgs.
+func (msgs Messages) AgentConnectSend() string {
+	return Catalog.Format(msgs.locale, "agentConnectSend", nil)
+}
+
+// AgentConnecting says "Connecting to {name}…"
+// in the language the app shows.
+func AgentConnecting(name string) string { return In(i18n.Locale()).AgentConnecting(name) }
+
+// AgentConnecting says "Connecting to {name}…"
+// in the language of msgs.
+func (msgs Messages) AgentConnecting(name string) string {
+	return Catalog.Format(msgs.locale, "agentConnecting", map[string]any{"name": name})
+}
+
+// AgentConnectCancelled says "The connection was cancelled."
+// in the language the app shows.
+func AgentConnectCancelled() string { return In(i18n.Locale()).AgentConnectCancelled() }
+
+// AgentConnectCancelled says "The connection was cancelled."
+// in the language of msgs.
+func (msgs Messages) AgentConnectCancelled() string {
+	return Catalog.Format(msgs.locale, "agentConnectCancelled", nil)
+}
+
+// AgentAttach says "Add attachment"
+// in the language the app shows.
+func AgentAttach() string { return In(i18n.Locale()).AgentAttach() }
+
+// AgentAttach says "Add attachment"
+// in the language of msgs.
+func (msgs Messages) AgentAttach() string {
+	return Catalog.Format(msgs.locale, "agentAttach", nil)
+}
+
+// AgentSelectModel says "Select model"
+// in the language the app shows.
+func AgentSelectModel() string { return In(i18n.Locale()).AgentSelectModel() }
+
+// AgentSelectModel says "Select model"
+// in the language of msgs.
+func (msgs Messages) AgentSelectModel() string {
+	return Catalog.Format(msgs.locale, "agentSelectModel", nil)
+}
+
+// AgentNoModels says "No models configured"
+// in the language the app shows.
+func AgentNoModels() string { return In(i18n.Locale()).AgentNoModels() }
+
+// AgentNoModels says "No models configured"
+// in the language of msgs.
+func (msgs Messages) AgentNoModels() string {
+	return Catalog.Format(msgs.locale, "agentNoModels", nil)
+}
+
+// AgentPickModel says "Choose a model first."
+// in the language the app shows.
+func AgentPickModel() string { return In(i18n.Locale()).AgentPickModel() }
+
+// AgentPickModel says "Choose a model first."
+// in the language of msgs.
+func (msgs Messages) AgentPickModel() string {
+	return Catalog.Format(msgs.locale, "agentPickModel", nil)
+}
+
+// AgentNoProviders says "No providers yet."
+// in the language the app shows.
+func AgentNoProviders() string { return In(i18n.Locale()).AgentNoProviders() }
+
+// AgentNoProviders says "No providers yet."
+// in the language of msgs.
+func (msgs Messages) AgentNoProviders() string {
+	return Catalog.Format(msgs.locale, "agentNoProviders", nil)
+}
+
+// AgentAddProvider says "Add Provider"
+// in the language the app shows.
+func AgentAddProvider() string { return In(i18n.Locale()).AgentAddProvider() }
+
+// AgentAddProvider says "Add Provider"
+// in the language of msgs.
+func (msgs Messages) AgentAddProvider() string {
+	return Catalog.Format(msgs.locale, "agentAddProvider", nil)
+}
+
+// AgentEditProvider says "Edit"
+// in the language the app shows.
+func AgentEditProvider() string { return In(i18n.Locale()).AgentEditProvider() }
+
+// AgentEditProvider says "Edit"
+// in the language of msgs.
+func (msgs Messages) AgentEditProvider() string {
+	return Catalog.Format(msgs.locale, "agentEditProvider", nil)
+}
+
+// AgentModelsCount says "{count, plural, =0 {No models} one {# model} other {# models}}"
+// in the language the app shows.
+func AgentModelsCount(count int) string { return In(i18n.Locale()).AgentModelsCount(count) }
+
+// AgentModelsCount says "{count, plural, =0 {No models} one {# model} other {# models}}"
+// in the language of msgs.
+func (msgs Messages) AgentModelsCount(count int) string {
+	return Catalog.Format(msgs.locale, "agentModelsCount", map[string]any{"count": count})
+}
+
+// AgentDefaultProvider says "Default"
+// in the language the app shows.
+func AgentDefaultProvider() string { return In(i18n.Locale()).AgentDefaultProvider() }
+
+// AgentDefaultProvider says "Default"
+// in the language of msgs.
+func (msgs Messages) AgentDefaultProvider() string {
+	return Catalog.Format(msgs.locale, "agentDefaultProvider", nil)
+}
+
+// AgentProviderNew says "New Provider"
+// in the language the app shows.
+func AgentProviderNew() string { return In(i18n.Locale()).AgentProviderNew() }
+
+// AgentProviderNew says "New Provider"
+// in the language of msgs.
+func (msgs Messages) AgentProviderNew() string {
+	return Catalog.Format(msgs.locale, "agentProviderNew", nil)
+}
+
+// AgentProviderEditTitle says "Edit Provider"
+// in the language the app shows.
+func AgentProviderEditTitle() string { return In(i18n.Locale()).AgentProviderEditTitle() }
+
+// AgentProviderEditTitle says "Edit Provider"
+// in the language of msgs.
+func (msgs Messages) AgentProviderEditTitle() string {
+	return Catalog.Format(msgs.locale, "agentProviderEditTitle", nil)
+}
+
+// AgentProviderDetail says "Keys are stored in the system credential store."
+// in the language the app shows.
+func AgentProviderDetail() string { return In(i18n.Locale()).AgentProviderDetail() }
+
+// AgentProviderDetail says "Keys are stored in the system credential store."
+// in the language of msgs.
+func (msgs Messages) AgentProviderDetail() string {
+	return Catalog.Format(msgs.locale, "agentProviderDetail", nil)
+}
+
+// AgentProviderName says "Name"
+// in the language the app shows.
+func AgentProviderName() string { return In(i18n.Locale()).AgentProviderName() }
+
+// AgentProviderName says "Name"
+// in the language of msgs.
+func (msgs Messages) AgentProviderName() string {
+	return Catalog.Format(msgs.locale, "agentProviderName", nil)
+}
+
+// AgentProviderNamePlaceholder says "e.g. OpenAI"
+// in the language the app shows.
+func AgentProviderNamePlaceholder() string { return In(i18n.Locale()).AgentProviderNamePlaceholder() }
+
+// AgentProviderNamePlaceholder says "e.g. OpenAI"
+// in the language of msgs.
+func (msgs Messages) AgentProviderNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderNamePlaceholder", nil)
+}
+
+// AgentProviderEndpoint says "Endpoint"
+// in the language the app shows.
+func AgentProviderEndpoint() string { return In(i18n.Locale()).AgentProviderEndpoint() }
+
+// AgentProviderEndpoint says "Endpoint"
+// in the language of msgs.
+func (msgs Messages) AgentProviderEndpoint() string {
+	return Catalog.Format(msgs.locale, "agentProviderEndpoint", nil)
+}
+
+// AgentProviderEndpointPlaceholder says "https://api.openai.com/v1"
+// in the language the app shows.
+func AgentProviderEndpointPlaceholder() string {
+	return In(i18n.Locale()).AgentProviderEndpointPlaceholder()
+}
+
+// AgentProviderEndpointPlaceholder says "https://api.openai.com/v1"
+// in the language of msgs.
+func (msgs Messages) AgentProviderEndpointPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderEndpointPlaceholder", nil)
+}
+
+// AgentProviderModels says "Models"
+// in the language the app shows.
+func AgentProviderModels() string { return In(i18n.Locale()).AgentProviderModels() }
+
+// AgentProviderModels says "Models"
+// in the language of msgs.
+func (msgs Messages) AgentProviderModels() string {
+	return Catalog.Format(msgs.locale, "agentProviderModels", nil)
+}
+
+// AgentProviderKey says "API key"
+// in the language the app shows.
+func AgentProviderKey() string { return In(i18n.Locale()).AgentProviderKey() }
+
+// AgentProviderKey says "API key"
+// in the language of msgs.
+func (msgs Messages) AgentProviderKey() string {
+	return Catalog.Format(msgs.locale, "agentProviderKey", nil)
+}
+
+// AgentProviderKeyPlaceholder says "sk-…"
+// in the language the app shows.
+func AgentProviderKeyPlaceholder() string { return In(i18n.Locale()).AgentProviderKeyPlaceholder() }
+
+// AgentProviderKeyPlaceholder says "sk-…"
+// in the language of msgs.
+func (msgs Messages) AgentProviderKeyPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderKeyPlaceholder", nil)
+}
+
+// AgentProviderDelete says "Remove"
+// in the language the app shows.
+func AgentProviderDelete() string { return In(i18n.Locale()).AgentProviderDelete() }
+
+// AgentProviderDelete says "Remove"
+// in the language of msgs.
+func (msgs Messages) AgentProviderDelete() string {
+	return Catalog.Format(msgs.locale, "agentProviderDelete", nil)
+}
+
+// AgentProviderDeleteConfirm says "Remove “{name}”? Its API key is deleted too."
+// in the language the app shows.
+func AgentProviderDeleteConfirm(name string) string {
+	return In(i18n.Locale()).AgentProviderDeleteConfirm(name)
+}
+
+// AgentProviderDeleteConfirm says "Remove “{name}”? Its API key is deleted too."
+// in the language of msgs.
+func (msgs Messages) AgentProviderDeleteConfirm(name string) string {
+	return Catalog.Format(msgs.locale, "agentProviderDeleteConfirm", map[string]any{"name": name})
+}
+
+// AgentProviderNameRequired says "Give the provider a name."
+// in the language the app shows.
+func AgentProviderNameRequired() string { return In(i18n.Locale()).AgentProviderNameRequired() }
+
+// AgentProviderNameRequired says "Give the provider a name."
+// in the language of msgs.
+func (msgs Messages) AgentProviderNameRequired() string {
+	return Catalog.Format(msgs.locale, "agentProviderNameRequired", nil)
+}
+
+// AgentProviderEndpointRequired says "Enter an endpoint."
+// in the language the app shows.
+func AgentProviderEndpointRequired() string { return In(i18n.Locale()).AgentProviderEndpointRequired() }
+
+// AgentProviderEndpointRequired says "Enter an endpoint."
+// in the language of msgs.
+func (msgs Messages) AgentProviderEndpointRequired() string {
+	return Catalog.Format(msgs.locale, "agentProviderEndpointRequired", nil)
+}
+
+// AgentProviderModelsRequired says "Add at least one model."
+// in the language the app shows.
+func AgentProviderModelsRequired() string { return In(i18n.Locale()).AgentProviderModelsRequired() }
+
+// AgentProviderModelsRequired says "Add at least one model."
+// in the language of msgs.
+func (msgs Messages) AgentProviderModelsRequired() string {
+	return Catalog.Format(msgs.locale, "agentProviderModelsRequired", nil)
+}
+
+// AgentProviderDetect says "Detect models"
+// in the language the app shows.
+func AgentProviderDetect() string { return In(i18n.Locale()).AgentProviderDetect() }
+
+// AgentProviderDetect says "Detect models"
+// in the language of msgs.
+func (msgs Messages) AgentProviderDetect() string {
+	return Catalog.Format(msgs.locale, "agentProviderDetect", nil)
+}
+
+// AgentProviderDetecting says "Detecting…"
+// in the language the app shows.
+func AgentProviderDetecting() string { return In(i18n.Locale()).AgentProviderDetecting() }
+
+// AgentProviderDetecting says "Detecting…"
+// in the language of msgs.
+func (msgs Messages) AgentProviderDetecting() string {
+	return Catalog.Format(msgs.locale, "agentProviderDetecting", nil)
+}
+
+// AgentProviderNoModelsFound says "The endpoint returned no models."
+// in the language the app shows.
+func AgentProviderNoModelsFound() string { return In(i18n.Locale()).AgentProviderNoModelsFound() }
+
+// AgentProviderNoModelsFound says "The endpoint returned no models."
+// in the language of msgs.
+func (msgs Messages) AgentProviderNoModelsFound() string {
+	return Catalog.Format(msgs.locale, "agentProviderNoModelsFound", nil)
+}
+
+// AgentProviderModelPlaceholder says "Model name"
+// in the language the app shows.
+func AgentProviderModelPlaceholder() string { return In(i18n.Locale()).AgentProviderModelPlaceholder() }
+
+// AgentProviderModelPlaceholder says "Model name"
+// in the language of msgs.
+func (msgs Messages) AgentProviderModelPlaceholder() string {
+	return Catalog.Format(msgs.locale, "agentProviderModelPlaceholder", nil)
+}
+
+// AgentProviderAddModel says "Add"
+// in the language the app shows.
+func AgentProviderAddModel() string { return In(i18n.Locale()).AgentProviderAddModel() }
+
+// AgentProviderAddModel says "Add"
+// in the language of msgs.
+func (msgs Messages) AgentProviderAddModel() string {
+	return Catalog.Format(msgs.locale, "agentProviderAddModel", nil)
+}
+
+// AgentHosts says "Hosts"
+// in the language the app shows.
+func AgentHosts() string { return In(i18n.Locale()).AgentHosts() }
+
+// AgentHosts says "Hosts"
+// in the language of msgs.
+func (msgs Messages) AgentHosts() string {
+	return Catalog.Format(msgs.locale, "agentHosts", nil)
+}
+
+// AgentThinking says "Thinking"
+// in the language the app shows.
+func AgentThinking() string { return In(i18n.Locale()).AgentThinking() }
+
+// AgentThinking says "Thinking"
+// in the language of msgs.
+func (msgs Messages) AgentThinking() string {
+	return Catalog.Format(msgs.locale, "agentThinking", nil)
+}
+
+// AgentThinkDefault says "None"
+// in the language the app shows.
+func AgentThinkDefault() string { return In(i18n.Locale()).AgentThinkDefault() }
+
+// AgentThinkDefault says "None"
+// in the language of msgs.
+func (msgs Messages) AgentThinkDefault() string {
+	return Catalog.Format(msgs.locale, "agentThinkDefault", nil)
+}
+
+// AgentThinkLow says "Low"
+// in the language the app shows.
+func AgentThinkLow() string { return In(i18n.Locale()).AgentThinkLow() }
+
+// AgentThinkLow says "Low"
+// in the language of msgs.
+func (msgs Messages) AgentThinkLow() string {
+	return Catalog.Format(msgs.locale, "agentThinkLow", nil)
+}
+
+// AgentThinkMedium says "Medium"
+// in the language the app shows.
+func AgentThinkMedium() string { return In(i18n.Locale()).AgentThinkMedium() }
+
+// AgentThinkMedium says "Medium"
+// in the language of msgs.
+func (msgs Messages) AgentThinkMedium() string {
+	return Catalog.Format(msgs.locale, "agentThinkMedium", nil)
+}
+
+// AgentThinkHigh says "High"
+// in the language the app shows.
+func AgentThinkHigh() string { return In(i18n.Locale()).AgentThinkHigh() }
+
+// AgentThinkHigh says "High"
+// in the language of msgs.
+func (msgs Messages) AgentThinkHigh() string {
+	return Catalog.Format(msgs.locale, "agentThinkHigh", nil)
+}
+
+// AgentAttachmentReadFailed says "Could not read {name}."
+// in the language the app shows.
+func AgentAttachmentReadFailed(name string) string {
+	return In(i18n.Locale()).AgentAttachmentReadFailed(name)
+}
+
+// AgentAttachmentReadFailed says "Could not read {name}."
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentReadFailed(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentReadFailed", map[string]any{"name": name})
+}
+
+// AgentAttachmentTooLarge says "File is too large (max 64 KB): {name}"
+// in the language the app shows.
+func AgentAttachmentTooLarge(name string) string {
+	return In(i18n.Locale()).AgentAttachmentTooLarge(name)
+}
+
+// AgentAttachmentTooLarge says "File is too large (max 64 KB): {name}"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentTooLarge(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentTooLarge", map[string]any{"name": name})
+}
+
+// AgentAttachmentTotal says "Text attachments can total at most 128 KB."
+// in the language the app shows.
+func AgentAttachmentTotal() string { return In(i18n.Locale()).AgentAttachmentTotal() }
+
+// AgentAttachmentTotal says "Text attachments can total at most 128 KB."
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentTotal() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentTotal", nil)
+}
+
+// AgentAttachmentRemove says "Remove attachment"
+// in the language the app shows.
+func AgentAttachmentRemove() string { return In(i18n.Locale()).AgentAttachmentRemove() }
+
+// AgentAttachmentRemove says "Remove attachment"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentRemove() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentRemove", nil)
+}
+
+// AgentAttachmentImageTooLarge says "Image is too large (max 5 MB): {name}"
+// in the language the app shows.
+func AgentAttachmentImageTooLarge(name string) string {
+	return In(i18n.Locale()).AgentAttachmentImageTooLarge(name)
+}
+
+// AgentAttachmentImageTooLarge says "Image is too large (max 5 MB): {name}"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentImageTooLarge(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentImageTooLarge", map[string]any{"name": name})
+}
+
+// AgentAttachmentImagesTotal says "Images can total at most 10 MB."
+// in the language the app shows.
+func AgentAttachmentImagesTotal() string { return In(i18n.Locale()).AgentAttachmentImagesTotal() }
+
+// AgentAttachmentImagesTotal says "Images can total at most 10 MB."
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentImagesTotal() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentImagesTotal", nil)
+}
+
+// AgentAttachmentUnsupported says "Only text files and PNG/JPEG/WebP/GIF images are supported: {name}"
+// in the language the app shows.
+func AgentAttachmentUnsupported(name string) string {
+	return In(i18n.Locale()).AgentAttachmentUnsupported(name)
+}
+
+// AgentAttachmentUnsupported says "Only text files and PNG/JPEG/WebP/GIF images are supported: {name}"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentUnsupported(name string) string {
+	return Catalog.Format(msgs.locale, "agentAttachmentUnsupported", map[string]any{"name": name})
+}
+
+// AgentAttachmentOpen says "Open image"
+// in the language the app shows.
+func AgentAttachmentOpen() string { return In(i18n.Locale()).AgentAttachmentOpen() }
+
+// AgentAttachmentOpen says "Open image"
+// in the language of msgs.
+func (msgs Messages) AgentAttachmentOpen() string {
+	return Catalog.Format(msgs.locale, "agentAttachmentOpen", nil)
 }

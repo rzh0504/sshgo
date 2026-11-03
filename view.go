@@ -49,12 +49,17 @@ func lead(bar ui.TitleBar) float32 {
 
 var sidebarMotion = ui.Animation{Duration: 260 * time.Millisecond, Ease: ui.CubicBezier(0.25, 1, 0.5, 1)}
 
+// tabMotion slides the sidebar's tab thumb and brings its list in.
+var tabMotion = ui.Animation{Duration: 170 * time.Millisecond, Ease: ui.CubicBezier(0.25, 1, 0.5, 1)}
+
 func chromeFor(progress, width float32, bar ui.TitleBar) chrome {
 	round := func(v float32) float32 { return float32(math.Round(float64(v))) }
 	w := round(width * min(max(progress, 0), 1))
 	s := w / width
 	pad := round(cardGap * (1 - s))
-	hidden, shown := lead(bar)+16+60, width+16
+	// Hidden, the header leaves room for the sidebar's show button (28)
+	// and the gap before what it heads.
+	hidden, shown := lead(bar)+38, width+16
 	x := round(hidden + (shown-hidden)*s)
 	return chrome{shown: s, sideW: w, mainPad: pad, headerPad: x - w - pad}
 }
@@ -122,8 +127,112 @@ func (a *App) resizeHandle(c *ui.Context, pal *palette, at float32) {
 
 func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	ui.Row(c).Height(topBar).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, lead(bar)).Gap(2).DragWindow().Children(func() {
-		iconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
-		iconButton(c, "new-host", plusIcon, locales.ActionNewHost(), pal, func() { a.openEditor("") })
+		plainIconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
+	})
+	a.sidebarTabs(c)
+	pane := ui.Column(c).Grow(1).MinHeight(0)
+	if a.tabEnter {
+		pane.Jump("tab-enter", 1)
+		a.tabEnter = false
+	}
+	if v := pane.AnimateTo("tab-enter", 0, tabMotion); v > 0.001 {
+		pane.Translate(a.tabDir*v*8, 0).Opacity(1 - v)
+	}
+	pane.Children(func() {
+		if a.sidebarTab() == "agent" {
+			a.agentSidebar(c, pal)
+		} else {
+			a.hostSidebar(c, pal)
+		}
+	})
+	a.sidebarFooter(c, pal)
+}
+
+// sidebarTab is the sidebar's current column: hosts unless the Agent is
+// enabled and chosen, so a stored state shows the hosts without it.
+func (a *App) sidebarTab() string {
+	if a.state.AgentEnabled && a.state.SidebarTab == "agent" {
+		return "agent"
+	}
+	return "hosts"
+}
+
+// sidebarTabs is the Hosts/Agent switch above the list: the compact
+// segmented look, at the list's left margin.
+func (a *App) sidebarTabs(c *ui.Context) {
+	if !a.state.AgentEnabled {
+		return
+	}
+	i := 0
+	if a.sidebarTab() == "agent" {
+		i = 1
+	}
+	labels := []string{locales.DashboardTitle(), locales.AgentTitle()}
+	pal := paletteFor(c)
+	track, thumb := pal.text.Alpha(0.06), ui.Hex("#ffffff")
+	if pal.dark {
+		track, thumb = ui.RGBA(255, 255, 255, 0.07), ui.RGBA(255, 255, 255, 0.2)
+	}
+	widths := make([]float32, len(labels))
+	total := float32(4)
+	for n, label := range labels {
+		w, _ := c.MeasureText(0, ui.Span{Text: label, Size: 12, Weight: 500})
+		widths[n] = w + 20
+		total += widths[n]
+	}
+	var seg ui.SegmentedParts
+	ui.Row(c).Shrink(0).Padding(2, 12, 8, 12).Children(func() {
+		seg = ui.SegmentedBase(c.Key("sidebar-tabs"), &i, len(labels))
+		seg.Track.Width(total).Height(24).Padding(2).Radius(7).Background(track).Shrink(0).Children(func() {
+			// The thumb slides under the labels, which paint above it.
+			x := float32(0)
+			for n := 0; n < i; n++ {
+				x += widths[n]
+			}
+			pill := ui.Box(c).Absolute().Top(2).Height(20).Radius(5).Background(thumb)
+			pill.Left(pill.AnimateTo("x", 2+x, tabMotion))
+			pill.Width(pill.AnimateTo("w", widths[i], tabMotion))
+			if pal.dark {
+				pill.Shadow(0, 1, 1, 0, ui.RGBA(0, 0, 0, 0.25))
+			} else {
+				pill.Shadow(0, 0.5, 1.5, 0, ui.RGBA(0, 0, 0, 0.16)).
+					Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.04))
+			}
+			layer := ui.Row(c).Absolute().Left(2).Top(2).Width(total - 4).Height(20)
+			layer.Children(func() {
+				for n, label := range labels {
+					part := seg.Segment(n).Width(widths[n]).FillHeight().Radius(5).Center().Cursor(ui.CursorPointer)
+					part.Children(func() {
+						ui.Text(c, label).FontSize(12).SingleLine().TextColor(pal.text)
+					})
+				}
+			})
+		})
+		ui.Spacer(c)
+	})
+	seg.Track.OnChange(func() {
+		next := "hosts"
+		if i == 1 {
+			next = "agent"
+		}
+		if a.state.SidebarTab != next {
+			a.state.SidebarTab = next
+			a.tabDir = -1
+			if next == "agent" {
+				a.tabDir = 1
+			}
+			a.tabEnter = true
+			a.saveState()
+			a.repaint()
+		}
+	})
+}
+
+func (a *App) hostSidebar(c *ui.Context, pal *palette) {
+	ui.Row(c).Height(32).Shrink(0).Padding(4, 12).Gap(6).AlignItems(ui.Center).DragWindow().Children(func() {
+		ui.Text(c, locales.SidebarGroups()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
+		ui.Spacer(c)
+		addButton(c, "sidebar-new-group", locales.ActionNewGroup(), pal, func() { a.openGroupEditor("") })
 	})
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
 		if len(a.state.Hosts) == 0 && len(a.state.Groups) == 0 {
@@ -145,7 +254,26 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 			a.sidebarGroup(c, pal, g, g.Name, a.hostsIn(g.ID))
 		}
 	})
-	a.sidebarFooter(c, pal)
+}
+
+func (a *App) agentSidebar(c *ui.Context, pal *palette) {
+	snap := a.agentChatsSnapshot()
+	ui.Row(c).Height(32).Shrink(0).Padding(4, 12).Gap(6).AlignItems(ui.Center).DragWindow().Children(func() {
+		ui.Text(c, locales.AgentChats()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
+		ui.Spacer(c)
+		addButton(c, "sidebar-agent-new", locales.AgentNewChat(), pal, a.newAgentChat)
+	})
+	ui.Scroll(c.Key("agent-chats")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
+		if len(snap.folders) == 0 {
+			ui.Column(c).Padding(8, 10).Children(func() {
+				ui.Text(c, locales.AgentNoChats()).FontSize(12.5).TextColor(pal.textFaint)
+			})
+			return
+		}
+		for _, f := range snap.folders {
+			a.agentHostFolder(c, pal, f, snap)
+		}
+	})
 }
 
 var ipv4Pattern = regexp.MustCompile(`\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b`)
@@ -212,7 +340,7 @@ func (a *App) maskedText(c *ui.Context, s string, size float32, weight int, colo
 		spans = append(spans, style)
 		at += utf8.RuneCountInString(style.Text)
 	}
-	return ui.RichText(c, spans...).TextColor(color).DrawObjects(func(p *ui.Painter, at int, r ui.Rect) {
+	return ui.RichText(c, spans...).FontSize(size).TextColor(color).DrawObjects(func(p *ui.Painter, at int, r ui.Rect) {
 		glyphs, ok := hidden[at]
 		if !ok {
 			return
@@ -225,7 +353,8 @@ func (a *App) maskedText(c *ui.Context, s string, size float32, weight int, colo
 func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32) {
 	selected := h.ID == a.selected
 	rt := a.runtimes[h.ID]
-	row := ui.Row(c.Key(h.ID)).Height(rowH2).Padding(0, 10, 0, rowInset+indent).Gap(10).AlignItems(ui.Center).Radius(8).Margin(0, 0, 1, 0)
+	row := ui.Row(c.Key(h.ID)).Height(rowH2).Padding(0, 10, 0, rowInset+indent).Gap(10).AlignItems(ui.Center).Radius(8).
+		Margin(0, 0, 1, 0).Cursor(ui.CursorPointer)
 	hovered := row.Hovered()
 	if pal.dark {
 		row.Border(1, ui.Transparent)
@@ -241,6 +370,11 @@ func (a *App) hostRow(c *ui.Context, pal *palette, h store.Host, indent float32)
 	row.Background(row.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
 	if (row.Pressed() || row.Clicked()) && !selected {
 		a.selectHost(h.ID)
+	}
+	if row.Clicked() && a.agentOpen() {
+		a.agent.open = false
+		a.focusTerminal(h.ID)
+		a.updateTitle()
 	}
 	if row.DoubleClicked() {
 		a.connect(h.ID)
@@ -288,11 +422,11 @@ func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 		if c.Theme().Dark {
 			icon, label, target = sunIcon, locales.ActionSwitchLight(), "light"
 		}
-		iconButton(c, "appearance-mode", icon, label, pal, func() {
+		plainIconButton(c, "appearance-mode", icon, label, pal, func() {
 			a.state.Appearance = target
 			a.applySettings()
 		})
-		iconButton(c, "settings", gearIcon, locales.ActionSettings(), pal, a.openSettings)
+		plainIconButton(c, "settings", gearIcon, locales.ActionSettings(), pal, a.openSettings)
 		ui.Spacer(c)
 		n := a.connectedCount()
 		dot := pal.textFaint
@@ -308,36 +442,28 @@ func (a *App) sidebarFooter(c *ui.Context, pal *palette) {
 
 func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) {
 	h, hasHost := a.selectedHost()
+	agentOpen := a.agentOpen()
 	dashboard := a.showsDashboard()
 	card := paned(ui.Column(c).Grow(1).MinHeight(0).Radius(14).Background(pal.card), pal).Clip()
 	card.Children(func() {
 		ui.Row(c).Height(headerH).Shrink(0).AlignItems(ui.Center).Padding(0, 10, 0, a.chrome.headerPad).DragWindow().Children(func() {
 			if shown < 0.5 {
 				ui.Row(c).Absolute().Left(a.chrome.buttonsLeft(bar)).Top(0).Bottom(0).AlignItems(ui.Center).Gap(2).Opacity(1 - 2*shown).Children(func() {
-					iconButton(c, "show-sidebar", sidebarIcon, locales.ToggleShowSidebar(), pal, a.toggleSidebar)
-					iconButton(c, "new-host-2", plusIcon, locales.ActionNewHost(), pal, func() { a.openEditor("") })
+					plainIconButton(c, "show-sidebar", sidebarIcon, locales.ToggleShowSidebar(), pal, a.toggleSidebar)
 				})
 			}
-			if hasHost && !dashboard {
-				a.hostGlyph(c, pal, h, 16)
+			if agentOpen {
+				plainIconButton(c, "agent-back", backIcon, locales.ActionBack(), pal, a.toggleAgent)
+				if title := a.agentCurrentTitle(); title != "" {
+					ui.Text(c, title).FontSize(12.5).TextColor(pal.textMuted).SingleLine().Ellipsis("…").
+						MaxWidth(260).Shrink(1).MinWidth(0).Margin(0, 0, 0, 8)
+				}
+			} else if hasHost && !dashboard {
 				ui.Text(c, h.Name).FontSize(14).FontWeight(600).TextColor(pal.text).SingleLine().Ellipsis("…").
 					Shrink(1).MaxWidth(280).Margin(0, 0, 0, 8)
-			} else {
-				ui.Icon(c, serverIcon).Size(15, 15).TextColor(pal.textMuted).Shrink(0)
-				ui.Text(c, locales.DashboardTitle()).FontSize(14).FontWeight(600).TextColor(pal.text).
-					SingleLine().Margin(0, 0, 0, 8)
 			}
 			ui.Spacer(c)
-			if dashboard {
-				ui.Row(c).Gap(8).Shrink(0).Margin(0, 8, 0, 8).Children(func() {
-					if button(c, "dash-new-group", locales.ActionNewGroup(), "", false, pal) {
-						a.openGroupEditor("")
-					}
-					if button(c, "dash-new-host", locales.ActionNewHost(), "", true, pal) {
-						a.openEditor("")
-					}
-				})
-			} else if hasHost {
+			if !agentOpen && hasHost && !dashboard {
 				if rt := a.runtimes[h.ID]; rt != nil && (rt.state == connFailed || rt.state == connEnded) {
 					iconButton(c, "reconnect", retryIcon, locales.ActionReconnect(), pal, func() { a.connect(h.ID) })
 				}
@@ -349,6 +475,10 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 }
 
 func (a *App) cardBody(c *ui.Context, pal *palette) {
+	if a.agentOpen() {
+		a.agentView(c, pal)
+		return
+	}
 	if a.showsDashboard() {
 		a.dashboard(c, pal)
 		return
@@ -403,5 +533,8 @@ func (a *App) shortcuts(c *ui.Context) {
 	}
 	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyB) {
 		a.toggleSidebar()
+	}
+	if a.state.AgentEnabled && c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA) {
+		a.toggleAgent()
 	}
 }

@@ -84,6 +84,15 @@ const DefaultFontSize = 13
 // RecentHostsMax is how many hosts the dashboard's recent group keeps.
 const RecentHostsMax = 6
 
+// AgentProvider is one OpenAI-compatible endpoint, the models it serves,
+// and a name for the menu. Its API key is in the credential store.
+type AgentProvider struct {
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	BaseURL string   `json:"baseUrl"`
+	Models  []string `json:"models,omitempty"`
+}
+
 // State is what sshgo remembers: its hosts and groups, the window as it
 // was, and the settings.
 type State struct {
@@ -93,6 +102,7 @@ type State struct {
 	Recent        []string `json:"recent,omitempty"` // host ids connected last, newest first
 	SidebarWidth  float32  `json:"sidebarWidth,omitempty"`
 	SidebarHidden bool     `json:"sidebarHidden,omitempty"`
+	SidebarTab    string   `json:"sidebarTab,omitempty"` // "hosts" or "agent"
 
 	Appearance string  `json:"appearance,omitempty"` // "system", "light" or "dark"
 	Theme      string  `json:"theme,omitempty"`      // one theme for both appearances
@@ -109,6 +119,34 @@ type State struct {
 	HideAtLogin   bool   `json:"hideAtLogin,omitempty"` // start in the tray when the system starts sshgo
 	ConfirmQuit   bool   `json:"confirmQuit,omitempty"` // ask before a quit disconnects open sessions
 	AutoConnect   bool   `json:"autoConnect,omitempty"` // connect the host selected last on launch
+
+	// The Agent's provider and behavior. Its API key is kept in the
+	// system's credential store, never here.
+	AgentEnabled bool   `json:"agentEnabled,omitempty"` // show the Agent in the sidebar
+	AgentBaseURL string `json:"agentBaseURL,omitempty"`
+	AgentModel   string `json:"agentModel,omitempty"`
+	// AgentAutoRunSafe lets a read-only shell command run without asking.
+	AgentAutoRunSafe bool `json:"agentAutoRunSafe,omitempty"`
+	// AgentAutoRunReadTools lets tools that only read run without asking.
+	AgentAutoRunReadTools bool `json:"agentAutoRunReadTools,omitempty"`
+	// AgentNoStream waits for each reply to be complete before showing it.
+	AgentNoStream bool `json:"agentNoStream,omitempty"`
+
+	// AgentNoTools turns every tool off. AgentDisabledTools names the ones
+	// turned off on their own; a tool not named is on.
+	AgentNoTools       bool     `json:"agentNoTools,omitempty"`
+	AgentDisabledTools []string `json:"agentDisabledTools,omitempty"`
+
+	// AgentProviders are the endpoints the Agent may use, and the model
+	// picked last; the old single endpoint above is read once into one.
+	AgentProviders        []AgentProvider `json:"agentProviders,omitempty"`
+	AgentDefaultProvider  string          `json:"agentDefaultProvider,omitempty"`
+	AgentDefaultModel     string          `json:"agentDefaultModel,omitempty"`
+	AgentDefaultReasoning string          `json:"agentDefaultReasoning,omitempty"`
+	// AgentTitleProvider and AgentTitleModel choose the model that names
+	// conversations; empty, the conversation's own does.
+	AgentTitleProvider string `json:"agentTitleProvider,omitempty"`
+	AgentTitleModel    string `json:"agentTitleModel,omitempty"`
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.

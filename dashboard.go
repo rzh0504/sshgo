@@ -106,7 +106,7 @@ func (a *App) dashboardSection(c *ui.Context, pal *palette, s hostSection) {
 					ui.Icon(c, chevron).Size(11, 11).TextColor(pal.textFaint).Shrink(0)
 				}
 				ui.Spacer(c)
-				iconButton(c, "dash-add-"+s.id, plusIcon, tip, pal, func() {
+				addButton(c, "dash-add-"+s.id, tip, pal, func() {
 					a.openEditorInGroup(s.id)
 				})
 			})
@@ -130,7 +130,7 @@ func (a *App) dashboardHost(c *ui.Context, pal *palette, h store.Host) {
 	rt := a.runtimes[h.ID]
 	selected := h.ID == a.selected
 	card := ui.ButtonBase(c.Key("dash-"+h.ID)).Row().Width(hostCardW).Height(hostCardH).Shrink(0).
-		Padding(12, 12).Gap(10).Radius(12).AlignItems(ui.Center).Label(h.Name)
+		Padding(12, 12).Gap(10).Radius(12).AlignItems(ui.Center).Label(h.Name).Cursor(ui.CursorPointer)
 	bg := pal.chip
 	switch {
 	case selected:

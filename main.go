@@ -4,19 +4,30 @@ package main
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 	updaternative "github.com/egoist/mygo/plugins/updater/native"
 	"github.com/egoist/mygo/ui"
 
+	"sshgo/internal/store"
 	"sshgo/locales"
 )
 
 func main() {
 	if !mygo.App.RequestSingleInstanceLock() {
 		return
+	}
+	if dir, err := store.Dir(); err == nil {
+		if f, err := os.OpenFile(filepath.Join(dir, "crash.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+			debug.SetTraceback("all")
+			_ = debug.SetCrashOutput(f, debug.CrashOptions{})
+			f.Close()
+		}
 	}
 	mygo.Use(updaternative.New(updater.Options{Icon: appIcon}))
 	a := newApp()
@@ -113,17 +124,25 @@ func (a *App) buildMenu() *mygo.Menu {
 	if runtime.GOOS == "darwin" {
 		file = append(file, &mygo.MenuItem{Role: mygo.RoleClose})
 	}
+	view := []*mygo.MenuItem{
+		{ID: "sidebar", Label: a.sidebarMenuLabel(), Accelerator: "CmdOrCtrl+Shift+B", Click: func(*mygo.MenuItem, *mygo.Window) {
+			a.toggleSidebar()
+		}},
+	}
+	if a.state.AgentEnabled {
+		view = append(view, &mygo.MenuItem{Label: locales.MenuAgent(), Accelerator: "CmdOrCtrl+Shift+A", Click: func(*mygo.MenuItem, *mygo.Window) {
+			a.toggleAgent()
+		}})
+	}
+	view = append(view,
+		mygo.Separator(),
+		&mygo.MenuItem{Role: mygo.RoleToggleFullScreen},
+	)
 	m := mygo.NewMenu([]*mygo.MenuItem{
 		{Role: mygo.RoleAppMenu},
 		{Label: locales.MenuFile(), Submenu: file},
 		{Role: mygo.RoleEditMenu},
-		{Label: locales.MenuView(), Submenu: []*mygo.MenuItem{
-			{ID: "sidebar", Label: a.sidebarMenuLabel(), Accelerator: "CmdOrCtrl+Shift+B", Click: func(*mygo.MenuItem, *mygo.Window) {
-				a.toggleSidebar()
-			}},
-			mygo.Separator(),
-			{Role: mygo.RoleToggleFullScreen},
-		}},
+		{Label: locales.MenuView(), Submenu: view},
 		{Role: mygo.RoleWindowMenu},
 	})
 	a.menuBar = m
