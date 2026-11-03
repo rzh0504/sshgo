@@ -340,7 +340,7 @@ func (a *App) maskedText(c *ui.Context, s string, size float32, weight int, colo
 		spans = append(spans, style)
 		at += utf8.RuneCountInString(style.Text)
 	}
-	return ui.RichText(c, spans...).TextColor(color).DrawObjects(func(p *ui.Painter, at int, r ui.Rect) {
+	return ui.RichText(c, spans...).FontSize(size).TextColor(color).DrawObjects(func(p *ui.Painter, at int, r ui.Rect) {
 		glyphs, ok := hidden[at]
 		if !ok {
 			return
