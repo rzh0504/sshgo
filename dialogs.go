@@ -245,9 +245,18 @@ func groupField(c *ui.Context, key string, value *string, options []string, pal 
 	})
 	focusEdge(box, cb.Input.Focused(), pal)
 	q := strings.ToLower(strings.TrimSpace(*value))
+	// A value that is already a group lists every group, so the field
+	// switches between them; typing another text filters the choices.
+	selected := false
+	for _, o := range options {
+		if strings.EqualFold(o, q) {
+			selected = true
+			break
+		}
+	}
 	var shown []string
 	for _, o := range options {
-		if q == "" || strings.Contains(strings.ToLower(o), q) {
+		if selected || q == "" || strings.Contains(strings.ToLower(o), q) {
 			shown = append(shown, o)
 		}
 	}
