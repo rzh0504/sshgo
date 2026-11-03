@@ -474,14 +474,16 @@ func (msgs Messages) DeleteGroupTitle() string {
 	return Catalog.Format(msgs.locale, "deleteGroupTitle", nil)
 }
 
-// DeleteGroupDetail says "Delete {name}? Its hosts stay, ungrouped."
+// DeleteGroupDetail says "Delete {name}? {count, plural, =0 {} one {Its host stays, ungrouped.} other {Its # hosts stay, ungrouped.}}"
 // in the language the app shows.
-func DeleteGroupDetail(name string) string { return In(i18n.Locale()).DeleteGroupDetail(name) }
+func DeleteGroupDetail(name string, count int) string {
+	return In(i18n.Locale()).DeleteGroupDetail(name, count)
+}
 
-// DeleteGroupDetail says "Delete {name}? Its hosts stay, ungrouped."
+// DeleteGroupDetail says "Delete {name}? {count, plural, =0 {} one {Its host stays, ungrouped.} other {Its # hosts stay, ungrouped.}}"
 // in the language of msgs.
-func (msgs Messages) DeleteGroupDetail(name string) string {
-	return Catalog.Format(msgs.locale, "deleteGroupDetail", map[string]any{"name": name})
+func (msgs Messages) DeleteGroupDetail(name string, count int) string {
+	return Catalog.Format(msgs.locale, "deleteGroupDetail", map[string]any{"name": name, "count": count})
 }
 
 // StatusConnected says "Connected"

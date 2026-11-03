@@ -44,7 +44,7 @@
   "errorGroupNameRequired": "请输入分组名称。",
   "errorGroupExists": "已有同名分组。",
   "deleteGroupTitle": "删除分组？",
-  "deleteGroupDetail": "删除分组 {name}？组内主机会变为未分组。",
+  "deleteGroupDetail": "删除分组 {name}？{count, plural, =0 {} other {组内 # 台主机将变为未分组。}}",
   "statusConnected": "已连接",
   "statusConnecting": "正在连接",
   "statusDisconnected": "未连接",

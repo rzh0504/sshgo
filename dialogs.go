@@ -858,7 +858,7 @@ func (a *App) confirmView(c *ui.Context, pal *palette) {
 	case cf.quit:
 		title, detail, action, key = locales.QuitTitle(), locales.QuitDetail(a.connectedCount()), locales.ActionQuit(), "quit"
 	case cf.group != nil:
-		title, detail = locales.DeleteGroupTitle(), locales.DeleteGroupDetail(cf.group.Name)
+		title, detail = locales.DeleteGroupTitle(), locales.DeleteGroupDetail(cf.group.Name, len(a.hostsIn(cf.group.ID)))
 	}
 	run := false
 	ui.DialogBase(c.Key("confirm-"+key), &cf.open, func(backdrop, panel ui.Element) {
