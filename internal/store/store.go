@@ -143,6 +143,10 @@ type State struct {
 	AgentDefaultProvider  string          `json:"agentDefaultProvider,omitempty"`
 	AgentDefaultModel     string          `json:"agentDefaultModel,omitempty"`
 	AgentDefaultReasoning string          `json:"agentDefaultReasoning,omitempty"`
+	// AgentTitleProvider and AgentTitleModel choose the model that names
+	// conversations; empty, the conversation's own does.
+	AgentTitleProvider string `json:"agentTitleProvider,omitempty"`
+	AgentTitleModel    string `json:"agentTitleModel,omitempty"`
 
 	// LightTheme and DarkTheme are the first build's separate themes, read
 	// to migrate them to Theme and then cleared.

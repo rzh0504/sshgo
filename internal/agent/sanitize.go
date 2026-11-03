@@ -76,3 +76,15 @@ func TitleOf(msgs []*Message) string {
 	}
 	return ""
 }
+
+// CleanTitle is a model's name for a conversation: one line, without the
+// quotes and closing period models add, and no longer than TitleOf's.
+func CleanTitle(s string) string {
+	title := strings.Join(strings.Fields(s), " ")
+	title = strings.Trim(title, "\"'“”‘’`《》")
+	title = strings.TrimSpace(strings.TrimRight(title, "。.！!？?…"))
+	if r := []rune(title); len(r) > 48 {
+		title = strings.TrimSpace(string(r[:48])) + "…"
+	}
+	return title
+}

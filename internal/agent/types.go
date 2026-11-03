@@ -31,6 +31,9 @@ type Chat struct {
 	CreatedAt  int64      `json:"createdAt"`
 	UpdatedAt  int64      `json:"updatedAt"`
 	Messages   []*Message `json:"messages"`
+	// TitleDone tells that a model named the conversation, or that it
+	// came with its title, so it is not named again.
+	TitleDone bool `json:"-"`
 }
 
 // Kinds of attachment a message may carry.

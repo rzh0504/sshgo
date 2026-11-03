@@ -33,8 +33,9 @@ var settingsPages = []settingsPage{
 // settingsState is the settings window's: the page it shows, and where
 // each page scrolled to.
 type settingsState struct {
-	page   string
-	scroll map[string]*ui.ScrollState
+	page           string
+	titleModelOpen bool // the title model's menu
+	scroll         map[string]*ui.ScrollState
 }
 
 func (s *settingsState) scrollOf(id string) *ui.ScrollState {
@@ -71,6 +72,7 @@ type settingsValues struct {
 	agentNoTools          bool
 	agentDisabledTools    string
 	agentEnabled          bool
+	agentTitle            string
 }
 
 func valuesOf(s store.State) settingsValues {
@@ -84,6 +86,7 @@ func valuesOf(s store.State) settingsValues {
 		agentNoStream:         s.AgentNoStream, agentNoTools: s.AgentNoTools,
 		agentDisabledTools: strings.Join(sortedNames(s.AgentDisabledTools), "\x00"),
 		agentEnabled:       s.AgentEnabled,
+		agentTitle:         s.AgentTitleProvider + "\x00" + s.AgentTitleModel,
 	}
 }
 
@@ -580,6 +583,9 @@ func (a *App) agentPage(c *ui.Context, pal *palette) {
 		return
 	}
 	a.agentProviderSettings(c, pal)
+	settingsGroup(c, pal, locales.AgentTitleGroup(), "", func() {
+		a.agentTitleModelRow(c, pal)
+	})
 	settingsGroup(c, pal, locales.AgentToolsGroup(), locales.AgentToolsNote(), func() {
 		settingRow(c, pal, locales.SetAgentTools(), locales.SetAgentToolsDetail(), func() {
 			on := !a.state.AgentNoTools

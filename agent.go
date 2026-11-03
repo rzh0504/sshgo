@@ -93,6 +93,7 @@ func (a *App) loadAgent() {
 		a.agent.chats = append(a.agent.chats, &agent.Chat{
 			ID: meta.ID, Title: meta.Title, HostID: meta.HostID,
 			CreatedAt: meta.CreatedAt, UpdatedAt: meta.UpdatedAt,
+			TitleDone: true,
 		})
 	}
 	a.agent.current = idx.Current
@@ -581,9 +582,91 @@ func (a *App) startAgentTurn(text string, attachments []agent.Attachment) bool {
 			a.agent.err = err.Error()
 		}
 		a.agent.mu.Unlock()
+		if err == nil {
+			a.generateAgentTitle(chatID)
+		}
 		a.repaint()
 	}()
 	return true
+}
+
+// agentTitlePrompt asks a model for a conversation's name.
+const agentTitlePrompt = "You name conversations. Write a short title for the exchange below: a few words, and no more than 20 characters in Chinese, Japanese, or Korean. Reply with the title alone, without quotes or a final period, in the language of the user's message."
+
+// generateAgentTitle has the title model name a conversation from its
+// first exchange, unless it came with its title or a model named it.
+func (a *App) generateAgentTitle(chatID string) {
+	a.agent.mu.Lock()
+	chat := a.agent.chatLocked(chatID)
+	if chat == nil || chat.TitleDone {
+		a.agent.mu.Unlock()
+		return
+	}
+	user, reply := firstExchange(chat.Messages)
+	provider, model, ok := a.resolveAgentTitleModel(chat)
+	a.agent.mu.Unlock()
+	if !ok || user == "" || reply == "" {
+		return
+	}
+	key := a.savedSecret(agentProviderSecret(provider.ID))
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		client := &llm.Client{BaseURL: provider.BaseURL, APIKey: key, Model: model}
+		res, err := client.Chat(ctx, []llm.Message{
+			{Role: "system", Content: agentTitlePrompt},
+			{Role: "user", Content: "User: " + excerptText(user, 1500) + "\n\nAssistant: " + excerptText(reply, 800)},
+		}, nil, nil)
+		if err != nil {
+			return
+		}
+		title := agent.CleanTitle(res.Content)
+		if title == "" {
+			return
+		}
+		a.agent.mu.Lock()
+		chat := a.agent.chatLocked(chatID)
+		if chat == nil {
+			a.agent.mu.Unlock()
+			return
+		}
+		chat.Title = title
+		chat.TitleDone = true
+		a.agent.mu.Unlock()
+		a.saveAgentChat(chatID)
+		a.saveAgentIndex()
+		a.repaint()
+	}()
+}
+
+// firstExchange is a conversation's first user message, or its first
+// attachment's name, and the first reply with text.
+func firstExchange(msgs []*agent.Message) (user, reply string) {
+	for _, m := range msgs {
+		switch m.Role {
+		case "user":
+			if user == "" {
+				user = m.Content
+				if user == "" && len(m.Attachments) > 0 {
+					user = m.Attachments[0].Name
+				}
+			}
+		case "assistant":
+			if reply == "" {
+				reply = m.Content
+			}
+		}
+	}
+	return user, reply
+}
+
+// excerptText is s shortened to max runes, with an ellipsis.
+func excerptText(s string, max int) string {
+	r := []rune(strings.TrimSpace(s))
+	if len(r) <= max {
+		return string(r)
+	}
+	return string(r[:max]) + "…"
 }
 
 // applyAgentMessages is the engine's conversation, as it changes.

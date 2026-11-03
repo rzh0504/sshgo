@@ -2404,6 +2404,46 @@ func (msgs Messages) AgentProviderGroup() string {
 	return Catalog.Format(msgs.locale, "agentProviderGroup", nil)
 }
 
+// AgentTitleGroup says "Titles"
+// in the language the app shows.
+func AgentTitleGroup() string { return In(i18n.Locale()).AgentTitleGroup() }
+
+// AgentTitleGroup says "Titles"
+// in the language of msgs.
+func (msgs Messages) AgentTitleGroup() string {
+	return Catalog.Format(msgs.locale, "agentTitleGroup", nil)
+}
+
+// SetAgentTitleModel says "Conversation titles"
+// in the language the app shows.
+func SetAgentTitleModel() string { return In(i18n.Locale()).SetAgentTitleModel() }
+
+// SetAgentTitleModel says "Conversation titles"
+// in the language of msgs.
+func (msgs Messages) SetAgentTitleModel() string {
+	return Catalog.Format(msgs.locale, "setAgentTitleModel", nil)
+}
+
+// SetAgentTitleModelDetail says "The model that names a conversation after its first reply."
+// in the language the app shows.
+func SetAgentTitleModelDetail() string { return In(i18n.Locale()).SetAgentTitleModelDetail() }
+
+// SetAgentTitleModelDetail says "The model that names a conversation after its first reply."
+// in the language of msgs.
+func (msgs Messages) SetAgentTitleModelDetail() string {
+	return Catalog.Format(msgs.locale, "setAgentTitleModelDetail", nil)
+}
+
+// AgentTitleModelSame says "Same as the conversation"
+// in the language the app shows.
+func AgentTitleModelSame() string { return In(i18n.Locale()).AgentTitleModelSame() }
+
+// AgentTitleModelSame says "Same as the conversation"
+// in the language of msgs.
+func (msgs Messages) AgentTitleModelSame() string {
+	return Catalog.Format(msgs.locale, "agentTitleModelSame", nil)
+}
+
 // SetAgentEnabled says "Enable Agent"
 // in the language the app shows.
 func SetAgentEnabled() string { return In(i18n.Locale()).SetAgentEnabled() }

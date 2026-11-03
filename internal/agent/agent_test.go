@@ -130,6 +130,24 @@ func TestTitleOfAttachment(t *testing.T) {
 	}
 }
 
+func TestCleanTitle(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"“Disk space check.”", "Disk space check"},
+		{"  Review\nserver logs  ", "Review server logs"},
+		{"《清理磁盘》", "清理磁盘"},
+		{"检查磁盘占用。", "检查磁盘占用"},
+	}
+	for _, c := range cases {
+		if got := CleanTitle(c.in); got != c.want {
+			t.Errorf("CleanTitle(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+	long := CleanTitle(strings.Repeat("字", 60))
+	if r := []rune(long); len(r) != 49 || r[48] != '…' {
+		t.Errorf("a long title is %d runes: %q", len(r), long)
+	}
+}
+
 func TestCloneMessageCopiesAttachments(t *testing.T) {
 	m := &Message{Attachments: []Attachment{{Name: "a"}}}
 	clone := CloneMessage(m)

@@ -76,6 +76,7 @@ func (a *App) providerByID(id string) (store.AgentProvider, bool) {
 func (a *App) ensureAgentDefaults() {
 	if len(a.state.AgentProviders) == 0 {
 		a.state.AgentDefaultProvider, a.state.AgentDefaultModel = "", ""
+		a.state.AgentTitleProvider, a.state.AgentTitleModel = "", ""
 		return
 	}
 	p, ok := a.providerByID(a.state.AgentDefaultProvider)
@@ -96,6 +97,9 @@ func (a *App) ensureAgentDefaults() {
 	}
 	if a.state.AgentDefaultModel == "" || !slices.Contains(p.Models, a.state.AgentDefaultModel) {
 		a.state.AgentDefaultModel = p.Models[0]
+	}
+	if a.state.AgentTitleModel != "" && !a.agentModelReady(a.state.AgentTitleProvider, a.state.AgentTitleModel) {
+		a.state.AgentTitleProvider, a.state.AgentTitleModel = "", ""
 	}
 }
 
@@ -130,6 +134,16 @@ func (a *App) resolveAgentModel(chat *agent.Chat) (store.AgentProvider, string, 
 		}
 	}
 	return store.AgentProvider{}, "", false
+}
+
+// resolveAgentTitleModel picks the model that names conversations: the
+// chosen one while it is ready, else the conversation's own.
+func (a *App) resolveAgentTitleModel(chat *agent.Chat) (store.AgentProvider, string, bool) {
+	if a.agentModelReady(a.state.AgentTitleProvider, a.state.AgentTitleModel) {
+		p, _ := a.providerByID(a.state.AgentTitleProvider)
+		return p, a.state.AgentTitleModel, true
+	}
+	return a.resolveAgentModel(chat)
 }
 
 func (a *App) syncAgentModel(chat *agent.Chat) {
@@ -351,6 +365,119 @@ func (a *App) agentProviderRow(c *ui.Context, pal *palette, p store.AgentProvide
 		if button(c, "agent-provider-edit-"+p.ID, locales.AgentEditProvider(), "", false, pal) {
 			a.openAgentProvider(p.ID)
 		}
+	})
+}
+
+// agentTitleModelRow chooses the model that names conversations, the
+// conversation's own by default.
+func (a *App) agentTitleModelRow(c *ui.Context, pal *palette) {
+	settingRow(c, pal, locales.SetAgentTitleModel(), locales.SetAgentTitleModelDetail(), func() {
+		label := locales.AgentTitleModelSame()
+		if a.state.AgentTitleModel != "" {
+			label = a.state.AgentTitleModel
+		}
+		b := ui.ButtonBase(c.Key("agent-title-model")).Height(26).Padding(0, 8).Radius(6).Gap(5).
+			AlignItems(ui.Center).MaxWidth(260).Label(label).Cursor(ui.CursorPointer)
+		bg := pal.control
+		switch {
+		case b.Pressed():
+			bg = bg.Mix(ui.Hex("#000000"), 0.08)
+		case b.Hovered():
+			bg = pal.controlHover
+		}
+		b.Background(b.AnimateColor("bg", bg, ui.Animation{Duration: 90 * time.Millisecond}))
+		b.Children(func() {
+			ui.Text(c, label).FontSize(12.5).TextColor(pal.text).SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
+			ui.Icon(c, chevronDownIcon).Size(10, 10).TextColor(pal.textFaint).Shrink(0)
+		})
+		if b.Clicked() {
+			a.ss.titleModelOpen = !a.ss.titleModelOpen
+		}
+		ui.PopoverBase(c, b, &a.ss.titleModelOpen, func(panel ui.Element) {
+			panel.AttachTo(b, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(6, 0, 0, 0)
+			a.agentTitleModelMenu(c, pal, panel)
+		})
+	})
+}
+
+func (a *App) agentTitleModelMenu(c *ui.Context, pal *palette, panel ui.Element) {
+	same := locales.AgentTitleModelSame()
+	width, _ := c.MeasureText(0, ui.Span{Text: same, Size: 12.5, Weight: 400})
+	h := float32(38)
+	for _, p := range a.state.AgentProviders {
+		if len(p.Models) == 0 {
+			continue
+		}
+		if w, _ := c.MeasureText(0, ui.Span{Text: p.Name, Size: 11, Weight: 600}); w > width {
+			width = w
+		}
+		h += 9 + 26 + float32(len(p.Models))*30
+		for _, model := range p.Models {
+			if w, _ := c.MeasureText(0, ui.Span{Text: model, Size: 12.5, Weight: 400}); w > width {
+				width = w
+			}
+		}
+	}
+	width = min(max(width+50, 140), 320)
+	h = min(h, 360)
+	choose := func(providerID, model string) {
+		a.ss.titleModelOpen = false
+		a.state.AgentTitleProvider, a.state.AgentTitleModel = providerID, model
+		a.saveState()
+	}
+	floating(panel.Width(width).Padding(4).Radius(10).Background(pal.popover).Clip(), pal)
+	panel.Children(func() {
+		ui.Scroll(c.Key("agent-title-model-menu")).Height(h).FillWidth().Children(func() {
+			ui.Column(c).Padding(4, 0).FillWidth().Children(func() {
+				sameRow := ui.Row(c.Key("agent-title-model-same")).Height(30).Padding(0, 8).
+					Gap(7).Radius(6).AlignItems(ui.Center).FillWidth().Cursor(ui.CursorPointer)
+				if sameRow.Hovered() {
+					sameRow.Background(pal.rowHover)
+				}
+				sameRow.Children(func() {
+					if a.state.AgentTitleModel == "" {
+						ui.Icon(c, checkIcon).Size(11, 11).TextColor(pal.accent).Shrink(0)
+					} else {
+						ui.Box(c).Size(11, 11).Shrink(0)
+					}
+					ui.Text(c, same).FontSize(12.5).TextColor(pal.text).SingleLine().
+						Ellipsis("…").Shrink(1).MinWidth(0)
+				})
+				if sameRow.Clicked() {
+					choose("", "")
+				}
+				for _, p := range a.state.AgentProviders {
+					if len(p.Models) == 0 {
+						continue
+					}
+					ui.Box(c).Height(1).Shrink(0).FillWidth().Background(pal.divider).Margin(4, 8, 4, 8)
+					ui.Row(c).Height(26).Padding(0, 8).AlignItems(ui.Center).FillWidth().Children(func() {
+						ui.Text(c, p.Name).FontSize(11).FontWeight(600).TextColor(pal.textMuted).
+							SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
+					})
+					for _, model := range p.Models {
+						selected := a.state.AgentTitleProvider == p.ID && a.state.AgentTitleModel == model
+						row := ui.Row(c.Key("agent-title-model-"+p.ID+"-"+model)).Height(30).Padding(0, 8).
+							Gap(7).Radius(6).AlignItems(ui.Center).FillWidth().Cursor(ui.CursorPointer)
+						if row.Hovered() {
+							row.Background(pal.rowHover)
+						}
+						row.Children(func() {
+							if selected {
+								ui.Icon(c, checkIcon).Size(11, 11).TextColor(pal.accent).Shrink(0)
+							} else {
+								ui.Box(c).Size(11, 11).Shrink(0)
+							}
+							ui.Text(c, model).FontSize(12.5).TextColor(pal.text).SingleLine().
+								Ellipsis("…").Shrink(1).MinWidth(0)
+						})
+						if row.Clicked() {
+							choose(p.ID, model)
+						}
+					}
+				}
+			})
+		})
 	})
 }
 
