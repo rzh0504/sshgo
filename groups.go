@@ -102,11 +102,15 @@ func (a *App) hostGroupMenu(m *ui.Menu, id string) {
 	}
 }
 
+// foldMotion grows and shrinks a sidebar folder's list.
+var foldMotion = ui.Animation{Duration: 180 * time.Millisecond, Ease: ui.CubicBezier(0.25, 1, 0.5, 1)}
+
 // sidebarGroup is a group's header and, while it is open, its hosts.
 func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name string, hosts []store.Host) {
 	open := !a.groupCollapsed(g.ID)
 	hdr := ui.Row(c.Key("group-"+g.ID)).Height(28).Margin(4, 0, 1, 0).Padding(0, 8, 0, 4).
 		Gap(6).AlignItems(ui.Center).Radius(6).Cursor(ui.CursorPointer)
+	progress := hdr.AnimateTo("open", b2f(open), foldMotion)
 	if pal.dark {
 		hdr.Border(1, ui.Transparent)
 	}
@@ -120,11 +124,7 @@ func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name stri
 		a.toggleGroup(g.ID)
 	}
 	hdr.Children(func() {
-		chevron := chevronRightIcon
-		if open {
-			chevron = chevronDownIcon
-		}
-		ui.Icon(c, chevron).Size(11, 11).TextColor(pal.textFaint).Shrink(0)
+		ui.Icon(c, chevronRightIcon).Size(11, 11).TextColor(pal.textFaint).Shrink(0).Rotate(progress * 90)
 		ui.Icon(c, folderIcon).Size(13, 13).TextColor(pal.textMuted).Shrink(0)
 		ui.Text(c, name).FontSize(12.5).FontWeight(600).TextColor(pal.textMuted).
 			SingleLine().Ellipsis("…").Shrink(1).MinWidth(0)
@@ -145,10 +145,19 @@ func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name stri
 		}
 		ui.Text(c, strconv.Itoa(len(hosts))).FontSize(11.5).FontFeatures("tnum").TextColor(pal.textFaint)
 	})
-	if !open {
-		return
-	}
-	for _, h := range hosts {
-		a.hostRow(c, pal, h, 4)
+	if progress > 0 || open {
+		panel := ui.Column(c).Shrink(0)
+		var inner ui.Element
+		panel.Children(func() {
+			inner = ui.Column(c).Shrink(0)
+			inner.Children(func() {
+				for _, h := range hosts {
+					a.hostRow(c, pal, h, 4)
+				}
+			})
+		})
+		if progress < 1 {
+			panel.ClipY().Height(progress * inner.Bounds().H)
+		}
 	}
 }
