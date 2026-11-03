@@ -131,7 +131,7 @@ func (a *App) sidebarGroup(c *ui.Context, pal *palette, g store.Group, name stri
 		ui.Spacer(c)
 		if hdr.Hovered() {
 			add := ui.ButtonBase(c.Key("group-add-"+g.ID)).Size(20, 20).Radius(4).Center().
-				TextColor(pal.textMuted).Label(locales.ActionNewHostInGroup())
+				TextColor(pal.textMuted).Label(locales.ActionNewHostInGroup()).Cursor(ui.CursorPointer)
 			if g.ID == "" {
 				add.Label(locales.ActionAddHost())
 			}

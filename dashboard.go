@@ -106,7 +106,7 @@ func (a *App) dashboardSection(c *ui.Context, pal *palette, s hostSection) {
 					ui.Icon(c, chevron).Size(11, 11).TextColor(pal.textFaint).Shrink(0)
 				}
 				ui.Spacer(c)
-				iconButton(c, "dash-add-"+s.id, plusIcon, tip, pal, func() {
+				addButton(c, "dash-add-"+s.id, tip, pal, func() {
 					a.openEditorInGroup(s.id)
 				})
 			})
