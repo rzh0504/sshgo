@@ -102,6 +102,7 @@ type State struct {
 	Recent        []string `json:"recent,omitempty"` // host ids connected last, newest first
 	SidebarWidth  float32  `json:"sidebarWidth,omitempty"`
 	SidebarHidden bool     `json:"sidebarHidden,omitempty"`
+	SidebarTab    string   `json:"sidebarTab,omitempty"` // "hosts" or "agent"
 
 	Appearance string  `json:"appearance,omitempty"` // "system", "light" or "dark"
 	Theme      string  `json:"theme,omitempty"`      // one theme for both appearances

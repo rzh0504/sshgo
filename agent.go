@@ -45,8 +45,7 @@ type agentState struct {
 	memoryMu    sync.Mutex
 	secrets     map[string]string
 
-	open              bool // the Agent is what the main card shows
-	showHistory       bool
+	open              bool   // the Agent is what the main card shows
 	target            string // the connected host this conversation runs on
 	provider          string // the provider this conversation uses
 	model             string // the model this conversation uses
@@ -218,7 +217,6 @@ func (a *App) closeAgentMenus() {
 func (a *App) toggleAgent() {
 	a.agent.open = !a.agent.open
 	if a.agent.open {
-		a.agent.showHistory = false
 		a.agent.focusComposer = true
 	} else {
 		a.closeAgentMenus()
@@ -244,7 +242,7 @@ func (a *App) newAgentChat() {
 	a.agent.target = ""
 	a.syncAgentModel(nil)
 	a.syncAgentReasoning(nil)
-	a.agent.showHistory = false
+	a.agent.open = true
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
 	a.repaint()
@@ -294,7 +292,7 @@ func (a *App) selectAgentChat(id string) {
 	a.agent.mu.Unlock()
 	a.syncAgentModel(chat)
 	a.syncAgentReasoning(chat)
-	a.agent.showHistory = false
+	a.agent.open = true
 	a.agent.focusComposer = true
 	a.saveAgentIndex()
 	a.repaint()

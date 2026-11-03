@@ -71,19 +71,34 @@ func (a *App) agentSnapshot() agentSnap {
 	return snap
 }
 
-// agentView is the Agent's page in the main card.
+// agentView is the Agent's page in the main card. Its conversations are
+// in the sidebar's Agent tab.
 func (a *App) agentView(c *ui.Context, pal *palette) {
-	snap := a.agentSnapshot()
-	row := ui.Row(c).Fill().AlignItems(ui.Stretch)
-	row.Children(func() {
-		if a.agent.showHistory {
-			a.agentHistory(c, pal, snap)
-			ui.Box(c).Width(1).Shrink(0).Background(pal.divider)
-		}
-		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
-			a.agentConversation(c, pal, snap)
+	a.agentConversation(c, pal, a.agentSnapshot())
+}
+
+// agentChatsSnap is the sidebar's view of the conversations: what it
+// lists, without the messages the conversation page reads.
+type agentChatsSnap struct {
+	chats   []*agent.Chat
+	current string
+	busy    bool
+}
+
+func (a *App) agentChatsSnapshot() agentChatsSnap {
+	a.agent.mu.Lock()
+	defer a.agent.mu.Unlock()
+	snap := agentChatsSnap{current: a.agent.current, busy: a.agent.busy}
+	for _, c := range a.agent.chats {
+		snap.chats = append(snap.chats, &agent.Chat{
+			ID: c.ID, Title: c.Title, HostID: c.HostID,
+			CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt,
 		})
+	}
+	sort.SliceStable(snap.chats, func(i, j int) bool {
+		return snap.chats[i].UpdatedAt > snap.chats[j].UpdatedAt
 	})
+	return snap
 }
 
 func (a *App) agentConversation(c *ui.Context, pal *palette, snap agentSnap) {
@@ -141,25 +156,8 @@ func (a *App) agentEmpty(c *ui.Context, pal *palette, snap agentSnap) {
 	})
 }
 
-func (a *App) agentHistory(c *ui.Context, pal *palette, snap agentSnap) {
-	ui.Column(c).Width(216).Shrink(0).Padding(10, 10, 8, 10).Gap(2).Children(func() {
-		ui.Row(c).Height(28).Padding(0, 8).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.AgentChats()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
-		})
-		ui.Scroll(c.Key("agent-chats")).Grow(1).Children(func() {
-			if len(snap.chats) == 0 {
-				ui.Text(c, locales.AgentNoChats()).FontSize(12).TextColor(pal.textFaint).Padding(6, 8)
-				return
-			}
-			for _, chat := range snap.chats {
-				a.agentHistoryRow(c, pal, chat, snap)
-			}
-		})
-	})
-}
-
-func (a *App) agentHistoryRow(c *ui.Context, pal *palette, chat *agent.Chat, snap agentSnap) {
-	sel := chat.ID == snap.current
+func (a *App) agentChatRow(c *ui.Context, pal *palette, chat *agent.Chat, current string, busy bool) {
+	sel := chat.ID == current
 	title := chat.Title
 	if title == "" {
 		title = locales.AgentUntitledChat()
@@ -183,7 +181,7 @@ func (a *App) agentHistoryRow(c *ui.Context, pal *palette, chat *agent.Chat, sna
 		bg = pal.rowHover
 	}
 	row.Background(row.AnimateColor("bg", bg, ui.Animation{Duration: 110 * time.Millisecond}))
-	if row.Clicked() && !sel && !snap.busy {
+	if row.Clicked() && !sel && !busy {
 		a.selectAgentChat(chat.ID)
 	}
 	row.ContextMenu(func(m *ui.Menu) {

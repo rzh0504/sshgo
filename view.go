@@ -126,6 +126,80 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 	ui.Row(c).Height(topBar).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, lead(bar)).Gap(2).DragWindow().Children(func() {
 		iconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
 	})
+	a.sidebarTabs(c)
+	if a.sidebarTab() == "agent" {
+		a.agentSidebar(c, pal)
+	} else {
+		a.hostSidebar(c, pal)
+	}
+	a.sidebarFooter(c, pal)
+}
+
+// sidebarTab is the sidebar's current column: hosts unless agent is
+// chosen, so a stored state without the field still shows the hosts.
+func (a *App) sidebarTab() string {
+	if a.state.SidebarTab == "agent" {
+		return "agent"
+	}
+	return "hosts"
+}
+
+// sidebarTabs is the Hosts/Agent switch above the list: the compact
+// segmented look, at the list's left margin.
+func (a *App) sidebarTabs(c *ui.Context) {
+	i := 0
+	if a.sidebarTab() == "agent" {
+		i = 1
+	}
+	labels := []string{locales.DashboardTitle(), locales.AgentTitle()}
+	pal := paletteFor(c)
+	track, thumb := pal.text.Alpha(0.06), ui.Hex("#ffffff")
+	if pal.dark {
+		track, thumb = ui.RGBA(255, 255, 255, 0.07), ui.RGBA(255, 255, 255, 0.2)
+	}
+	widths := make([]float32, len(labels))
+	total := float32(4)
+	for n, label := range labels {
+		w, _ := c.MeasureText(0, ui.Span{Text: label, Size: 12, Weight: 500})
+		widths[n] = w + 20
+		total += widths[n]
+	}
+	var seg ui.SegmentedParts
+	ui.Row(c).Shrink(0).Padding(2, 12, 8, 12).Children(func() {
+		seg = ui.SegmentedBase(c.Key("sidebar-tabs"), &i, len(labels))
+		seg.Track.Width(total).Height(24).Padding(2).Radius(7).Background(track).Shrink(0).Children(func() {
+			for n, label := range labels {
+				part := seg.Segment(n).Width(widths[n]).FillHeight().Radius(5).Center()
+				if n == i {
+					part.Background(thumb)
+					if pal.dark {
+						part.Shadow(0, 1, 1, 0, ui.RGBA(0, 0, 0, 0.25))
+					} else {
+						part.Shadow(0, 0.5, 1.5, 0, ui.RGBA(0, 0, 0, 0.16)).
+							Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.04))
+					}
+				}
+				part.Children(func() {
+					ui.Text(c, label).FontSize(12).SingleLine().TextColor(pal.text)
+				})
+			}
+		})
+		ui.Spacer(c)
+	})
+	seg.Track.OnChange(func() {
+		next := "hosts"
+		if i == 1 {
+			next = "agent"
+		}
+		if a.state.SidebarTab != next {
+			a.state.SidebarTab = next
+			a.saveState()
+			a.repaint()
+		}
+	})
+}
+
+func (a *App) hostSidebar(c *ui.Context, pal *palette) {
 	ui.Scroll(c.Key("hosts")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
 		if len(a.state.Hosts) == 0 && len(a.state.Groups) == 0 {
 			ui.Column(c).Padding(8, 10).Children(func() {
@@ -146,7 +220,26 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 			a.sidebarGroup(c, pal, g, g.Name, a.hostsIn(g.ID))
 		}
 	})
-	a.sidebarFooter(c, pal)
+}
+
+func (a *App) agentSidebar(c *ui.Context, pal *palette) {
+	snap := a.agentChatsSnapshot()
+	ui.Row(c).Height(32).Shrink(0).Padding(4, 12).Gap(6).AlignItems(ui.Center).DragWindow().Children(func() {
+		ui.Text(c, locales.AgentChats()).FontSize(12).FontWeight(600).TextColor(pal.textMuted)
+		ui.Spacer(c)
+		iconButton(c, "sidebar-agent-new", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
+	})
+	ui.Scroll(c.Key("agent-chats")).Grow(1).Padding(0, 10, 16, 10).DragWindow().Children(func() {
+		if len(snap.chats) == 0 {
+			ui.Column(c).Padding(8, 10).Children(func() {
+				ui.Text(c, locales.AgentNoChats()).FontSize(12.5).TextColor(pal.textFaint)
+			})
+			return
+		}
+		for _, chat := range snap.chats {
+			a.agentChatRow(c, pal, chat, snap.current, snap.busy)
+		}
+	})
 }
 
 var ipv4Pattern = regexp.MustCompile(`\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b`)
@@ -327,8 +420,12 @@ func (a *App) card(c *ui.Context, pal *palette, bar ui.TitleBar, shown float32) 
 			if agentOpen {
 				ui.Row(c).Gap(2).Shrink(0).Margin(0).Children(func() {
 					iconButton(c, "agent-history", clockIcon, locales.AgentChats(), pal, func() {
-						a.agent.showHistory = !a.agent.showHistory
-						a.repaint()
+						if a.state.SidebarTab != "agent" || a.state.SidebarHidden {
+							a.state.SidebarTab = "agent"
+							a.state.SidebarHidden = false
+							a.saveState()
+							a.repaint()
+						}
 					})
 					iconButton(c, "agent-new-chat", plusIcon, locales.AgentNewChat(), pal, a.newAgentChat)
 					iconButton(c, "agent-close", closeIcon, locales.AgentClose(), pal, a.toggleAgent)

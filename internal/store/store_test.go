@@ -38,6 +38,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		Selected:      "b",
 		Recent:        []string{"b", "a"},
 		SidebarWidth:  300,
+		SidebarTab:    "agent",
 		Appearance:    "dark",
 		Theme:         "mist",
 		FontFamily:    "Cascadia Mono",
@@ -72,7 +73,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Selected != want.Selected || got.SidebarWidth != want.SidebarWidth {
+	if got.Selected != want.Selected || got.SidebarWidth != want.SidebarWidth || got.SidebarTab != want.SidebarTab {
 		t.Fatalf("state = %+v, want %+v", got, want)
 	}
 	if got.Appearance != want.Appearance || got.Theme != want.Theme || got.FontFamily != want.FontFamily ||
