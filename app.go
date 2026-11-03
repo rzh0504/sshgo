@@ -96,6 +96,10 @@ type App struct {
 	dashScroll  ui.ScrollState
 	// dashCollapsed is the dashboard's groups, apart from the sidebar's.
 	dashCollapsed map[string]bool
+	// tabEnter slides the sidebar's list in after its tab changed, toward
+	// tabDir: 1 for the Agent, -1 for the hosts.
+	tabEnter bool
+	tabDir   float32
 
 	tray          *mygo.Tray // the icon in the notification area, while it shows
 	quitting      bool       // a quit is on its way: let the windows close

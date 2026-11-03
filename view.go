@@ -49,6 +49,9 @@ func lead(bar ui.TitleBar) float32 {
 
 var sidebarMotion = ui.Animation{Duration: 260 * time.Millisecond, Ease: ui.CubicBezier(0.25, 1, 0.5, 1)}
 
+// tabMotion slides the sidebar's tab thumb and brings its list in.
+var tabMotion = ui.Animation{Duration: 170 * time.Millisecond, Ease: ui.CubicBezier(0.25, 1, 0.5, 1)}
+
 func chromeFor(progress, width float32, bar ui.TitleBar) chrome {
 	round := func(v float32) float32 { return float32(math.Round(float64(v))) }
 	w := round(width * min(max(progress, 0), 1))
@@ -127,11 +130,21 @@ func (a *App) sidebar(c *ui.Context, pal *palette, bar ui.TitleBar) {
 		plainIconButton(c, "hide-sidebar", sidebarIcon, locales.ToggleHideSidebar(), pal, a.toggleSidebar)
 	})
 	a.sidebarTabs(c)
-	if a.sidebarTab() == "agent" {
-		a.agentSidebar(c, pal)
-	} else {
-		a.hostSidebar(c, pal)
+	pane := ui.Column(c).Grow(1).MinHeight(0)
+	if a.tabEnter {
+		pane.Jump("tab-enter", 1)
+		a.tabEnter = false
 	}
+	if v := pane.AnimateTo("tab-enter", 0, tabMotion); v > 0.001 {
+		pane.Translate(a.tabDir*v*8, 0).Opacity(1 - v)
+	}
+	pane.Children(func() {
+		if a.sidebarTab() == "agent" {
+			a.agentSidebar(c, pal)
+		} else {
+			a.hostSidebar(c, pal)
+		}
+	})
 	a.sidebarFooter(c, pal)
 }
 
@@ -171,21 +184,29 @@ func (a *App) sidebarTabs(c *ui.Context) {
 	ui.Row(c).Shrink(0).Padding(2, 12, 8, 12).Children(func() {
 		seg = ui.SegmentedBase(c.Key("sidebar-tabs"), &i, len(labels))
 		seg.Track.Width(total).Height(24).Padding(2).Radius(7).Background(track).Shrink(0).Children(func() {
-			for n, label := range labels {
-				part := seg.Segment(n).Width(widths[n]).FillHeight().Radius(5).Center().Cursor(ui.CursorPointer)
-				if n == i {
-					part.Background(thumb)
-					if pal.dark {
-						part.Shadow(0, 1, 1, 0, ui.RGBA(0, 0, 0, 0.25))
-					} else {
-						part.Shadow(0, 0.5, 1.5, 0, ui.RGBA(0, 0, 0, 0.16)).
-							Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.04))
-					}
-				}
-				part.Children(func() {
-					ui.Text(c, label).FontSize(12).SingleLine().TextColor(pal.text)
-				})
+			// The thumb slides under the labels, which paint above it.
+			x := float32(0)
+			for n := 0; n < i; n++ {
+				x += widths[n]
 			}
+			pill := ui.Box(c).Absolute().Top(2).Height(20).Radius(5).Background(thumb)
+			pill.Left(pill.AnimateTo("x", 2+x, tabMotion))
+			pill.Width(pill.AnimateTo("w", widths[i], tabMotion))
+			if pal.dark {
+				pill.Shadow(0, 1, 1, 0, ui.RGBA(0, 0, 0, 0.25))
+			} else {
+				pill.Shadow(0, 0.5, 1.5, 0, ui.RGBA(0, 0, 0, 0.16)).
+					Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.04))
+			}
+			layer := ui.Row(c).Absolute().Left(2).Top(2).Width(total - 4).Height(20)
+			layer.Children(func() {
+				for n, label := range labels {
+					part := seg.Segment(n).Width(widths[n]).FillHeight().Radius(5).Center().Cursor(ui.CursorPointer)
+					part.Children(func() {
+						ui.Text(c, label).FontSize(12).SingleLine().TextColor(pal.text)
+					})
+				}
+			})
 		})
 		ui.Spacer(c)
 	})
@@ -196,6 +217,11 @@ func (a *App) sidebarTabs(c *ui.Context) {
 		}
 		if a.state.SidebarTab != next {
 			a.state.SidebarTab = next
+			a.tabDir = -1
+			if next == "agent" {
+				a.tabDir = 1
+			}
+			a.tabEnter = true
 			a.saveState()
 			a.repaint()
 		}
