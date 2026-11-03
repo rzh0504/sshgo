@@ -140,7 +140,7 @@ func (a *App) agentConversation(c *ui.Context, pal *palette, snap agentSnap) {
 			a.agent.list.FollowAnimation = &ui.Smooth
 			ui.List(c, &a.agent.list, len(rows), func(i int) {
 				a.agentMessage(c, pal, rows[i], snap)
-			}).Grow(1).MinHeight(0).Padding(18, 40, 12, 40).Gap(18).Justify(ui.End)
+			}).Grow(1).MinHeight(0).Padding(18, 40, 12, 40).Gap(18)
 		}
 		if snap.err != "" {
 			a.agentError(c, pal, snap.err)
