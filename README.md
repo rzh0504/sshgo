@@ -4,6 +4,8 @@
 
 # sshgo
 
+[![Listed on Awesome MyGo](https://awesomemygo.dev/badge.svg)](https://awesomemygo.dev/apps/sshgo)
+
 [简体中文](README.zh.md)
 
 An SSH client with native UI for macOS, Windows and Linux. Hosts in a sidebar, their shells in a card beside it.

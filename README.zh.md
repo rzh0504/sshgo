@@ -4,6 +4,8 @@
 
 # sshgo
 
+[![Listed on Awesome MyGo](https://awesomemygo.dev/badge.svg)](https://awesomemygo.dev/apps/sshgo)
+
 [English](README.md)
 
 原生 UI 的 SSH 客户端，支持 macOS、Windows 和 Linux。主机列表在侧栏，终端在旁边的卡片里。
